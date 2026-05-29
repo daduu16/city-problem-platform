@@ -87,7 +87,8 @@ export class AccessControlService {
         return incident.organizationId === scope.organizationId;
       case 'region':
         if (scope.geozoneIds.length === 0) return true;
-        return incident.geozoneId ? scope.geozoneIds.includes(incident.geozoneId) : false;
+        if (!incident.geozoneId) return true;
+        return scope.geozoneIds.includes(incident.geozoneId);
       default:
         return true;
     }
@@ -103,7 +104,11 @@ export class AccessControlService {
     }
 
     if (scope.geozoneIds.length > 0) {
-      where.geozoneId = { in: scope.geozoneIds };
+      where.OR = [
+        { geozoneId: { in: scope.geozoneIds } },
+        // Outside-district incidents have no geozone but stay visible in lists/audit.
+        { geozoneId: null },
+      ];
     }
 
     switch (scope.incidentScope as IncidentScopeType) {
