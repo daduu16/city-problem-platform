@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: municipal-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-municipal}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-municipal_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-municipal_incidents}
+    ports:
+      - "5433:5432"
+    volumes:
+      - municipal_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U municipal -d municipal_incidents"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: municipal-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - municipal_redis_data:/data
+
+  backend:
+    profiles: ["production"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://municipal:municipal_secret@postgres:5432/municipal_incidents?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 3001
+      CORS_ORIGIN: http://localhost
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "3001:3001"
+
+  frontend:
+    profiles: ["production"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3001
+        VITE_WS_URL: http://localhost:3001
+    ports:
+      - "5173:80"
+
+  nginx:
+    profiles: ["production"]
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  municipal_pg_data:
+  municipal_redis_data:

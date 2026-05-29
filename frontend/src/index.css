@@ -1,0 +1,322 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 221.2 83.2% 53.3%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 221.2 83.2% 53.3%;
+  }
+
+  .dark {
+    --background: 222 24% 6%;
+    --foreground: 210 20% 98%;
+    --card: 222 20% 9%;
+    --card-foreground: 210 20% 98%;
+    --popover: 222 22% 8%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 222 16% 15%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 222 16% 14%;
+    --muted-foreground: 215 16% 62%;
+    --accent: 217 33% 18%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 16% 17%;
+    --input: 220 16% 17%;
+    --ring: 217 91% 60%;
+    --sidebar-background: 222 26% 7%;
+    --sidebar-foreground: 215 16% 72%;
+    --sidebar-primary: 217 91% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 16%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 220 16% 15%;
+    --sidebar-ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    margin: 0;
+    min-height: 100vh;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+  #root {
+    min-height: 100vh;
+  }
+  /* Tabular numbers for data-dense UI (KPIs, tables, charts) */
+  .tabular-nums,
+  .ag-cell,
+  .recharts-text {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+}
+
+/* Refined scrollbars */
+@layer utilities {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.35) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.28);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.5);
+  }
+}
+
+/* Leaflet */
+.leaflet-container {
+  font-family: inherit;
+  background: hsl(var(--background));
+}
+
+.leaflet-popup-content-wrapper {
+  @apply rounded-lg border border-border bg-card text-card-foreground shadow-md;
+}
+
+/* No map hover popups — incident details open in the side drawer only */
+.maplibregl-popup,
+.leaflet-popup {
+  display: none !important;
+}
+
+.maplibregl-marker.map-incident-marker-3d {
+  z-index: 5;
+}
+
+.incident-marker-wrapper {
+  background: transparent !important;
+  border: none !important;
+  pointer-events: auto !important;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.55));
+}
+
+.status-marker {
+  box-sizing: border-box;
+}
+
+.status-marker-new {
+  animation: status-pulse 1.8s ease-in-out infinite;
+}
+
+.status-marker-overdue {
+  animation: status-pulse 1s ease-in-out infinite;
+}
+
+.status-marker-in-progress {
+  animation: status-spin 4s linear infinite;
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.85;
+  }
+}
+
+@keyframes status-spin {
+  from {
+    filter: hue-rotate(0deg);
+  }
+  to {
+    filter: hue-rotate(15deg);
+  }
+}
+
+/* AG Grid — shadcn tokens */
+.ag-theme-shadcn {
+  --ag-background-color: transparent;
+  --ag-header-background-color: hsl(var(--muted) / 0.5);
+  --ag-odd-row-background-color: transparent;
+  --ag-row-hover-color: hsl(var(--accent) / 0.55);
+  --ag-selected-row-background-color: hsl(var(--primary) / 0.14);
+  --ag-border-color: hsl(var(--border) / 0.7);
+  --ag-row-border-color: hsl(var(--border) / 0.5);
+  --ag-secondary-border-color: hsl(var(--border) / 0.5);
+  --ag-foreground-color: hsl(var(--foreground));
+  --ag-data-color: hsl(var(--foreground) / 0.92);
+  --ag-secondary-foreground-color: hsl(var(--muted-foreground));
+  --ag-header-foreground-color: hsl(var(--muted-foreground));
+  --ag-disabled-foreground-color: hsl(var(--muted-foreground) / 0.5);
+  --ag-input-border-color: hsl(var(--border));
+  --ag-input-focus-border-color: hsl(var(--ring) / 0.7);
+  --ag-range-selection-border-color: hsl(var(--ring) / 0.5);
+  --ag-control-panel-background-color: hsl(var(--card));
+  --ag-modal-overlay-background-color: hsl(var(--background) / 0.6);
+  --ag-font-family: 'Inter', system-ui, sans-serif;
+  --ag-font-size: 13px;
+  --ag-grid-size: 6px;
+  --ag-row-height: 52px;
+  --ag-header-height: 44px;
+  --ag-cell-horizontal-padding: 18px;
+  --ag-borders: none;
+  --ag-border-radius: 0px;
+  --ag-wrapper-border-radius: 0px;
+}
+
+/* Header: compact, uppercase, quiet */
+.incident-grid .ag-header {
+  border-bottom: 1px solid hsl(var(--border));
+  backdrop-filter: blur(2px);
+}
+
+.incident-grid .ag-header-cell {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.incident-grid .ag-header-cell-resize::after {
+  background-color: hsl(var(--border) / 0.6);
+}
+
+/* Rows: subtle separators, smooth hover, no harsh focus ring */
+.incident-grid .ag-row {
+  border-bottom: 1px solid hsl(var(--border) / 0.45);
+  transition: background-color 0.12s ease;
+}
+
+.incident-grid .ag-row:last-child {
+  border-bottom: none;
+}
+
+.incident-grid .ag-row-selected::before {
+  background-color: hsl(var(--primary) / 0.14) !important;
+}
+
+.incident-grid .ag-cell {
+  display: flex;
+  align-items: center;
+  line-height: 1.4;
+}
+
+.incident-grid .ag-cell-focus,
+.incident-grid .ag-cell:focus {
+  border-color: transparent !important;
+  outline: none !important;
+}
+
+.incident-grid .ag-cell-primary {
+  font-weight: 500;
+  color: hsl(var(--foreground));
+}
+
+/* Status accent bar on the left edge of each row */
+.incident-grid .incident-row-new {
+  box-shadow: inset 3px 0 0 #f59e0b;
+}
+
+.incident-grid .incident-row-in-progress {
+  box-shadow: inset 3px 0 0 #3b82f6;
+}
+
+.incident-grid .incident-row-pending {
+  box-shadow: inset 3px 0 0 #a855f7;
+}
+
+.incident-grid .incident-row-resolved {
+  box-shadow: inset 3px 0 0 #22c55e;
+}
+
+.incident-grid .incident-row-resolved .ag-cell-primary {
+  color: hsl(var(--muted-foreground));
+}
+
+.incident-grid .incident-row-overdue {
+  box-shadow: inset 3px 0 0 #ef4444;
+  background-color: hsl(var(--destructive) / 0.06) !important;
+}
+
+.incident-grid .incident-row-archived {
+  box-shadow: inset 3px 0 0 #64748b;
+  opacity: 0.6;
+}
+
+.incident-grid .incident-row-outside-district {
+  box-shadow: inset 3px 0 0 #f59e0b;
+  background-color: rgb(245 158 11 / 0.06) !important;
+}
+
+/* Pagination panel */
+.incident-grid .ag-paging-panel {
+  border-top: 1px solid hsl(var(--border));
+  height: 48px;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+}
+
+.incident-grid .ag-paging-button {
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.incident-grid .ag-paging-button:hover:not(.ag-disabled) {
+  background-color: hsl(var(--accent));
+}
+
+/* Floating filter / menu surfaces */
+.ag-theme-shadcn .ag-popup .ag-menu,
+.ag-theme-shadcn .ag-popup .ag-filter {
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  box-shadow: 0 12px 32px -8px rgb(0 0 0 / 0.6);
+}

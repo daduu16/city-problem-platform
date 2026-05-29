@@ -1,0 +1,310 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum IncidentStatus {
+  NEW
+  IN_PROGRESS
+  PENDING
+  RESOLVED
+  OVERDUE
+  ARCHIVED
+}
+
+enum IncidentPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IncidentType {
+  ACCIDENT
+  COMPLAINT
+  INSPECTION
+  EMERGENCY
+}
+
+enum HistoryActionType {
+  CREATED
+  STATUS_CHANGED
+  PRIORITY_CHANGED
+  ASSIGNED
+  COMMENT
+  ATTACHMENT_ADDED
+  DEADLINE_CHANGED
+  UPDATED
+}
+
+enum AttachmentType {
+  PHOTO
+  DOCUMENT
+  VIDEO
+  OTHER
+}
+
+enum DistrictStatus {
+  WITHIN_DISTRICT
+  OUTSIDE_DISTRICT
+}
+
+enum IncidentScope {
+  ALL
+  REGION
+  ASSIGNED
+  ORGANIZATION
+}
+
+model Organization {
+  id        String     @id @default(uuid())
+  name      String
+  type      String
+  createdAt DateTime   @default(now()) @map("created_at")
+  users     User[]
+  incidents Incident[]
+
+  @@map("organizations")
+}
+
+model Role {
+  id            String           @id @default(uuid())
+  key           String           @unique
+  name          String
+  incidentScope IncidentScope    @default(ALL) @map("incident_scope")
+  permissions   RolePermission[]
+  users         User[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  key         String           @unique
+  description String?
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Category {
+  id           String  @id @default(uuid())
+  key          String  @unique
+  name         String
+  parentId     String? @map("parent_id")
+  serviceOwner String? @map("service_owner")
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+
+  incidents            Incident[]           @relation("IncidentCategory")
+  subcategoryIncidents Incident[]           @relation("IncidentSubcategory")
+  userAccess           UserCategoryAccess[]
+
+  @@map("categories")
+}
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  passwordHash     String   @map("password_hash")
+  name             String
+  department       String?
+  phone            String?
+  isActive         Boolean  @default(true) @map("is_active")
+  organizationId   String?  @map("organization_id")
+  roleId           String   @map("role_id")
+  defaultGeozoneId String?  @map("default_geozone_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  organization    Organization?         @relation(fields: [organizationId], references: [id])
+  role            Role                  @relation(fields: [roleId], references: [id])
+  defaultGeozone  Geozone?              @relation("UserDefaultGeozone", fields: [defaultGeozoneId], references: [id])
+  categoryAccess  UserCategoryAccess[]
+  geozoneAccess   UserGeozoneAccess[]
+  mapLayerAccess  UserMapLayerAccess[]
+  analyticsAccess UserAnalyticsAccess[]
+  createdIncidents  Incident[]        @relation("CreatedBy")
+  assignedIncidents Incident[]        @relation("AssignedTo")
+  historyEntries    IncidentHistory[]
+  comments          IncidentComment[]
+  auditLogs         AuditLog[]
+
+  @@map("users")
+}
+
+model UserCategoryAccess {
+  userId     String @map("user_id")
+  categoryId String @map("category_id")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([userId, categoryId])
+  @@map("user_category_access")
+}
+
+model UserGeozoneAccess {
+  userId    String @map("user_id")
+  geozoneId String @map("geozone_id")
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  geozone   Geozone @relation(fields: [geozoneId], references: [id], onDelete: Cascade)
+
+  @@id([userId, geozoneId])
+  @@map("user_geozone_access")
+}
+
+model UserMapLayerAccess {
+  userId   String @map("user_id")
+  layerKey String @map("layer_key")
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, layerKey])
+  @@map("user_map_layer_access")
+}
+
+model UserAnalyticsAccess {
+  userId       String @map("user_id")
+  analyticsKey String @map("analytics_key")
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, analyticsKey])
+  @@map("user_analytics_access")
+}
+
+model Incident {
+  id             String           @id @default(uuid())
+  title          String
+  description    String
+  status         IncidentStatus   @default(NEW)
+  priority       IncidentPriority @default(MEDIUM)
+  type           IncidentType     @default(COMPLAINT)
+  categoryId     String           @map("category_id")
+  subcategoryId  String?          @map("subcategory_id")
+  geozoneId      String?          @map("geozone_id")
+  organizationId String?          @map("organization_id")
+  lat            Float
+  lng            Float
+  address        String?
+  deadline       DateTime?
+  slaDueAt       DateTime?        @map("sla_due_at")
+  resolvedAt     DateTime?        @map("resolved_at")
+  createdById    String           @map("created_by")
+  assignedToId   String?          @map("assigned_to")
+  districtStatus DistrictStatus   @default(WITHIN_DISTRICT) @map("district_status")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  category     Category      @relation("IncidentCategory", fields: [categoryId], references: [id])
+  subcategory  Category?     @relation("IncidentSubcategory", fields: [subcategoryId], references: [id])
+  geozone      Geozone?      @relation(fields: [geozoneId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  createdBy    User          @relation("CreatedBy", fields: [createdById], references: [id])
+  assignedTo   User?         @relation("AssignedTo", fields: [assignedToId], references: [id])
+  history      IncidentHistory[]
+  attachments  Attachment[]
+  comments     IncidentComment[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([categoryId])
+  @@index([createdAt])
+  @@index([lat, lng])
+  @@index([geozoneId])
+  @@index([organizationId])
+  @@index([districtStatus])
+  @@map("incidents")
+}
+
+model IncidentHistory {
+  id          String            @id @default(uuid())
+  incidentId  String            @map("incident_id")
+  actionType  HistoryActionType @map("action_type")
+  oldValue    String?           @map("old_value")
+  newValue    String?           @map("new_value")
+  metadata    Json?
+  createdById String            @map("created_by")
+  createdAt   DateTime          @default(now()) @map("created_at")
+
+  incident  Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  createdBy User     @relation(fields: [createdById], references: [id])
+
+  @@index([incidentId])
+  @@map("incident_history")
+}
+
+model IncidentComment {
+  id         String   @id @default(uuid())
+  incidentId String   @map("incident_id")
+  authorId   String   @map("author_id")
+  body       String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  author   User     @relation(fields: [authorId], references: [id])
+
+  @@index([incidentId])
+  @@map("incident_comments")
+}
+
+model Attachment {
+  id         String         @id @default(uuid())
+  incidentId String         @map("incident_id")
+  fileUrl    String         @map("file_url")
+  fileName   String?        @map("file_name")
+  type       AttachmentType @default(PHOTO)
+  createdAt  DateTime       @default(now()) @map("created_at")
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId])
+  @@map("attachments")
+}
+
+model Geozone {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  geojson     Json
+  color       String   @default("#3b82f6")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  incidents     Incident[]
+  userAccess    UserGeozoneAccess[]
+  defaultUsers  User[]              @relation("UserDefaultGeozone")
+
+  @@map("geozones")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
+  action     String
+  resource   String
+  resourceId String?  @map("resource_id")
+  metadata   Json?
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
