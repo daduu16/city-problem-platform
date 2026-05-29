@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  fullName     String
+  email        String    @unique
+  phone        String    @unique
+  finCode      String
+  passwordHash String
+  emailVerified Boolean  @default(false)
+  verificationCode String?
+  verificationExpiresAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  problems     Problem[]
+}
+
+model News {
+  id          String   @id @default(cuid())
+  title       String
+  summary     String
+  description String
+  imageUrl    String
+  publishedAt DateTime
+  createdAt   DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model Problem {
+  id          String          @id @default(cuid())
+  title       String
+  description String
+  address     String
+  imageUrl    String?
+  status      String          @default("YENI")
+  priority    String
+  category    String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

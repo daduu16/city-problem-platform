@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "City Problem",
+    "slug": "city-problem",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Problem üçün şəkil çəkmək məqsədilə kameraya icazə tələb olunur.",
+        "NSPhotoLibraryUsageDescription": "Çəkilən şəkli müraciətə əlavə etmək üçün qalereyaya icazə tələb olunur.",
+        "NSLocationWhenInUseUsageDescription": "Mövcud mövqeyi avtomatik doldurmaq üçün lokasiya icazəsi tələb olunur."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Problem üçün şəkil çəkmək məqsədilə kameraya icazə tələb olunur.",
+          "photosPermission": "Çəkilən şəkli müraciətə əlavə etmək üçün qalereyaya icazə tələb olunur."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Mövcud mövqeyi avtomatik doldurmaq üçün lokasiya icazəsi tələb olunur."
+        }
+      ]
+    ],
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
