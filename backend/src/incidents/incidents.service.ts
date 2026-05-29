@@ -94,15 +94,27 @@ export class IncidentsService {
     return { items, total, page, limit };
   }
 
-  async findForMap(user: JwtPayload) {
+  private async findMapIncidents(
+    user: JwtPayload,
+    mode: 'active' | 'archived',
+  ) {
     const scope = await this.getScope(user);
     this.accessControl.requirePermission(scope, 'view_map');
 
     let where = this.accessControl.buildIncidentWhere(scope, user.sub);
-    where = this.accessControl.applyAnalystArchiveFilter(scope, where);
-    where = {
-      AND: [where, { districtStatus: DistrictStatus.WITHIN_DISTRICT }],
-    };
+
+    if (mode === 'archived') {
+      where = { AND: [where, { status: IncidentStatus.ARCHIVED }] };
+    } else {
+      where = this.accessControl.applyAnalystArchiveFilter(scope, where);
+      where = {
+        AND: [
+          where,
+          { status: { not: IncidentStatus.ARCHIVED } },
+          { districtStatus: DistrictStatus.WITHIN_DISTRICT },
+        ],
+      };
+    }
 
     const incidents = await this.prisma.incident.findMany({
       where,
@@ -127,6 +139,14 @@ export class IncidentsService {
     });
 
     return this.accessControl.filterMapIncidentsByLayers(scope, incidents);
+  }
+
+  findForMap(user: JwtPayload) {
+    return this.findMapIncidents(user, 'active');
+  }
+
+  findForArchivedMap(user: JwtPayload) {
+    return this.findMapIncidents(user, 'archived');
   }
 
   async findNearby(lat: number, lng: number, radiusMeters: number, user: JwtPayload) {

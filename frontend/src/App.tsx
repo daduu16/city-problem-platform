@@ -5,6 +5,7 @@ import { PermissionRoute } from '@/components/auth/PermissionRoute';
 import { LoginPage } from '@/pages/LoginPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { MapPage } from '@/pages/MapPage';
+import { ArchivedMapPage } from '@/pages/ArchivedMapPage';
 import { IncidentsPage } from '@/pages/IncidentsPage';
 import { AdminUsersPage } from '@/pages/AdminUsersPage';
 import { useRealtime } from '@/hooks/useRealtime';
@@ -50,6 +51,14 @@ function AuthenticatedApp() {
           element={
             <PermissionRoute permission="view_map">
               <MapPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="/map/archived"
+          element={
+            <PermissionRoute permission="view_map">
+              <ArchivedMapPage />
             </PermissionRoute>
           }
         />

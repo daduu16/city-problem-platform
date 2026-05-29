@@ -4,13 +4,16 @@ import {
   DistrictStatus,
   IncidentStatus,
   IncidentPriority,
-  IncidentType,
   HistoryActionType,
 } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import * as fs from 'fs';
 import * as path from 'path';
-import { CATEGORY_TREE, LEGACY_CATEGORY_MAP } from './seed-data/categories';
+import { CATEGORY_TREE } from './seed-data/categories';
+import {
+  buildDemoIncidents,
+  SEED_DESCRIPTION_TAG,
+} from './seed-data/demo-incidents';
 import {
   ANALYTICS_KEYS,
   MAP_LAYERS,
@@ -21,7 +24,7 @@ import {
 const prisma = new PrismaClient();
 
 const DEFAULT_PASSWORD = 'admin123';
-const DEMO_PREFIX = '[Nümunə]';
+const LEGACY_DEMO_PREFIXES = ['[Nümunə]', '[Демо]', '[Demo]'];
 
 type GeoJsonFeature = {
   type: string;
@@ -37,17 +40,16 @@ type GeoJsonFeatureCollection = {
 function loadNarimanovGeojson(): GeoJsonFeature {
   const filePath = path.join(
     __dirname,
-    '../../frontend/public/narimanov-rayon.geojson',
+    '../data/narimanov-district/boundary.geojson',
   );
   const collection = JSON.parse(
     fs.readFileSync(filePath, 'utf-8'),
   ) as GeoJsonFeatureCollection;
-  const feature = collection.features.find(
-    (f: GeoJsonFeature) =>
-      f.properties && (f.properties as { Name?: string }).Name === 'Narimanov',
-  );
+  const feature = collection.features[0];
   if (!feature) {
-    throw new Error('Narimanov feature not found in narimanov-rayon.geojson');
+    throw new Error(
+      'Narimanov boundary missing; run npm run district:extract in backend',
+    );
   }
   return feature;
 }
@@ -58,168 +60,25 @@ const GEOZONE_ID = '00000000-0000-4000-8000-000000000001';
 const MUNICIPALITY_ORG_ID = '00000000-0000-4000-8000-000000000010';
 const AZERIQAZ_ORG_ID = '00000000-0000-4000-8000-000000000011';
 
-type LegacyCategory = keyof typeof LEGACY_CATEGORY_MAP;
+function slaHours(priority: IncidentPriority): number {
+  switch (priority) {
+    case IncidentPriority.CRITICAL:
+      return 4;
+    case IncidentPriority.HIGH:
+      return 12;
+    case IncidentPriority.MEDIUM:
+      return 24;
+    default:
+      return 48;
+  }
+}
 
-const DEMO_INCIDENTS: Array<{
-  title: string;
-  description: string;
-  status: IncidentStatus;
-  priority: IncidentPriority;
-  legacyCategory: LegacyCategory;
-  type: IncidentType;
-  lat: number;
-  lng: number;
-  address: string;
-  assign?: boolean;
-  deadline?: Date;
-  slaDueAt?: Date;
-  resolvedAt?: Date;
-}> = [
-  {
-    title: `${DEMO_PREFIX} Su borusunda partlayış — Nərimanov pr.`,
-    description: 'Girişdə su sıxması. Təcili briqada ərazidədir.',
-    status: IncidentStatus.IN_PROGRESS,
-    priority: IncidentPriority.CRITICAL,
-    legacyCategory: 'WATER',
-    type: IncidentType.ACCIDENT,
-    lat: 40.4133,
-    lng: 49.8561,
-    address: 'Nərimanov pr., 87, Nərimanov r-n, Bakı',
-    assign: true,
-  },
-  {
-    title: `${DEMO_PREFIX} İşıq dirəkləri yanmır — Bəbək küç.`,
-    description: 'Həyətdə 5 işıq dirəyi işləmir. Yeni müraciət.',
-    status: IncidentStatus.NEW,
-    priority: IncidentPriority.MEDIUM,
-    legacyCategory: 'LIGHTING',
-    type: IncidentType.COMPLAINT,
-    lat: 40.4043,
-    lng: 49.8591,
-    address: 'Bəbək küç., 45, Nərimanov r-n, Bakı',
-  },
-  {
-    title: `${DEMO_PREFIX} Çuxur — Üzeyir Hacıbəyov küç.`,
-    description: 'Dərin çuxur. Zolağın bağlanması razılaşdırılır.',
-    status: IncidentStatus.PENDING,
-    priority: IncidentPriority.HIGH,
-    legacyCategory: 'ROADS',
-    type: IncidentType.COMPLAINT,
-    lat: 40.4153,
-    lng: 49.8491,
-    address: 'Üzeyir Hacıbəyov küç., 12, Nərimanov r-n, Bakı',
-    assign: true,
-  },
-  {
-    title: `${DEMO_PREFIX} Qaz qoxusu — Təbriz Xanım küç.`,
-    description: 'Sakinlər qaz qoxusu barədə məlumat verib. SLA gecikib.',
-    status: IncidentStatus.OVERDUE,
-    priority: IncidentPriority.CRITICAL,
-    legacyCategory: 'GAS',
-    type: IncidentType.EMERGENCY,
-    lat: 40.4023,
-    lng: 49.8481,
-    address: 'Təbriz Xanım küç., 28, Nərimanov r-n, Bakı',
-    deadline: new Date(Date.now() - 86400000),
-    slaDueAt: new Date(Date.now() - 43200000),
-  },
-  {
-    title: `${DEMO_PREFIX} Tullantı daşınıb — Gənclik mkr.`,
-    description: 'Konteynerlər boşaldılıb, müraciət bağlanıb.',
-    status: IncidentStatus.RESOLVED,
-    priority: IncidentPriority.LOW,
-    legacyCategory: 'WASTE',
-    type: IncidentType.COMPLAINT,
-    lat: 40.4123,
-    lng: 49.8611,
-    address: 'Gənclik mkr., 15, Nərimanov r-n, Bakı',
-    resolvedAt: new Date(Date.now() - 3600000),
-  },
-  {
-    title: `${DEMO_PREFIX} Kabel zədələnib — Nərimanov m.`,
-    description: 'Qismən elektrik kəsintisi. Təmir davam edir.',
-    status: IncidentStatus.IN_PROGRESS,
-    priority: IncidentPriority.HIGH,
-    legacyCategory: 'ELECTRICITY',
-    type: IncidentType.ACCIDENT,
-    lat: 40.4063,
-    lng: 49.8551,
-    address: 'Nərimanov pr., 202, Nərimanov m. yaxınlığı, Bakı',
-    assign: true,
-  },
-  {
-    title: `${DEMO_PREFIX} Kafedən səs-küy (arxiv)`,
-    description: 'Yoxlama aparılıb, qərar verilib. İş arxivləşdirilib.',
-    status: IncidentStatus.ARCHIVED,
-    priority: IncidentPriority.LOW,
-    legacyCategory: 'OTHER',
-    type: IncidentType.COMPLAINT,
-    lat: 40.4083,
-    lng: 49.8521,
-    address: 'Axmed Rəcəbli küç., 8, Nərimanov r-n, Bakı',
-    resolvedAt: new Date(Date.now() - 86400000 * 30),
-  },
-  {
-    title: `${DEMO_PREFIX} Uşaq meydançası — yoxlama`,
-    description: 'Sınmış yellənçək, müfəttiş yoxlaması lazımdır.',
-    status: IncidentStatus.NEW,
-    priority: IncidentPriority.MEDIUM,
-    legacyCategory: 'OTHER',
-    type: IncidentType.INSPECTION,
-    lat: 40.411,
-    lng: 49.8505,
-    address: 'Akademik Xanəli Rzaev küç., 3, Nərimanov r-n, Bakı',
-  },
-  {
-    title: `${DEMO_PREFIX} Qapaqsız manhole — Nərimanov pr.`,
-    description: 'Təhlükəli manhole. Anbar qapağının gözlənilməsi.',
-    status: IncidentStatus.PENDING,
-    priority: IncidentPriority.HIGH,
-    legacyCategory: 'ROADS',
-    type: IncidentType.EMERGENCY,
-    lat: 40.4105,
-    lng: 49.854,
-    address: 'Nərimanov pr., 156, Nərimanov r-n, Bakı',
-    assign: true,
-  },
-  {
-    title: `${DEMO_PREFIX} Pilləkən işıqları dəyişdirilib`,
-    description: 'Bütün lampalar dəyişilib, akt imzalanıb.',
-    status: IncidentStatus.RESOLVED,
-    priority: IncidentPriority.LOW,
-    legacyCategory: 'LIGHTING',
-    type: IncidentType.COMPLAINT,
-    lat: 40.4078,
-    lng: 49.8575,
-    address: 'Bəbək küç., 102, Nərimanov r-n, Bakı',
-    resolvedAt: new Date(),
-  },
-  {
-    title: `${DEMO_PREFIX} Su sayğacı yoxlaması gecikib`,
-    description: 'Planlı yoxlama vaxtı keçib.',
-    status: IncidentStatus.OVERDUE,
-    priority: IncidentPriority.MEDIUM,
-    legacyCategory: 'WATER',
-    type: IncidentType.INSPECTION,
-    lat: 40.4055,
-    lng: 49.8518,
-    address: 'Hüseyn Cəbbar küç., 22, Nərimanov r-n, Bakı',
-    slaDueAt: new Date(Date.now() - 7200000),
-    assign: true,
-  },
-  {
-    title: `${DEMO_PREFIX} Sıradan çıxmış işıqfor (arxiv)`,
-    description: 'Keçən rübdə təmir edilib.',
-    status: IncidentStatus.ARCHIVED,
-    priority: IncidentPriority.HIGH,
-    legacyCategory: 'ROADS',
-    type: IncidentType.ACCIDENT,
-    lat: 40.414,
-    lng: 49.8488,
-    address: 'Nərimanov küç., 5, Nərimanov r-n, Bakı',
-    resolvedAt: new Date(Date.now() - 86400000 * 60),
-  },
-];
+function createdAtFromDaysAgo(daysAgo: number): Date {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  d.setHours(8 + (daysAgo % 10), (daysAgo * 7) % 60, 0, 0);
+  return d;
+}
 
 async function seedCategories(): Promise<Map<string, string>> {
   const keyToId = new Map<string, string>();
@@ -518,35 +377,63 @@ async function main() {
     }
   }
 
+  const demoIncidents = buildDemoIncidents();
+
+  await prisma.incidentComment.deleteMany({
+    where: { incident: { description: { contains: SEED_DESCRIPTION_TAG } } },
+  });
+  await prisma.incidentHistory.deleteMany({
+    where: { incident: { description: { contains: SEED_DESCRIPTION_TAG } } },
+  });
+  await prisma.attachment.deleteMany({
+    where: { incident: { description: { contains: SEED_DESCRIPTION_TAG } } },
+  });
   await prisma.incident.deleteMany({
     where: {
       OR: [
-        { title: { startsWith: DEMO_PREFIX } },
-        { title: { startsWith: '[Демо]' } },
-        { title: { startsWith: '[Demo]' } },
+        { description: { contains: SEED_DESCRIPTION_TAG } },
+        ...LEGACY_DEMO_PREFIXES.map((prefix) => ({
+          title: { startsWith: prefix },
+        })),
       ],
     },
   });
 
-  for (const demo of DEMO_INCIDENTS) {
-    const categoryKey = LEGACY_CATEGORY_MAP[demo.legacyCategory];
-    const categoryId = categoryKeyToId.get(categoryKey);
-    if (!categoryId) continue;
+  let seededCount = 0;
 
-    const isGas = demo.legacyCategory === 'GAS';
-    const slaDueAt =
-      demo.slaDueAt ??
-      new Date(
-        Date.now() +
-          (demo.priority === IncidentPriority.CRITICAL
-            ? 4
-            : demo.priority === IncidentPriority.HIGH
-              ? 12
-              : 24) *
-            3600000,
-      );
+  for (const demo of demoIncidents) {
+    const categoryId = categoryKeyToId.get(demo.categoryKey);
+    if (!categoryId) {
+      console.warn(`Skip seed incident — unknown category: ${demo.categoryKey}`);
+      continue;
+    }
 
-    const districtStatus = await resolveDistrictStatus(demo.lat, demo.lng);
+    const createdAt = createdAtFromDaysAgo(demo.daysAgo);
+    const slaDueAt = new Date(
+      createdAt.getTime() + slaHours(demo.priority) * 3600000,
+    );
+
+    let districtStatus =
+      demo.districtStatus ??
+      (await resolveDistrictStatus(demo.lat, demo.lng));
+
+    if (demo.districtStatus === DistrictStatus.OUTSIDE_DISTRICT) {
+      districtStatus = DistrictStatus.OUTSIDE_DISTRICT;
+    }
+
+    const isResolved =
+      demo.status === IncidentStatus.RESOLVED ||
+      demo.status === IncidentStatus.ARCHIVED;
+    const isOverdue = demo.status === IncidentStatus.OVERDUE;
+
+    const resolvedAt = isResolved
+      ? new Date(createdAt.getTime() + 8 * 3600000)
+      : undefined;
+
+    const effectiveSlaDueAt = isOverdue
+      ? new Date(Date.now() - 3 * 3600000)
+      : slaDueAt;
+
     const incident = await prisma.incident.create({
       data: {
         title: demo.title,
@@ -558,25 +445,56 @@ async function main() {
         lat: demo.lat,
         lng: demo.lng,
         address: demo.address,
-        geozoneId: districtStatus === DistrictStatus.WITHIN_DISTRICT ? GEOZONE_ID : null,
+        geozoneId:
+          districtStatus === DistrictStatus.WITHIN_DISTRICT ? GEOZONE_ID : null,
         districtStatus,
-        organizationId: isGas ? AZERIQAZ_ORG_ID : MUNICIPALITY_ORG_ID,
-        deadline: demo.deadline,
-        slaDueAt,
-        resolvedAt: demo.resolvedAt,
+        organizationId:
+          demo.organization === 'azeriqaz'
+            ? AZERIQAZ_ORG_ID
+            : MUNICIPALITY_ORG_ID,
+        slaDueAt: effectiveSlaDueAt,
+        deadline: isOverdue ? effectiveSlaDueAt : undefined,
+        resolvedAt,
         assignedToId: demo.assign ? executor.id : undefined,
         createdById: dispatcher.id,
+        createdAt,
+        updatedAt: resolvedAt ?? createdAt,
       },
     });
 
-    await prisma.incidentHistory.create({
-      data: {
-        incidentId: incident.id,
-        actionType: HistoryActionType.CREATED,
-        newValue: incident.status,
-        createdById: dispatcher.id,
-      },
-    });
+    seededCount++;
+
+    const historyEntries = demo.history ?? [
+      { actionType: HistoryActionType.CREATED, newValue: demo.status },
+    ];
+
+    for (const entry of historyEntries) {
+      await prisma.incidentHistory.create({
+        data: {
+          incidentId: incident.id,
+          actionType: entry.actionType,
+          oldValue: entry.oldValue,
+          newValue: entry.newValue,
+          createdById: dispatcher.id,
+          createdAt: new Date(createdAt.getTime() + 60000),
+        },
+      });
+    }
+
+    if (demo.comments?.length) {
+      for (let i = 0; i < demo.comments.length; i++) {
+        await prisma.incidentComment.create({
+          data: {
+            incidentId: incident.id,
+            authorId: i % 2 === 0 ? executor.id : dispatcher.id,
+            body: demo.comments[i],
+            createdAt: new Date(
+              createdAt.getTime() + (i + 1) * 3600000,
+            ),
+          },
+        });
+      }
+    }
 
     if (districtStatus === DistrictStatus.OUTSIDE_DISTRICT) {
       await prisma.auditLog.create({
@@ -591,49 +509,8 @@ async function main() {
     }
   }
 
-  const outsideCategoryId = categoryKeyToId.get('street_dirt');
-  if (outsideCategoryId) {
-    const outsideLat = 40.365;
-    const outsideLng = 49.92;
-    const outsideIncident = await prisma.incident.create({
-      data: {
-        title: `${DEMO_PREFIX} Rayon xaricində zibillik — Bayıl`,
-        description: 'Koordinatlar Nərimanov rayonu sərhədinin kənarındadır.',
-        status: IncidentStatus.NEW,
-        priority: IncidentPriority.MEDIUM,
-        categoryId: outsideCategoryId,
-        type: IncidentType.COMPLAINT,
-        lat: outsideLat,
-        lng: outsideLng,
-        address: 'Bayıl, Bakı (rayon xaricində)',
-        districtStatus: DistrictStatus.OUTSIDE_DISTRICT,
-        geozoneId: null,
-        organizationId: MUNICIPALITY_ORG_ID,
-        slaDueAt: new Date(Date.now() + 24 * 3600000),
-        createdById: dispatcher.id,
-      },
-    });
-    await prisma.incidentHistory.create({
-      data: {
-        incidentId: outsideIncident.id,
-        actionType: HistoryActionType.CREATED,
-        newValue: outsideIncident.status,
-        createdById: dispatcher.id,
-      },
-    });
-    await prisma.auditLog.create({
-      data: {
-        userId: dispatcher.id,
-        action: 'INCIDENT_OUTSIDE_DISTRICT',
-        resource: 'incident',
-        resourceId: outsideIncident.id,
-        metadata: { lat: outsideLat, lng: outsideLng, seed: true },
-      },
-    });
-  }
-
   console.log(
-    `Seed complete: ${DEMO_INCIDENTS.length + 1} demo incidents, ${users.length} users. Password: ${DEFAULT_PASSWORD}`,
+    `Seed complete: ${seededCount} incidents, ${users.length} users. Password: ${DEFAULT_PASSWORD}`,
   );
   console.log(`Azeriqaz demo: azeriqaz@municipal.local / ${DEFAULT_PASSWORD}`);
 }

@@ -9,6 +9,8 @@ import { UsersModule } from './users/users.module';
 import { IncidentsModule } from './incidents/incidents.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { GeozonesModule } from './geozones/geozones.module';
+import { DistrictsModule } from './districts/districts.module';
+import { PlacesModule } from './places/places.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { AdminModule } from './admin/admin.module';
 import { AuditModule } from './audit/audit.module';
@@ -32,6 +34,8 @@ import { NotificationModule } from './notifications/notification.module';
     IncidentsModule,
     AnalyticsModule,
     GeozonesModule,
+    PlacesModule,
+    DistrictsModule,
     RealtimeModule,
     AdminModule,
     AuditModule,

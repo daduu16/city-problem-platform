@@ -1,5 +1,6 @@
 import osmtogeojson from 'osmtogeojson';
 import type { BuildingLegendId } from '@/lib/buildingTypeStyles';
+import { getOsmFeatureId } from '@/lib/matchPlacesToBuildings';
 
 export interface Bbox {
   south: number;
@@ -172,6 +173,7 @@ export async function fetchOsmBuildingsGeoJson(
       properties: {
         buildingType: normalizeBuildingType(buildingTag),
         height: estimateBuildingHeightMeters(props),
+        osmId: getOsmFeatureId(feature) ?? undefined,
       },
     });
   }

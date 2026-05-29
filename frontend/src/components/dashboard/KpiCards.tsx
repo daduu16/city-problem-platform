@@ -3,22 +3,22 @@ import { az } from '@/i18n/az';
 import { AlertTriangle, Clock, PlusCircle, Percent, Wrench, Zap } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
-type Accent = 'blue' | 'red' | 'amber' | 'violet' | 'orange' | 'emerald';
+type KpiAccent = 'blue' | 'red' | 'amber' | 'violet' | 'orange' | 'emerald';
 
-const ACCENTS: Record<Accent, string> = {
-  blue: 'bg-blue-500/12 text-blue-400 ring-blue-500/20',
-  red: 'bg-red-500/12 text-red-400 ring-red-500/20',
-  amber: 'bg-amber-500/12 text-amber-400 ring-amber-500/20',
-  violet: 'bg-violet-500/12 text-violet-400 ring-violet-500/20',
-  orange: 'bg-orange-500/12 text-orange-400 ring-orange-500/20',
-  emerald: 'bg-emerald-500/12 text-emerald-400 ring-emerald-500/20',
+const KPI_ICON: Record<KpiAccent, string> = {
+  blue: 'bg-sky-500/15 text-sky-400 ring-1 ring-sky-500/25',
+  red: 'bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/25',
+  amber: 'bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/25',
+  violet: 'bg-violet-500/15 text-violet-400 ring-1 ring-violet-500/25',
+  orange: 'bg-orange-500/15 text-orange-400 ring-1 ring-orange-500/25',
+  emerald: 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25',
 };
 
 const cards: Array<{
   key: keyof DashboardKpis;
   label: string;
   icon: typeof Zap;
-  accent: Accent;
+  accent: KpiAccent;
   suffix?: string;
 }> = [
   { key: 'activeProblems', label: az.dashboard.kpiActive, icon: Zap, accent: 'blue' },
@@ -41,10 +41,10 @@ export function KpiCards({ data }: { data: DashboardKpis }) {
       {cards.map(({ key, label, icon: Icon, accent, suffix }) => (
         <Card
           key={key}
-          className="group relative overflow-hidden p-4 transition-all duration-200 hover:border-border/80 hover:shadow-lg hover:shadow-black/20"
+          className="group relative overflow-hidden border-border bg-card p-4 shadow-sm transition-colors hover:bg-accent/30"
         >
           <div
-            className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg ring-1 ${ACCENTS[accent]}`}
+            className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg ${KPI_ICON[accent]}`}
           >
             <Icon className="h-[18px] w-[18px]" />
           </div>

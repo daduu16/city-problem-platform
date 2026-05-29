@@ -3,6 +3,8 @@ import { Marker, useMap } from 'react-map-gl/maplibre';
 import type { Map as MaplibreMap } from 'maplibre-gl';
 import type { MapIncident } from '@/types';
 import { statusMarkerHtml } from '@/lib/incidentStyles';
+import { typeMarkerHtml } from '@/lib/incidentTypeStyles';
+import type { IncidentMarkerMode } from '@/stores/mapStore';
 
 const INCIDENTS_SOURCE = 'incidents';
 
@@ -56,6 +58,7 @@ function useVisibleIncidentIds(
 
 interface Props {
   incidents: MapIncident[];
+  markerMode?: IncidentMarkerMode;
   showClusters: boolean;
   onIncidentClick: (id: string) => void;
 }
@@ -63,6 +66,7 @@ interface Props {
 /** DOM markers drawn above the 3D canvas (not occluded by buildings). */
 export function IncidentMarkers3D({
   incidents,
+  markerMode = 'status',
   showClusters,
   onIncidentClick,
 }: Props) {
@@ -89,7 +93,10 @@ export function IncidentMarkers3D({
             <div
               className="incident-marker-wrapper"
               dangerouslySetInnerHTML={{
-                __html: statusMarkerHtml(i.status),
+                __html:
+                  markerMode === 'type'
+                    ? typeMarkerHtml(i.type)
+                    : statusMarkerHtml(i.status),
               }}
             />
           </Marker>

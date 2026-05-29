@@ -1,6 +1,9 @@
+import { useMemo } from 'react';
 import { az } from '@/i18n/az';
+import { countIncidentsByLayer } from '@/lib/mapIncidentCounts';
 import { useAuthStore, MAP_LAYER_TO_ACCESS } from '@/stores/authStore';
 import { useMapStore, type MapLayerKey } from '@/stores/mapStore';
+import type { MapIncident } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -10,16 +13,23 @@ import { Box, Map } from 'lucide-react';
 
 const layerKeys = Object.keys(az.map.layers) as MapLayerKey[];
 
-export function MapControls() {
+type Props = {
+  incidents: MapIncident[];
+  showPlacesToggle?: boolean;
+};
+
+export function MapControls({ incidents, showPlacesToggle = true }: Props) {
   const hasMapLayer = useAuthStore((s) => s.hasMapLayer);
   const {
     viewMode,
     setViewMode,
     showHeatmap,
     showClusters,
+    showPlaces,
     layers,
     setShowHeatmap,
     setShowClusters,
+    setShowPlaces,
     toggleLayer,
   } = useMapStore();
 
@@ -27,6 +37,11 @@ export function MapControls() {
     const accessKey = MAP_LAYER_TO_ACCESS[key];
     return !accessKey || hasMapLayer(accessKey);
   });
+
+  const layerCounts = useMemo(
+    () => countIncidentsByLayer(incidents, layerKeys),
+    [incidents],
+  );
 
   return (
     <Card className="w-full border-border/80 bg-card/95 shadow-lg backdrop-blur">
@@ -82,6 +97,18 @@ export function MapControls() {
             {az.map.heatmap}
           </Label>
         </div>
+        {showPlacesToggle && (
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="places"
+              checked={showPlaces}
+              onCheckedChange={(v) => setShowPlaces(v === true)}
+            />
+            <Label htmlFor="places" className="cursor-pointer text-sm font-normal">
+              {az.map.showPlaces}
+            </Label>
+          </div>
+        )}
         <Separator />
         <div className="space-y-2">
           {visibleLayers.map((key) => (
@@ -93,9 +120,12 @@ export function MapControls() {
               />
               <Label
                 htmlFor={`layer-${key}`}
-                className="cursor-pointer text-sm font-normal"
+                className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 text-sm font-normal"
               >
-                {az.map.layers[key]}
+                <span className="truncate">{az.map.layers[key]}</span>
+                <span className="shrink-0 tabular-nums text-muted-foreground">
+                  {layerCounts[key]}
+                </span>
               </Label>
             </div>
           ))}

@@ -1,5 +1,14 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Map, List, LogOut, PanelLeftClose, PanelLeftOpen, Settings } from 'lucide-react';
+import {
+  Archive,
+  LayoutDashboard,
+  Map,
+  List,
+  LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Settings,
+} from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useUiStore } from '@/stores/uiStore';
 import { az } from '@/i18n/az';
@@ -15,6 +24,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const nav = [
     { to: '/', label: az.nav.dashboard, icon: LayoutDashboard, permission: 'view_dashboard' },
     { to: '/map', label: az.nav.map, icon: Map, permission: 'view_map' },
+    {
+      to: '/map/archived',
+      label: az.nav.archivedMap,
+      icon: Archive,
+      permission: 'view_map',
+    },
     { to: '/incidents', label: az.nav.incidents, icon: List, permission: 'view_incidents' },
     ...(can('manage_users')
       ? [{ to: '/admin/users', label: az.nav.admin, icon: Settings, permission: 'manage_users' }]
@@ -62,7 +77,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <NavLink
               key={to}
               to={to}
-              end={to === '/'}
+              end={to === '/' || to === '/map'}
               title={sidebarCollapsed ? label : undefined}
               className={({ isActive }) =>
                 cn(

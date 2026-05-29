@@ -1,9 +1,17 @@
 import { az } from '@/i18n/az';
+import { MAP_STATUS_COLORS } from '@/lib/mapPalette';
 import type { IncidentPriority, IncidentStatus } from '@/types';
+
+const badgeMuted =
+  'border-border/60 bg-secondary/60 text-secondary-foreground font-normal';
 
 export interface StatusStyle {
   label: string;
+  /** Table dot, dashboard status chart */
   color: string;
+  /** 2D / 3D map markers and map legend */
+  mapColor: string;
+  mapBorder: string;
   bg: string;
   border: string;
   badgeClass: string;
@@ -15,60 +23,66 @@ export const STATUS_STYLES: Record<IncidentStatus, StatusStyle> = {
   NEW: {
     label: az.status.NEW,
     color: '#f59e0b',
+    mapColor: MAP_STATUS_COLORS.NEW.fill,
+    mapBorder: MAP_STATUS_COLORS.NEW.border,
     bg: 'rgba(245, 158, 11, 0.18)',
     border: '#fbbf24',
-    badgeClass:
-      'bg-amber-500/20 text-amber-300 border-amber-400/60 ring-1 ring-amber-400/30',
+    badgeClass: badgeMuted,
     rowClass: 'incident-row-new',
     markerClass: 'status-marker-new',
   },
   IN_PROGRESS: {
     label: az.status.IN_PROGRESS,
     color: '#3b82f6',
+    mapColor: MAP_STATUS_COLORS.IN_PROGRESS.fill,
+    mapBorder: MAP_STATUS_COLORS.IN_PROGRESS.border,
     bg: 'rgba(59, 130, 246, 0.18)',
     border: '#60a5fa',
-    badgeClass:
-      'bg-blue-500/20 text-blue-300 border-blue-400/60 ring-1 ring-blue-400/40',
+    badgeClass: badgeMuted,
     rowClass: 'incident-row-in-progress',
     markerClass: 'status-marker-in-progress',
   },
   PENDING: {
     label: az.status.PENDING,
     color: '#a855f7',
+    mapColor: MAP_STATUS_COLORS.PENDING.fill,
+    mapBorder: MAP_STATUS_COLORS.PENDING.border,
     bg: 'rgba(168, 85, 247, 0.18)',
     border: '#c084fc',
-    badgeClass:
-      'bg-violet-500/20 text-violet-300 border-violet-400/60 ring-1 ring-violet-400/30',
+    badgeClass: badgeMuted,
     rowClass: 'incident-row-pending',
     markerClass: 'status-marker-pending',
   },
   RESOLVED: {
     label: az.status.RESOLVED,
     color: '#22c55e',
+    mapColor: MAP_STATUS_COLORS.RESOLVED.fill,
+    mapBorder: MAP_STATUS_COLORS.RESOLVED.border,
     bg: 'rgba(34, 197, 94, 0.18)',
     border: '#4ade80',
-    badgeClass:
-      'bg-emerald-500/20 text-emerald-300 border-emerald-400/60 ring-1 ring-emerald-400/30',
+    badgeClass: badgeMuted,
     rowClass: 'incident-row-resolved',
     markerClass: 'status-marker-resolved',
   },
   OVERDUE: {
     label: az.status.OVERDUE,
     color: '#ef4444',
+    mapColor: MAP_STATUS_COLORS.OVERDUE.fill,
+    mapBorder: MAP_STATUS_COLORS.OVERDUE.border,
     bg: 'rgba(239, 68, 68, 0.22)',
     border: '#f87171',
-    badgeClass:
-      'bg-red-500/25 text-red-300 border-red-400/70 ring-2 ring-red-500/50 font-semibold',
+    badgeClass: `${badgeMuted} border-destructive/30 bg-destructive/10 text-destructive-foreground`,
     rowClass: 'incident-row-overdue',
     markerClass: 'status-marker-overdue',
   },
   ARCHIVED: {
     label: az.status.ARCHIVED,
     color: '#94a3b8',
+    mapColor: MAP_STATUS_COLORS.ARCHIVED.fill,
+    mapBorder: MAP_STATUS_COLORS.ARCHIVED.border,
     bg: 'rgba(148, 163, 184, 0.12)',
     border: '#64748b',
-    badgeClass:
-      'bg-slate-500/15 text-slate-400 border-slate-500/50 line-through decoration-slate-500',
+    badgeClass: `${badgeMuted} opacity-70 line-through decoration-muted-foreground`,
     rowClass: 'incident-row-archived',
     markerClass: 'status-marker-archived',
   },
@@ -81,22 +95,23 @@ export const PRIORITY_STYLES: Record<
   CRITICAL: {
     label: az.priority.CRITICAL,
     color: '#ef4444',
-    badgeClass: 'bg-red-600/30 text-red-200 border-red-500/70 font-semibold',
+    badgeClass:
+      'border-destructive/30 bg-destructive/10 text-destructive-foreground font-medium',
   },
   HIGH: {
     label: az.priority.HIGH,
     color: '#f97316',
-    badgeClass: 'bg-orange-500/20 text-orange-300 border-orange-400/50',
+    badgeClass: badgeMuted,
   },
   MEDIUM: {
     label: az.priority.MEDIUM,
     color: '#eab308',
-    badgeClass: 'bg-yellow-500/15 text-yellow-200 border-yellow-500/40',
+    badgeClass: badgeMuted,
   },
   LOW: {
     label: az.priority.LOW,
     color: '#22c55e',
-    badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
+    badgeClass: badgeMuted,
   },
 };
 
@@ -110,10 +125,15 @@ export function getPriorityStyle(priority: IncidentPriority) {
 
 export const ALL_STATUSES = Object.keys(STATUS_STYLES) as IncidentStatus[];
 
+/** Statuses shown on the active (non-archived) map legend */
+export const ACTIVE_MAP_STATUSES = ALL_STATUSES.filter(
+  (s) => s !== 'ARCHIVED',
+);
+
 /** Marker HTML per status — shape + color distinguish states on the map */
 export function statusMarkerHtml(status: IncidentStatus): string {
   const s = getStatusStyle(status);
-  const base = `background:${s.color};border:2px solid ${s.border};box-shadow:0 1px 6px rgba(0,0,0,.5);`;
+  const base = `background:${s.mapColor};border:2px solid ${s.mapBorder};box-shadow:0 1px 6px rgba(0,0,0,.55);`;
 
   switch (status) {
     case 'PENDING':

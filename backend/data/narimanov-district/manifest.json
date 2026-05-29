@@ -1,0 +1,26 @@
+{
+  "district": "Narimanov",
+  "districtAz": "Nərimanov",
+  "city": "Baku",
+  "areaKm2": 20.475270978879298,
+  "perimeterKmEstimate": 27.891199472661523,
+  "vertexCount": 622,
+  "lastUpdated": "2026-05-29T21:03:00.755Z",
+  "sourceFile": "narimanov-rayon.geojson",
+  "properties": {
+    "OBJECTID": 349,
+    "Name_AZ": "Nərimanov",
+    "Name": "Narimanov",
+    "PARENT_ID": "10",
+    "Code_OSM": "1204",
+    "Name_RU": "Нариманов",
+    "Area": 20.475270978879298,
+    "Shape_Leng": 0.270269871508,
+    "Shape_Le_1": 0.270269871508,
+    "ID": 1008,
+    "Shape_Le_2": 0.270269871508,
+    "Shape_Length": 0.28449011083448117,
+    "Shape_Area": 0.002172401526306703,
+    "Upper_case": "NƏRİMANOV"
+  }
+}

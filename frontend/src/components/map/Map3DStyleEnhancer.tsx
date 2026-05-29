@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
 import type { Map as MaplibreMap } from 'maplibre-gl';
 import { TYPED_BUILDINGS_LAYER_ID } from '@/components/map/TypedBuildings3D';
+import { INSTITUTION_BUILDINGS_LAYER_ID } from '@/components/map/InstitutionBuildings3D';
 
 const OVERLAY_LAYER_IDS = [
   'incident-heatmap',
@@ -10,6 +11,7 @@ const OVERLAY_LAYER_IDS = [
   'district-fill',
   'district-outline',
   TYPED_BUILDINGS_LAYER_ID,
+  INSTITUTION_BUILDINGS_LAYER_ID,
 ] as const;
 
 function setLayoutIfLayer(

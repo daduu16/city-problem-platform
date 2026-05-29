@@ -75,6 +75,42 @@ nginx/             Reverse proxy (production)
 - **Realtime** — Socket.IO (`incident:*` events)
 - **RBAC** — ADMIN, DISPATCHER, EXECUTOR, ANALYST, MOBILE_INSPECTOR
 
+### Narimanov district boundary (area + polygon)
+
+Extracted from `frontend/azrbaycan_rayonlar.geojson` into `backend/data/narimanov-district/` (`boundary.geojson`, `manifest.json` with area km², perimeter, vertex count).
+
+```bash
+cd backend
+npm run district:extract
+```
+
+API (JWT + `view_map`):
+
+- `GET /districts/narimanov` — polygon + `positions` + area metadata
+- `GET /districts/narimanov/manifest` — summary only
+
+### Narimanov places (GeoJSON by TYPE)
+
+Objects for **Nərimanov** district are extracted from `frontend/azrbaycanda_obyektlr_v_mkanlar.geojson` into `backend/data/narimanov-places/` (one file per `TYPE` + `all.geojson` + `manifest.json`).
+
+```bash
+cd backend
+npm run places:extract
+```
+
+API (JWT + `view_map`):
+
+- `GET /places/narimanov` — all points
+- `GET /places/narimanov/manifest` — types and counts
+- `GET /places/narimanov/types/:type` — e.g. `HOSPITAL`, `SCHOOL`
+
+Annual refresh: cron **1 January 03:00 UTC** (`OpenDataRefreshScheduler`) for district + places. Set `DISTRICT_SOURCE_URL` / `PLACES_SOURCE_URL` in `.env` to download new datasets before re-extracting.
+
+```bash
+cd backend
+npm run opendata:extract   # district + places
+```
+
 ### PostGIS
 
 Migration `0002_postgis` enables spatial queries (radius search, intersections). Prisma stores `lat`/`lng`; raw SQL uses `location` geometry column.

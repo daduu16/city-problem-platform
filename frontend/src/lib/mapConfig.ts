@@ -1,8 +1,11 @@
+import { MAP_DISTRICT_COLOR } from '@/lib/mapPalette';
+
 /** Narimanov district (Baku) — demo map center */
+/** Default zoom ≥ minZoomForBuildings so 3D extrusions are visible. */
 export const NARIMANOV_CENTER = {
   lat: 40.4093,
   lng: 49.8531,
-  zoom: 14,
+  zoom: 15,
 } as const;
 
 /** Minimal base map: roads/water only, no place or street labels (no API key) */
@@ -23,10 +26,10 @@ export const MAP_3D_VIEW = {
   minZoomForBuildings: 14,
 } as const;
 
-/** Blue highlight for the active district boundary */
+/** District boundary highlight (2D + 3D) */
 export const DISTRICT_HIGHLIGHT = {
-  color: '#2563eb',
-  fillOpacity: 0.1,
+  color: MAP_DISTRICT_COLOR,
+  fillOpacity: 0.12,
   lineWidth: 2.5,
 } as const;
 

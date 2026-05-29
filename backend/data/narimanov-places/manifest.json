@@ -1,0 +1,266 @@
+{
+  "district": "Narimanov",
+  "districtAz": "Nərimanov",
+  "city": "Baku",
+  "featureCount": 1297,
+  "typeCount": 51,
+  "lastUpdated": "2026-05-29T21:02:49.465Z",
+  "sourceFile": "azrbaycanda_obyektlr_v_mkanlar.geojson",
+  "types": [
+    {
+      "type": "AUTO_REPAIR",
+      "count": 27,
+      "file": "by-type/AUTO_REPAIR.geojson"
+    },
+    {
+      "type": "BANK",
+      "count": 122,
+      "file": "by-type/BANK.geojson"
+    },
+    {
+      "type": "CHANNEL",
+      "count": 4,
+      "file": "by-type/CHANNEL.geojson"
+    },
+    {
+      "type": "CLOTHING_RETAIL",
+      "count": 26,
+      "file": "by-type/CLOTHING_RETAIL.geojson"
+    },
+    {
+      "type": "COMMUNICATION_SERVICES",
+      "count": 3,
+      "file": "by-type/COMMUNICATION_SERVICES.geojson"
+    },
+    {
+      "type": "COMMUNITY_CENTER",
+      "count": 2,
+      "file": "by-type/COMMUNITY_CENTER.geojson"
+    },
+    {
+      "type": "COURTHOUSE",
+      "count": 8,
+      "file": "by-type/COURTHOUSE.geojson"
+    },
+    {
+      "type": "CUSTOMIZABLE_POINT_1",
+      "count": 5,
+      "file": "by-type/CUSTOMIZABLE_POINT_1.geojson"
+    },
+    {
+      "type": "CUSTOMIZABLE_POINT_2",
+      "count": 14,
+      "file": "by-type/CUSTOMIZABLE_POINT_2.geojson"
+    },
+    {
+      "type": "CUSTOMIZABLE_POINT_3",
+      "count": 32,
+      "file": "by-type/CUSTOMIZABLE_POINT_3.geojson"
+    },
+    {
+      "type": "CUSTOMIZABLE_POINT_4",
+      "count": 21,
+      "file": "by-type/CUSTOMIZABLE_POINT_4.geojson"
+    },
+    {
+      "type": "CUSTOMIZABLE_POINT_5",
+      "count": 14,
+      "file": "by-type/CUSTOMIZABLE_POINT_5.geojson"
+    },
+    {
+      "type": "CUSTOMIZABLE_POINT_6",
+      "count": 6,
+      "file": "by-type/CUSTOMIZABLE_POINT_6.geojson"
+    },
+    {
+      "type": "CUSTOMIZABLE_POINT_7",
+      "count": 9,
+      "file": "by-type/CUSTOMIZABLE_POINT_7.geojson"
+    },
+    {
+      "type": "DEPARTMENT_STORE",
+      "count": 18,
+      "file": "by-type/DEPARTMENT_STORE.geojson"
+    },
+    {
+      "type": "FIRE_DEPT",
+      "count": 1,
+      "file": "by-type/FIRE_DEPT.geojson"
+    },
+    {
+      "type": "FITNESS_CENTER",
+      "count": 6,
+      "file": "by-type/FITNESS_CENTER.geojson"
+    },
+    {
+      "type": "GAS_STATION",
+      "count": 8,
+      "file": "by-type/GAS_STATION.geojson"
+    },
+    {
+      "type": "GOV_OFFICE",
+      "count": 33,
+      "file": "by-type/GOV_OFFICE.geojson"
+    },
+    {
+      "type": "GROCERY_STORE",
+      "count": 184,
+      "file": "by-type/GROCERY_STORE.geojson"
+    },
+    {
+      "type": "HOME_AND_GARDEN_STORE",
+      "count": 1,
+      "file": "by-type/HOME_AND_GARDEN_STORE.geojson"
+    },
+    {
+      "type": "HOME_FURNISHINGS_STORE",
+      "count": 58,
+      "file": "by-type/HOME_FURNISHINGS_STORE.geojson"
+    },
+    {
+      "type": "HOSPITAL",
+      "count": 60,
+      "file": "by-type/HOSPITAL.geojson"
+    },
+    {
+      "type": "HOTEL",
+      "count": 32,
+      "file": "by-type/HOTEL.geojson"
+    },
+    {
+      "type": "KINDERGARTEN",
+      "count": 20,
+      "file": "by-type/KINDERGARTEN.geojson"
+    },
+    {
+      "type": "LANDMARK",
+      "count": 4,
+      "file": "by-type/LANDMARK.geojson"
+    },
+    {
+      "type": "LIBRARY",
+      "count": 5,
+      "file": "by-type/LIBRARY.geojson"
+    },
+    {
+      "type": "MOSGUE",
+      "count": 3,
+      "file": "by-type/MOSGUE.geojson"
+    },
+    {
+      "type": "PARK",
+      "count": 4,
+      "file": "by-type/PARK.geojson"
+    },
+    {
+      "type": "PARKING",
+      "count": 3,
+      "file": "by-type/PARKING.geojson"
+    },
+    {
+      "type": "PHARMACY",
+      "count": 55,
+      "file": "by-type/PHARMACY.geojson"
+    },
+    {
+      "type": "PHONE",
+      "count": 1,
+      "file": "by-type/PHONE.geojson"
+    },
+    {
+      "type": "POLICE_STATION",
+      "count": 17,
+      "file": "by-type/POLICE_STATION.geojson"
+    },
+    {
+      "type": "POST_OFFICE",
+      "count": 11,
+      "file": "by-type/POST_OFFICE.geojson"
+    },
+    {
+      "type": "REPAIR_SERVICE",
+      "count": 12,
+      "file": "by-type/REPAIR_SERVICE.geojson"
+    },
+    {
+      "type": "REST_AREA_TOURIST_INFO",
+      "count": 6,
+      "file": "by-type/REST_AREA_TOURIST_INFO.geojson"
+    },
+    {
+      "type": "RESTAURANT",
+      "count": 37,
+      "file": "by-type/RESTAURANT.geojson"
+    },
+    {
+      "type": "RESTAURANT_CAFES",
+      "count": 143,
+      "file": "by-type/RESTAURANT_CAFES.geojson"
+    },
+    {
+      "type": "RESTAURANT_FAST_FOOD",
+      "count": 2,
+      "file": "by-type/RESTAURANT_FAST_FOOD.geojson"
+    },
+    {
+      "type": "RESTAURANT_TEA",
+      "count": 10,
+      "file": "by-type/RESTAURANT_TEA.geojson"
+    },
+    {
+      "type": "SCENIC_AREA",
+      "count": 1,
+      "file": "by-type/SCENIC_AREA.geojson"
+    },
+    {
+      "type": "SCHOOL",
+      "count": 53,
+      "file": "by-type/SCHOOL.geojson"
+    },
+    {
+      "type": "SERVICES_PERSONAL",
+      "count": 142,
+      "file": "by-type/SERVICES_PERSONAL.geojson"
+    },
+    {
+      "type": "SHOPPING_CENTER",
+      "count": 8,
+      "file": "by-type/SHOPPING_CENTER.geojson"
+    },
+    {
+      "type": "SOFTWARE_RETAIL",
+      "count": 1,
+      "file": "by-type/SOFTWARE_RETAIL.geojson"
+    },
+    {
+      "type": "SPECIALTY_RETAIL",
+      "count": 47,
+      "file": "by-type/SPECIALTY_RETAIL.geojson"
+    },
+    {
+      "type": "SPORT_AIRPORT",
+      "count": 5,
+      "file": "by-type/SPORT_AIRPORT.geojson"
+    },
+    {
+      "type": "THEME_PARK",
+      "count": 1,
+      "file": "by-type/THEME_PARK.geojson"
+    },
+    {
+      "type": "UTILITY",
+      "count": 8,
+      "file": "by-type/UTILITY.geojson"
+    },
+    {
+      "type": "WINERY",
+      "count": 3,
+      "file": "by-type/WINERY.geojson"
+    },
+    {
+      "type": "ZOO",
+      "count": 1,
+      "file": "by-type/ZOO.geojson"
+    }
+  ]
+}

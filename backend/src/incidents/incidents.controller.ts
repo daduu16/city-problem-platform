@@ -33,6 +33,12 @@ export class IncidentsController {
   }
 
   @RequirePermission('view_map')
+  @Get('map/archived')
+  findArchivedForMap(@CurrentUser() user: JwtPayload) {
+    return this.incidentsService.findForArchivedMap(user);
+  }
+
+  @RequirePermission('view_map')
   @Get('map')
   findForMap(@CurrentUser() user: JwtPayload) {
     return this.incidentsService.findForMap(user);

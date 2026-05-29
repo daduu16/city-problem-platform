@@ -59,11 +59,15 @@ export function DashboardPage() {
   });
 
   return (
-    <div className="mx-auto max-w-[1600px] p-6">
-      <header className="mb-6 space-y-3 border-b border-border/60 pb-4">
+    <div className="dashboard-page mx-auto max-w-[1600px] p-6">
+      <header className="mb-6 space-y-3 border-b border-border/60 pb-5">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">{az.dashboard.title}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{az.dashboard.subtitle}</p>
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+            {az.dashboard.title}
+          </h2>
+          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            {az.dashboard.subtitle}
+          </p>
         </div>
         {apiUnreachable && (
           <ApiConnectionAlert onRetry={() => void kpisQuery.refetch()} />

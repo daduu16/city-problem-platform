@@ -12,7 +12,7 @@ export function DistrictStatusBadge({
   return (
     <Badge
       variant="outline"
-      className="border-amber-500/70 bg-amber-500/15 text-amber-200"
+      className="border-border bg-secondary/60 text-secondary-foreground"
     >
       {tDistrictStatus(status)}
     </Badge>

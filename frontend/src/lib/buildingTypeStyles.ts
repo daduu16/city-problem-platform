@@ -1,22 +1,9 @@
 import type { ExpressionSpecification } from 'maplibre-gl';
 import { az } from '@/i18n/az';
+import { MAP_BUILDING_TYPE_COLORS } from '@/lib/mapPalette';
 
-/** Colors by normalized OSM building type (`buildingType` feature property). */
-export const BUILDING_TYPE_COLORS: Record<string, string> = {
-  residential: '#5b9bd5',
-  commercial: '#e8985a',
-  industrial: '#9b8ec4',
-  retail: '#f4a261',
-  office: '#7eb6e0',
-  hotel: '#c77dff',
-  school: '#7bc96f',
-  hospital: '#ef6b6b',
-  religious: '#d4b85a',
-  government: '#6c8ebf',
-  warehouse: '#a78b71',
-  garage: '#9ca3af',
-  other: '#6b7280',
-};
+/** Dark palette by OSM building type (2D + 3D extrusions). */
+export const BUILDING_TYPE_COLORS = MAP_BUILDING_TYPE_COLORS;
 
 export const BUILDING_LEGEND_ITEMS = [
   { id: 'residential', color: BUILDING_TYPE_COLORS.residential },

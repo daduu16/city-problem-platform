@@ -5,7 +5,10 @@
     "dev:infra": "docker compose up -d postgres redis",
     "dev:backend": "npm run dev --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",
-    "dev": "npm run dev:infra && npx concurrently -k -n backend,frontend -c blue,green \"npm run dev:backend\" \"npm run dev:frontend\""
+    "dev": "npm run dev:infra && npx concurrently -k -n backend,frontend -c blue,green \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "places:extract": "npm run places:extract --prefix backend",
+    "district:extract": "npm run district:extract --prefix backend",
+    "opendata:extract": "npm run opendata:extract --prefix backend"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

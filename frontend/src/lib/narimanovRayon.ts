@@ -14,8 +14,7 @@ export interface RayonGeoProperties {
   Upper_case: string;
 }
 
-export const NARIMANOV_RAYON_GEOJSON_URL = '/narimanov-rayon.geojson';
-
+/** Served by backend: GET /districts/narimanov */
 export const OPENDATA_RAYONLAR_PACKAGE_URL =
   'https://admin.opendata.az/api/3/action/package_show?id=azerbaycanin-rayonlari';
 

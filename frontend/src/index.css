@@ -32,6 +32,22 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 221.2 83.2% 53.3%;
+    /* shadcn chart palette — muted */
+    --chart-1: 221 55% 48%;
+    --chart-2: 199 40% 42%;
+    --chart-3: 262 35% 48%;
+    --chart-4: 38 45% 46%;
+    --chart-5: 152 35% 40%;
+    --chart-6: 0 45% 48%;
+    --chart-7: 240 5% 52%;
+    /* Status accents (tables, badges, charts) */
+    --status-new: 38 55% 46%;
+    --status-in-progress: 221 50% 48%;
+    --status-pending: 262 35% 50%;
+    --status-resolved: 152 35% 40%;
+    --status-overdue: 0 55% 48%;
+    --status-archived: 240 5% 52%;
+    --status-warning: 38 55% 46%;
   }
 
   .dark {
@@ -62,6 +78,21 @@
     --sidebar-accent-foreground: 210 20% 98%;
     --sidebar-border: 220 16% 15%;
     --sidebar-ring: 217 91% 60%;
+    /* shadcn chart palette — desaturated for dark UI */
+    --chart-1: 217 40% 58%;
+    --chart-2: 199 28% 52%;
+    --chart-3: 262 26% 56%;
+    --chart-4: 38 38% 52%;
+    --chart-5: 152 28% 48%;
+    --chart-6: 0 38% 54%;
+    --chart-7: 215 14% 42%;
+    --status-new: 38 45% 52%;
+    --status-in-progress: 217 40% 58%;
+    --status-pending: 262 28% 58%;
+    --status-resolved: 152 30% 48%;
+    --status-overdue: 0 40% 54%;
+    --status-archived: 215 14% 48%;
+    --status-warning: 38 45% 52%;
   }
 }
 
@@ -91,6 +122,27 @@
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum';
   }
+}
+
+/* Dashboard charts — readable Recharts tooltips on dark theme */
+.dashboard-charts .recharts-default-tooltip,
+.dashboard-charts .recharts-tooltip-wrapper {
+  outline: none;
+}
+
+.dashboard-charts .recharts-tooltip-label,
+.dashboard-charts .recharts-tooltip-item-name,
+.dashboard-charts .recharts-tooltip-item-value,
+.dashboard-charts .recharts-tooltip-item-separator {
+  color: hsl(var(--popover-foreground)) !important;
+}
+
+.dashboard-charts .recharts-tooltip-label {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.dashboard-charts .recharts-legend-item-text {
+  color: hsl(var(--muted-foreground)) !important;
 }
 
 /* Refined scrollbars */
@@ -262,19 +314,19 @@
 
 /* Status accent bar on the left edge of each row */
 .incident-grid .incident-row-new {
-  box-shadow: inset 3px 0 0 #f59e0b;
+  box-shadow: inset 3px 0 0 hsl(var(--status-new));
 }
 
 .incident-grid .incident-row-in-progress {
-  box-shadow: inset 3px 0 0 #3b82f6;
+  box-shadow: inset 3px 0 0 hsl(var(--status-in-progress));
 }
 
 .incident-grid .incident-row-pending {
-  box-shadow: inset 3px 0 0 #a855f7;
+  box-shadow: inset 3px 0 0 hsl(var(--status-pending));
 }
 
 .incident-grid .incident-row-resolved {
-  box-shadow: inset 3px 0 0 #22c55e;
+  box-shadow: inset 3px 0 0 hsl(var(--status-resolved));
 }
 
 .incident-grid .incident-row-resolved .ag-cell-primary {
@@ -282,18 +334,18 @@
 }
 
 .incident-grid .incident-row-overdue {
-  box-shadow: inset 3px 0 0 #ef4444;
-  background-color: hsl(var(--destructive) / 0.06) !important;
+  box-shadow: inset 3px 0 0 hsl(var(--status-overdue));
+  background-color: hsl(var(--destructive) / 0.04) !important;
 }
 
 .incident-grid .incident-row-archived {
-  box-shadow: inset 3px 0 0 #64748b;
+  box-shadow: inset 3px 0 0 hsl(var(--status-archived));
   opacity: 0.6;
 }
 
 .incident-grid .incident-row-outside-district {
-  box-shadow: inset 3px 0 0 #f59e0b;
-  background-color: rgb(245 158 11 / 0.06) !important;
+  box-shadow: inset 3px 0 0 hsl(var(--status-warning));
+  background-color: hsl(var(--status-warning) / 0.05) !important;
 }
 
 /* Pagination panel */
