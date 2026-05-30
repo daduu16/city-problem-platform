@@ -14,6 +14,7 @@ import { PermissionsGuard } from '../access-control/guards/permissions.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser, JwtPayload } from '../common/decorators/current-user.decorator';
 import { IncidentsService } from './incidents.service';
+import { CreateCitizenReportDto } from './dto/create-citizen-report.dto';
 import { CreateIncidentDto } from './dto/create-incident.dto';
 import { UpdateIncidentDto } from './dto/update-incident.dto';
 import { IncidentQueryDto, NearbyQueryDto } from './dto/incident-query.dto';
@@ -59,6 +60,15 @@ export class IncidentsController {
   @Get(':id')
   findOne(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     return this.incidentsService.findOne(id, user);
+  }
+
+  @RequirePermission('create_incident')
+  @Post('reports')
+  submitReport(
+    @Body() dto: CreateCitizenReportDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.incidentsService.submitCitizenReport(dto, user);
   }
 
   @RequirePermission('create_incident')

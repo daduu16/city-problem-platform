@@ -1,21 +1,29 @@
-import { useMemo, useCallback, useEffect, useRef } from "react";
+import { useMemo, useCallback, useEffect, useRef, type CSSProperties } from "react";
 import { MapContainer, TileLayer, Marker, ZoomControl, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
 import type { MapIncident } from "@/types";
 import { useMapStore } from "@/stores/mapStore";
 import { useFilteredMapIncidents } from "@/hooks/useFilteredMapIncidents";
+import { useMapIncidentPins } from "@/hooks/useMapIncidentPins";
+import type { MapIncidentPin } from "@/lib/mapIncidentPin";
 import { statusMarkerHtml } from "@/lib/incidentStyles";
 import { typeMarkerHtml } from "@/lib/incidentTypeStyles";
 import type { IncidentMarkerMode } from "@/stores/mapStore";
 import {
 	NARIMANOV_CENTER,
+	BASE_MAP_2D_TILE_CLASS,
 	BASE_MAP_ATTRIBUTION,
 	BASE_MAP_TILE_URL,
 	getActiveMapRegion,
 } from "@/lib/mapConfig";
+import { MAP_DISTRICT_COLOR } from "@/lib/mapPalette";
+import { MAP_CLUSTER_RADIUS } from "@/lib/mapClusterConfig";
 import type { NarimanovRayonData } from "@/lib/narimanovRayon";
+import { CreateIncidentDraftMarker2D } from "@/components/map/CreateIncidentDraftMarker2D";
+import { MapLocationPickHandler2D } from "@/components/map/MapLocationPickHandler2D";
 import { DistrictHighlight2D } from "@/components/map/DistrictHighlight2D";
+import { DistrictZones2D } from "@/components/map/DistrictZones2D";
 import { MapRegionLimits2D } from "@/components/map/MapRegionLimits2D";
 import { InstitutionBuildings2D } from "@/components/map/InstitutionBuildings2D";
 import { PlacesLayer2D } from "@/components/map/PlacesLayer2D";
@@ -23,7 +31,6 @@ import { useInstitutionBuildingsGeoJson } from "@/hooks/useInstitutionBuildingsG
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
-
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -41,11 +48,12 @@ interface Props {
 	places: GeoJSON.FeatureCollection;
 }
 
-function createIncidentMarkerIcon(
-	incident: MapIncident,
+function createPinMarkerIcon(
+	pin: MapIncidentPin,
 	markerMode: IncidentMarkerMode,
 ) {
-	const html =
+	const incident = pin.incident;
+	const inner =
 		markerMode === "type"
 			? typeMarkerHtml(incident.type)
 			: statusMarkerHtml(incident.status);
@@ -61,7 +69,7 @@ function createIncidentMarkerIcon(
 					: 14;
 	return L.divIcon({
 		className: "incident-marker-wrapper",
-		html,
+		html: inner,
 		iconSize: [size, size],
 		iconAnchor: [size / 2, size / 2],
 	});
@@ -145,9 +153,11 @@ export function IncidentMap({
 		showClusters,
 		showPlaces,
 		visiblePlaceTypes,
-		setSelectedIncidentId,
+		openIncident,
+		incidentCreateMode,
 	} = useMapStore();
-	const filtered = useFilteredMapIncidents(incidents);
+	const filtered = useFilteredMapIncidents(incidents, narimanovRayon.feature);
+	const pins = useMapIncidentPins(filtered);
 	const { positions } = narimanovRayon;
 
 	const institutionQuery = useInstitutionBuildingsGeoJson(
@@ -166,30 +176,32 @@ export function IncidentMap({
 
 	const heatPoints = useMemo(
 		() =>
-			filtered.map((i) => {
+			pins.map((pin) => {
+				const i = pin.incident;
 				const w =
 					i.priority === "CRITICAL" ? 1 : i.priority === "HIGH" ? 0.7 : 0.4;
-				return [i.lat, i.lng, w] as [number, number, number];
+				return [pin.lat, pin.lng, w] as [number, number, number];
 			}),
-		[filtered],
+		[pins],
 	);
 
-	const handleMarkerClick = useCallback(
-		(id: string) => {
-			setSelectedIncidentId(id);
+	const handlePinClick = useCallback(
+		(pin: MapIncidentPin) => {
+			if (incidentCreateMode !== false) return;
+			openIncident(pin.incident.id);
 		},
-		[setSelectedIncidentId],
+		[openIncident, incidentCreateMode],
 	);
 
-	const renderMarker = (i: MapIncident) => (
+	const renderPinMarker = (pin: MapIncidentPin) => (
 		<Marker
-			key={i.id}
-			position={[i.lat, i.lng]}
-			icon={createIncidentMarkerIcon(i, markerMode)}
+			key={pin.incident.id}
+			position={[pin.lat, pin.lng]}
+			icon={createPinMarkerIcon(pin, markerMode)}
 			eventHandlers={{
 				click: (e) => {
 					L.DomEvent.stopPropagation(e);
-					handleMarkerClick(i.id);
+					handlePinClick(pin);
 				},
 			}}
 		/>
@@ -199,8 +211,12 @@ export function IncidentMap({
 		<MapContainer
 			center={[NARIMANOV_CENTER.lat, NARIMANOV_CENTER.lng]}
 			zoom={NARIMANOV_CENTER.zoom}
-			className="h-full w-full z-0"
+			className="incident-map-2d h-full w-full z-0"
+			style={
+				{ "--map-district-color": MAP_DISTRICT_COLOR } as CSSProperties
+			}
 			scrollWheelZoom
+			zoomControl={false}
 			minZoom={mapRegion.minZoom}
 			maxZoom={mapRegion.maxZoom}
 			maxBoundsViscosity={1}
@@ -208,6 +224,7 @@ export function IncidentMap({
 			<TileLayer
 				url={BASE_MAP_TILE_URL}
 				attribution={BASE_MAP_ATTRIBUTION}
+				className={BASE_MAP_2D_TILE_CLASS || undefined}
 				subdomains="abcd"
 				maxZoom={20}
 			/>
@@ -216,9 +233,12 @@ export function IncidentMap({
 
 			<FitNarimanovBounds positions={positions} />
 			<MapRegionLimits2D />
+			<MapLocationPickHandler2D />
+			<CreateIncidentDraftMarker2D />
 
 			<HeatmapLayer points={heatPoints} enabled={showHeatmap} />
 
+			<DistrictZones2D rayon={narimanovRayon} />
 			<DistrictHighlight2D rayon={narimanovRayon} />
 
 			{showPlaces && matchedBuildingCount > 0 && institutionBuildings && (
@@ -239,15 +259,15 @@ export function IncidentMap({
 			{showClusters ? (
 				<MarkerClusterGroup
 					chunkedLoading
-					maxClusterRadius={50}
+					maxClusterRadius={MAP_CLUSTER_RADIUS}
 					spiderfyOnMaxZoom
 					showCoverageOnHover={false}
 					zoomToBoundsOnClick
 				>
-					{filtered.map((i) => renderMarker(i))}
+					{pins.map((pin) => renderPinMarker(pin))}
 				</MarkerClusterGroup>
 			) : (
-				filtered.map((i) => renderMarker(i))
+				pins.map((pin) => renderPinMarker(pin))
 			)}
 		</MapContainer>
 	);
