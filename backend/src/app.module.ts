@@ -17,6 +17,7 @@ import { AuditModule } from './audit/audit.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
 import { CategoriesModule } from './categories/categories.module';
 import { NotificationModule } from './notifications/notification.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { NotificationModule } from './notifications/notification.module';
     SchedulerModule,
     CategoriesModule,
     NotificationModule,
+    AiModule,
   ],
   providers: [
     {

@@ -34,6 +34,14 @@ npm run dev
 API: `http://localhost:3001`  
 Swagger: `http://localhost:3001/api/docs`
 
+Groq prompt endpoint:
+
+- Set `GROQ_API_KEY` in `backend/.env` or the root `.env` used by Docker Compose.
+- Optional: set `GROQ_MODEL`; default is `openai/gpt-oss-120b`.
+- Optional: set `GROQ_VISION_MODEL`; default is `meta-llama/llama-4-scout-17b-16e-instruct`.
+- In Swagger, call public `POST /ai/prompt` with `systemPrompt`, `userPrompt`, and optionally an `image` file. Image requests use `GROQ_VISION_MODEL`.
+- AI answers are instructed by the backend to respond in Azerbaijani by default.
+
 ### 3. Frontend
 
 ```bash
