@@ -14,9 +14,12 @@ export const BASE_MAP_TILE_URL =
 export const BASE_MAP_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
-/** Vector style with 3D buildings (no API key) — OpenFreeMap */
-export const MAPLIBRE_STYLE_URL =
-  'https://tiles.openfreemap.org/styles/liberty';
+/**
+ * 2D Leaflet only: CSS invert on tile images (not markers/overlays).
+ * Alternative without filter: dark_nolabels tile URL from CARTO.
+ */
+export const BASE_MAP_2D_INVERT = true;
+export const BASE_MAP_2D_TILE_CLASS = BASE_MAP_2D_INVERT ? 'map-basemap-invert' : '';
 
 export const MAP_3D_VIEW = {
   pitch: 60,

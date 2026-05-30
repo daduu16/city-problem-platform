@@ -36,6 +36,7 @@ enum HistoryActionType {
   PRIORITY_CHANGED
   ASSIGNED
   COMMENT
+  CITIZEN_REPORT
   ATTACHMENT_ADDED
   DEADLINE_CHANGED
   UPDATED
@@ -143,6 +144,7 @@ model User {
   assignedIncidents Incident[]        @relation("AssignedTo")
   historyEntries    IncidentHistory[]
   comments          IncidentComment[]
+  citizenReports    IncidentReport[]  @relation("CitizenReporter")
   auditLogs         AuditLog[]
 
   @@map("users")
@@ -218,6 +220,7 @@ model Incident {
   history      IncidentHistory[]
   attachments  Attachment[]
   comments     IncidentComment[]
+  reports      IncidentReport[]
 
   @@index([status])
   @@index([priority])
@@ -259,6 +262,28 @@ model IncidentComment {
 
   @@index([incidentId])
   @@map("incident_comments")
+}
+
+model IncidentReport {
+  id         String   @id @default(uuid())
+  incidentId String   @map("incident_id")
+  reporterId String   @map("reporter_id")
+  title      String
+  message    String
+  lat        Float
+  lng        Float
+  address    String?
+  photoUrl   String?  @map("photo_url")
+  videoUrl   String?  @map("video_url")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  reporter User     @relation("CitizenReporter", fields: [reporterId], references: [id])
+
+  @@index([incidentId])
+  @@index([reporterId])
+  @@index([lat, lng])
+  @@map("incident_reports")
 }
 
 model Attachment {

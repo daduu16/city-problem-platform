@@ -14,6 +14,8 @@ import {
 } from '../geozones/district.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
+import { IncidentAggregationService } from './incident-aggregation.service';
+import { CreateCitizenReportDto } from './dto/create-citizen-report.dto';
 import { CreateIncidentDto } from './dto/create-incident.dto';
 import { UpdateIncidentDto } from './dto/update-incident.dto';
 import { IncidentQueryDto } from './dto/incident-query.dto';
@@ -35,6 +37,7 @@ export class IncidentsService {
     private accessControl: AccessControlService,
     private audit: AuditService,
     private districtService: DistrictService,
+    private aggregation: IncidentAggregationService,
   ) {}
 
   private async getScope(user: JwtPayload) {
@@ -135,10 +138,20 @@ export class IncidentsService {
         geozoneId: true,
         districtStatus: true,
         category: { select: { id: true, key: true, name: true } },
+        subcategory: { select: { id: true, key: true, name: true } },
+        _count: { select: { reports: true } },
       },
     });
 
-    return this.accessControl.filterMapIncidentsByLayers(scope, incidents);
+    const filtered = this.accessControl.filterMapIncidentsByLayers(
+      scope,
+      incidents,
+    );
+
+    return filtered.map(({ _count, ...row }) => ({
+      ...row,
+      reportCount: _count.reports,
+    }));
   }
 
   findForMap(user: JwtPayload) {
@@ -215,11 +228,16 @@ export class IncidentsService {
         ...incidentInclude,
         history: {
           include: { createdBy: { select: { id: true, name: true } } },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: 'asc' },
         },
+        reports: {
+          include: { reporter: { select: { id: true, name: true } } },
+          orderBy: { createdAt: 'asc' },
+        },
+        _count: { select: { reports: true } },
         comments: {
           include: { author: { select: { id: true, name: true } } },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: 'asc' },
         },
       },
     });
@@ -229,9 +247,37 @@ export class IncidentsService {
     const canView = await this.accessControl.canViewIncident(scope, incident);
     if (!canView) throw new ForbiddenException();
 
-    return incident;
+    const { _count, ...row } = incident;
+    return { ...row, reportCount: _count.reports };
   }
 
+  /** Citizen report from mobile — creates or attaches to an open incident cluster. */
+  async submitCitizenReport(dto: CreateCitizenReportDto, user: JwtPayload) {
+    const scope = await this.getScope(user);
+    this.accessControl.requirePermission(scope, 'create_incident');
+
+    if (!this.accessControl.canAccessCategory(scope, dto.categoryId)) {
+      throw new ForbiddenException('Category not allowed');
+    }
+
+    const duplicate = await this.aggregation.findOpenIncidentForReport(
+      dto.lat,
+      dto.lng,
+      dto.categoryId,
+      dto.subcategoryId ?? null,
+      dto.title,
+      scope,
+      user.sub,
+    );
+
+    if (duplicate) {
+      return this.attachCitizenReportToExisting(duplicate.id, dto, user);
+    }
+
+    return this.createIncidentWithFirstReport(dto, user);
+  }
+
+  /** Dispatcher creates an incident directly (no citizen report row). */
   async create(dto: CreateIncidentDto, user: JwtPayload) {
     const scope = await this.getScope(user);
     this.accessControl.requirePermission(scope, 'create_incident');
@@ -286,7 +332,7 @@ export class IncidentsService {
       action: 'INCIDENT_CREATED',
       resource: 'incident',
       resourceId: incident.id,
-      metadata: { districtStatus },
+      metadata: { districtStatus, source: 'dispatcher' },
     });
 
     if (districtStatus === DistrictStatus.OUTSIDE_DISTRICT) {
@@ -309,6 +355,108 @@ export class IncidentsService {
     return incident;
   }
 
+  private async createIncidentWithFirstReport(
+    dto: CreateCitizenReportDto,
+    user: JwtPayload,
+  ) {
+    const slaHours = 24;
+
+    const userRecord = await this.prisma.user.findUnique({
+      where: { id: user.sub },
+      select: { organizationId: true },
+    });
+
+    const districtStatus = await this.districtService.resolveDistrictStatus(
+      dto.lat,
+      dto.lng,
+    );
+    const geozoneId =
+      districtStatus === DistrictStatus.WITHIN_DISTRICT
+        ? NARIMANOV_GEOZONE_ID
+        : null;
+
+    const incident = await this.prisma.incident.create({
+      data: {
+        title: dto.title,
+        description: dto.message,
+        status: IncidentStatus.NEW,
+        priority: 'MEDIUM',
+        categoryId: dto.categoryId,
+        subcategoryId: dto.subcategoryId,
+        type: dto.type ?? 'COMPLAINT',
+        lat: dto.lat,
+        lng: dto.lng,
+        address: dto.address,
+        geozoneId,
+        districtStatus,
+        organizationId: userRecord?.organizationId,
+        slaDueAt: new Date(Date.now() + slaHours * 3600000),
+        createdById: user.sub,
+      },
+      include: incidentInclude,
+    });
+
+    const report = await this.prisma.incidentReport.create({
+      data: {
+        incidentId: incident.id,
+        reporterId: user.sub,
+        title: dto.title,
+        message: dto.message,
+        lat: dto.lat,
+        lng: dto.lng,
+        address: dto.address,
+        photoUrl: dto.photoUrl,
+        videoUrl: dto.videoUrl,
+      },
+    });
+
+    await this.aggregation.recalculateIncidentCentroid(incident.id);
+
+    await this.recordHistory(incident.id, user.sub, HistoryActionType.CREATED, null, incident.status);
+    await this.recordHistory(
+      incident.id,
+      user.sub,
+      HistoryActionType.CITIZEN_REPORT,
+      null,
+      dto.message,
+      { reportId: report.id },
+    );
+    await this.audit.log({
+      userId: user.sub,
+      action: 'INCIDENT_CREATED',
+      resource: 'incident',
+      resourceId: incident.id,
+      metadata: { districtStatus, source: 'citizen_report' },
+    });
+
+    if (districtStatus === DistrictStatus.OUTSIDE_DISTRICT) {
+      await this.audit.log({
+        userId: user.sub,
+        action: 'INCIDENT_OUTSIDE_DISTRICT',
+        resource: 'incident',
+        resourceId: incident.id,
+        metadata: { lat: dto.lat, lng: dto.lng, address: dto.address },
+      });
+      await this.recordHistory(
+        incident.id,
+        user.sub,
+        HistoryActionType.UPDATED,
+        null,
+        DistrictStatus.OUTSIDE_DISTRICT,
+      );
+    }
+
+    const updated = await this.prisma.incident.findUnique({
+      where: { id: incident.id },
+      include: incidentInclude,
+    });
+
+    if (!updated) throw new NotFoundException('Incident not found');
+
+    this.realtime.emitIncidentCreated(updated);
+    return updated;
+  }
+
   async update(id: string, dto: UpdateIncidentDto, user: JwtPayload) {
     const scope = await this.getScope(user);
     this.accessControl.requirePermission(scope, 'edit_incident');
@@ -319,9 +467,16 @@ export class IncidentsService {
       this.accessControl.requirePermission(scope, 'close_task');
     }
 
+    const reportCount = existing.reportCount ?? existing.reports?.length ?? 0;
     const coordsChanged =
       (dto.lat !== undefined && dto.lat !== existing.lat) ||
       (dto.lng !== undefined && dto.lng !== existing.lng);
+
+    if (coordsChanged && reportCount > 0) {
+      throw new ForbiddenException(
+        'Cannot move incident coordinates while citizen reports exist; map pin follows report centroid',
+      );
+    }
 
     let districtUpdate: {
       districtStatus?: DistrictStatus;
@@ -354,11 +509,16 @@ export class IncidentsService {
       }
     }
 
+    const { lat: _lat, lng: _lng, ...dtoWithoutCoords } = dto;
+    const updateData =
+      coordsChanged && reportCount === 0
+        ? { ...dto, ...districtUpdate }
+        : { ...dtoWithoutCoords, ...districtUpdate };
+
     const incident = await this.prisma.incident.update({
       where: { id },
       data: {
-        ...dto,
-        ...districtUpdate,
+        ...updateData,
         deadline: dto.deadline ? new Date(dto.deadline) : undefined,
         resolvedAt:
           dto.status === IncidentStatus.RESOLVED ? new Date() : existing.resolvedAt,
@@ -400,12 +560,64 @@ export class IncidentsService {
     return comment;
   }
 
+  private async attachCitizenReportToExisting(
+    incidentId: string,
+    dto: CreateCitizenReportDto,
+    user: JwtPayload,
+  ) {
+    await this.findOne(incidentId, user);
+
+    const report = await this.prisma.incidentReport.create({
+      data: {
+        incidentId,
+        reporterId: user.sub,
+        title: dto.title,
+        message: dto.message,
+        lat: dto.lat,
+        lng: dto.lng,
+        address: dto.address,
+        photoUrl: dto.photoUrl,
+        videoUrl: dto.videoUrl,
+      },
+    });
+
+    await this.aggregation.recalculateIncidentCentroid(incidentId);
+
+    await this.recordHistory(
+      incidentId,
+      user.sub,
+      HistoryActionType.CITIZEN_REPORT,
+      null,
+      dto.message,
+      { reportId: report.id },
+    );
+
+    await this.audit.log({
+      userId: user.sub,
+      action: 'INCIDENT_REPORT_MERGED',
+      resource: 'incident',
+      resourceId: incidentId,
+      metadata: { message: dto.message, lat: dto.lat, lng: dto.lng },
+    });
+
+    const updated = await this.prisma.incident.findUnique({
+      where: { id: incidentId },
+      include: incidentInclude,
+    });
+
+    if (!updated) throw new NotFoundException('Incident not found');
+
+    this.realtime.emitIncidentUpdated(updated);
+    return { ...updated, mergedIntoExisting: true as const };
+  }
+
   private async recordHistory(
     incidentId: string,
     userId: string,
     actionType: HistoryActionType,
     oldValue: string | null | undefined,
     newValue: string | null | undefined,
+    metadata?: Prisma.InputJsonValue,
   ) {
     await this.prisma.incidentHistory.create({
       data: {
@@ -414,6 +626,7 @@ export class IncidentsService {
         oldValue: oldValue ?? undefined,
         newValue: newValue ?? undefined,
         createdById: userId,
+        metadata: metadata ?? undefined,
       },
     });
   }

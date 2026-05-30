@@ -4,7 +4,11 @@ import { az as azLocale } from "date-fns/locale";
 import { api } from "@/lib/api";
 import type { IncidentDetail } from "@/types";
 import { az } from "@/i18n/az";
-import { formatCategory, formatHistoryAction } from "@/lib/format";
+import { formatCategory } from "@/lib/format";
+import { getCitizenReportTotal } from "@/lib/citizenReports";
+import { IncidentTimeline } from "@/components/incidents/IncidentTimeline";
+import { ReportMediaPopover } from "@/components/incidents/ReportMediaPopover";
+import { hasReportMedia } from "@/lib/normalizeReportMedia";
 import { getStatusStyle } from "@/lib/incidentStyles";
 import { DistrictStatusBadge } from "./DistrictStatusBadge";
 import { StatusBadge } from "./StatusBadge";
@@ -17,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+
 interface Props {
 	incidentId: string | null;
 	onClose: () => void;
@@ -42,6 +47,14 @@ function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 		},
 	});
 
+	const citizenReportTotal = incident
+		? getCitizenReportTotal(incident.reportCount ?? incident.reports.length)
+		: 0;
+	const uniqueReporters =
+		incident && incident.reports.length > 0
+			? new Set(incident.reports.map((r) => r.reporter.id)).size
+			: 0;
+
 	return (
 		<>
 			<header
@@ -57,6 +70,14 @@ function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 				<h2 className="pr-8 text-left text-lg font-semibold text-foreground">
 					{isLoading ? <Skeleton className="h-6 w-3/4" /> : incident?.title}
 				</h2>
+				{incident && citizenReportTotal > 0 && (
+					<p className="mt-1 text-xs text-muted-foreground">
+						{az.drawer.citizenReportsTitle(citizenReportTotal)}
+						{citizenReportTotal > 1
+							? ` · ${az.drawer.citizenReportsHint}`
+							: null}
+					</p>
+				)}
 			</header>
 
 			{isLoading && (
@@ -109,36 +130,74 @@ function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 							</p>
 						)}
 
+						{incident.reports.length > 0 && (
+							<>
+								<Separator />
+								<section>
+									<h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+										{az.drawer.reportsSection}
+									</h4>
+									<p className="mb-3 text-xs text-muted-foreground">
+										{az.drawer.reportLocationHint}
+									</p>
+									<ul className="space-y-3">
+										{incident.reports.map((report) => (
+											<li
+												key={report.id}
+												className="rounded-lg border bg-muted/30 px-3 py-2.5"
+											>
+												{report.title && (
+													<p className="text-xs font-medium text-foreground/80">
+														{report.title}
+													</p>
+												)}
+												<p className="mt-1 text-sm leading-relaxed text-foreground/90">
+													{report.message}
+												</p>
+												{hasReportMedia(report) && (
+													<ReportMediaPopover
+														className="mt-2"
+														showInlinePreview
+														photoUrl={report.photoUrl}
+														videoUrl={report.videoUrl}
+													/>
+												)}
+												{(report.address ||
+													(report.lat != null && report.lng != null)) && (
+													<p className="mt-2 text-xs text-muted-foreground">
+														{report.address ??
+															`${report.lat.toFixed(5)}, ${report.lng.toFixed(5)}`}
+													</p>
+												)}
+												<p className="mt-2 text-xs text-muted-foreground">
+													<span className="font-medium text-foreground/85">
+														{report.reporter.name}
+													</span>
+													{" · "}
+													{format(new Date(report.createdAt), "PPp", {
+														locale: azLocale,
+													})}
+												</p>
+											</li>
+										))}
+									</ul>
+								</section>
+							</>
+						)}
+
 						<Separator />
 
 						<section>
 							<h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
 								{az.drawer.timeline}
 							</h4>
-							<ul className="space-y-3">
-								{incident.history.map((h) => (
-									<li
-										key={h.id}
-										className="border-l-2 border-primary pl-3 text-xs"
-									>
-										<span className="text-foreground">
-											{formatHistoryAction(h.actionType)}
-										</span>
-										{h.newValue && (
-											<span className="text-muted-foreground">
-												{" "}
-												→ {h.newValue}
-											</span>
-										)}
-										<p className="mt-1 text-muted-foreground">
-											{h.createdBy.name} ·{" "}
-											{format(new Date(h.createdAt), "PPp", {
-												locale: azLocale,
-											})}
-										</p>
-									</li>
-								))}
-							</ul>
+							<IncidentTimeline
+								history={incident.history}
+								reports={incident.reports}
+								reporterCount={
+									uniqueReporters > 0 ? uniqueReporters : undefined
+								}
+							/>
 						</section>
 
 						<Separator />
@@ -147,22 +206,9 @@ function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 							<h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
 								{az.drawer.comments}
 							</h4>
-							<ul className="mb-4 space-y-2">
-								{incident.comments.map((c) => (
-									<li
-										key={c.id}
-										className="rounded-lg border bg-muted/50 p-3 text-sm"
-									>
-										<p>{c.body}</p>
-										<p className="mt-1 text-xs text-muted-foreground">
-											{c.author.name} ·{" "}
-											{format(new Date(c.createdAt), "PPp", {
-												locale: azLocale,
-											})}
-										</p>
-									</li>
-								))}
-							</ul>
+							<p className="mb-3 text-xs text-muted-foreground">
+								{az.drawer.commentsHint}
+							</p>
 							<form
 								onSubmit={(e) => {
 									e.preventDefault();

@@ -1,4 +1,11 @@
-import { useMemo, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useMemo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import Map, {
   Source,
   Layer,
@@ -7,32 +14,25 @@ import Map, {
   useMap,
 } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre';
-import type {
-  ExpressionSpecification,
-  GeoJSONSource,
-  LngLatBoundsLike,
-  Map as MaplibreMap,
-  MapMouseEvent,
-} from 'maplibre-gl';
+import type { LngLatBoundsLike, MapMouseEvent } from 'maplibre-gl';
 import type { MapIncident } from '@/types';
+import type { MapIncidentPin } from '@/lib/mapIncidentPin';
 import { useMapStore, type IncidentMarkerMode } from '@/stores/mapStore';
 import { useFilteredMapIncidents } from '@/hooks/useFilteredMapIncidents';
+import { useMapIncidentPins } from '@/hooks/useMapIncidentPins';
 import {
   NARIMANOV_CENTER,
-  MAPLIBRE_STYLE_URL,
   MAP_3D_VIEW,
   getActiveMapRegion,
   getActiveMapRegionBoundsLngLat,
 } from '@/lib/mapConfig';
 import type { NarimanovRayonData } from '@/lib/narimanovRayon';
 import { priorityWeightExpression } from '@/lib/mapLayerExpressions';
-import { MAP_CLUSTER_COLORS } from '@/lib/mapPalette';
-import { az } from '@/i18n/az';
-import { Button } from '@/components/ui/button';
-import { Box, Layers } from 'lucide-react';
 import { Map3DStyleEnhancer } from '@/components/map/Map3DStyleEnhancer';
-import { IncidentMarkers3D } from '@/components/map/IncidentMarkers3D';
+import { CreateIncidentDraftMarker3D } from '@/components/map/CreateIncidentDraftMarker3D';
+import { IncidentMapMarkers3D } from '@/components/map/IncidentMapMarkers3D';
 import { DistrictHighlight3D } from '@/components/map/DistrictHighlight3D';
+import { DistrictZones3D } from '@/components/map/DistrictZones3D';
 import { MapRegionLimits3D } from '@/components/map/MapRegionLimits3D';
 import { TypedBuildings3D } from '@/components/map/TypedBuildings3D';
 import {
@@ -43,6 +43,8 @@ import { PlacesLayer3D, PLACES_LAYER_ID } from '@/components/map/PlacesLayer3D';
 import { useOsmBuildingsGeoJson } from '@/hooks/useOsmBuildingsGeoJson';
 import { useInstitutionBuildingsGeoJson } from '@/hooks/useInstitutionBuildingsGeoJson';
 import { getPlaceTypeLabel } from '@/lib/placeTypeStyles';
+import { MAPLIBRE_STYLE_URL } from '@/lib/map3dBasemap';
+import { MAP_DISTRICT_COLOR } from '@/lib/mapPalette';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 const INCIDENTS_SOURCE = 'incidents';
@@ -132,11 +134,28 @@ export function IncidentMap3D({
     showClusters,
     showPlaces,
     visiblePlaceTypes,
-    setSelectedIncidentId,
+    openIncident,
+    map3dFlatView,
+    incidentCreateMode,
+    setIncidentCreateLocation,
   } = useMapStore();
-  const filtered = useFilteredMapIncidents(incidents);
-  const [isFlatView, setIsFlatView] = useState(false);
+  const filtered = useFilteredMapIncidents(incidents, narimanovRayon.feature);
+  const pins = useMapIncidentPins(filtered);
   const [placePopup, setPlacePopup] = useState<PlacePopupState | null>(null);
+
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    if (map3dFlatView) {
+      map.easeTo({ pitch: 0, bearing: 0, duration: 600 });
+    } else {
+      map.easeTo({
+        pitch: MAP_3D_VIEW.pitch,
+        bearing: MAP_3D_VIEW.bearing,
+        duration: 600,
+      });
+    }
+  }, [map3dFlatView]);
 
   const districtBounds = useMemo(
     () => boundsFromLatLngPositions(narimanovRayon.positions),
@@ -165,66 +184,36 @@ export function IncidentMap3D({
   const incidentsGeoJson = useMemo((): GeoJSON.FeatureCollection => {
     return {
       type: 'FeatureCollection',
-      features: filtered.map((i) => ({
+      features: pins.map((pin) => ({
         type: 'Feature',
-        geometry: { type: 'Point', coordinates: [i.lng, i.lat] },
+        geometry: { type: 'Point', coordinates: [pin.lng, pin.lat] },
         properties: {
-          id: i.id,
-          status: i.status,
-          priority: i.priority,
+          id: pin.incident.id,
+          reportCount: pin.incident.reportCount,
+          status: pin.incident.status,
+          priority: pin.incident.priority,
         },
       })),
     };
-  }, [filtered]);
+  }, [pins]);
 
-  const clusterRadius: ExpressionSpecification = [
-    'step',
-    ['get', 'point_count'],
-    22,
-    10,
-    26,
-    30,
-    32,
-  ];
-
-  const clusterColor: ExpressionSpecification = [
-    'step',
-    ['get', 'point_count'],
-    MAP_CLUSTER_COLORS.small,
-    10,
-    MAP_CLUSTER_COLORS.medium,
-    30,
-    MAP_CLUSTER_COLORS.large,
-  ];
-
-  const openIncidentDrawer = useCallback(
-    (id: string) => {
-      setSelectedIncidentId(id);
+  const handlePinClick = useCallback(
+    (pin: MapIncidentPin) => {
+      if (incidentCreateMode !== false) return;
+      openIncident(pin.incident.id);
     },
-    [setSelectedIncidentId],
-  );
-
-  const handleClusterClick = useCallback(
-    async (map: MaplibreMap, clusterId: number, coordinates: [number, number]) => {
-      const source = map.getSource(INCIDENTS_SOURCE) as GeoJSONSource | undefined;
-      if (!source) return;
-
-      const leaves = await source.getClusterLeaves(clusterId, 50, 0);
-      if (leaves.length === 1 && leaves[0].properties?.id) {
-        openIncidentDrawer(String(leaves[0].properties.id));
-        return;
-      }
-
-      const zoom = await source.getClusterExpansionZoom(clusterId);
-      map.easeTo({ center: coordinates, zoom, duration: 400 });
-    },
-    [openIncidentDrawer],
+    [openIncident, incidentCreateMode],
   );
 
   const onMapClick = useCallback(
     (e: MapLayerMouseEvent) => {
       const map = mapRef.current?.getMap();
       if (!map) return;
+
+      if (incidentCreateMode === 'pick') {
+        setIncidentCreateLocation(e.lngLat.lat, e.lngLat.lng);
+        return;
+      }
 
       if (showPlaces) {
         const placeLayers = [
@@ -263,71 +252,34 @@ export function IncidentMap3D({
       }
 
       setPlacePopup(null);
-
-      const layers = showClusters
-        ? ['incident-clusters', 'incident-cluster-count']
-        : [];
-
-      const features =
-        e.features ??
-        (layers.length
-          ? map.queryRenderedFeatures(e.point, { layers })
-          : []);
-
-      if (!features.length) return;
-
-      for (const f of features) {
-        const layerId = f.layer?.id;
-        const clusterId = f.properties?.cluster_id as number | undefined;
-
-        if (
-          clusterId != null &&
-          (layerId === 'incident-clusters' || layerId === 'incident-cluster-count')
-        ) {
-          const coords = (f.geometry as GeoJSON.Point).coordinates as [
-            number,
-            number,
-          ];
-          void handleClusterClick(map, clusterId, coords);
-          return;
-        }
-      }
     },
     [
-      showClusters,
-      handleClusterClick,
+      incidentCreateMode,
+      setIncidentCreateLocation,
       showPlaces,
       hasInstitutionBuildings,
       usePlacePointsFallback,
     ],
   );
 
-  const toggleTilt = useCallback(() => {
-    const map = mapRef.current?.getMap();
-    if (!map) return;
-    if (isFlatView) {
-      map.easeTo({
-        pitch: MAP_3D_VIEW.pitch,
-        bearing: MAP_3D_VIEW.bearing,
-        duration: 600,
-      });
-      setIsFlatView(false);
-    } else {
-      map.easeTo({ pitch: 0, bearing: 0, duration: 600 });
-      setIsFlatView(true);
-    }
-  }, [isFlatView]);
-
   const interactiveLayerIds = [
     ...(showPlaces && hasInstitutionBuildings
       ? [INSTITUTION_BUILDINGS_LAYER_ID]
       : []),
     ...(usePlacePointsFallback ? [PLACES_LAYER_ID] : []),
-    ...(showClusters ? ['incident-clusters', 'incident-cluster-count'] : []),
   ];
 
   return (
-    <div className="relative h-full w-full">
+    <div
+      className={
+        incidentCreateMode === 'pick'
+          ? 'relative h-full w-full cursor-crosshair incident-map-3d'
+          : 'relative h-full w-full incident-map-3d'
+      }
+      style={
+        { '--map-district-color': MAP_DISTRICT_COLOR } as CSSProperties
+      }
+    >
       <Map
         ref={mapRef}
         mapStyle={MAPLIBRE_STYLE_URL}
@@ -353,14 +305,7 @@ export function IncidentMap3D({
         <MapRegionLimits3D />
         <DisableBaseMapHoverPopups />
 
-        <Source
-          id={INCIDENTS_SOURCE}
-          type="geojson"
-          data={incidentsGeoJson}
-          cluster={showClusters}
-          clusterMaxZoom={16}
-          clusterRadius={50}
-        >
+        <Source id={INCIDENTS_SOURCE} type="geojson" data={incidentsGeoJson}>
           {showHeatmap && (
             <Layer
               id="incident-heatmap"
@@ -391,35 +336,9 @@ export function IncidentMap3D({
             />
           )}
 
-          {showClusters && (
-            <>
-              <Layer
-                id="incident-clusters"
-                type="circle"
-                filter={['has', 'point_count']}
-                paint={{
-                  'circle-color': clusterColor,
-                  'circle-radius': clusterRadius,
-                  'circle-stroke-width': 2,
-                  'circle-stroke-color': '#fff',
-                  'circle-opacity': 0.95,
-                }}
-              />
-              <Layer
-                id="incident-cluster-count"
-                type="symbol"
-                filter={['has', 'point_count']}
-                layout={{
-                  'text-field': ['get', 'point_count_abbreviated'],
-                  'text-size': 13,
-                  'text-allow-overlap': true,
-                }}
-                paint={{ 'text-color': '#ffffff' }}
-              />
-            </>
-          )}
         </Source>
 
+        <DistrictZones3D rayon={narimanovRayon} />
         <DistrictHighlight3D rayon={narimanovRayon} />
 
         {showPlaces ? (
@@ -442,12 +361,14 @@ export function IncidentMap3D({
           <TypedBuildings3D data={typedBuildings} />
         )}
 
-        <IncidentMarkers3D
-          incidents={filtered}
+        <IncidentMapMarkers3D
+          pins={pins}
           markerMode={markerMode}
           showClusters={showClusters}
-          onIncidentClick={openIncidentDrawer}
+          onPinClick={handlePinClick}
         />
+
+        <CreateIncidentDraftMarker3D />
 
         <Map3DStyleEnhancer
           hideBaseBuildings={hasInstitutionBuildings || hasTypedBuildings}
@@ -469,26 +390,6 @@ export function IncidentMap3D({
           </Popup>
         )}
       </Map>
-
-      <Button
-        type="button"
-        variant="secondary"
-        size="sm"
-        className="absolute bottom-4 right-4 z-10 gap-1.5 shadow-md"
-        onClick={toggleTilt}
-      >
-        {isFlatView ? (
-          <>
-            <Box className="h-4 w-4" />
-            {az.map.tilt3d}
-          </>
-        ) : (
-          <>
-            <Layers className="h-4 w-4" />
-            {az.map.tiltFlat}
-          </>
-        )}
-      </Button>
     </div>
   );
 }

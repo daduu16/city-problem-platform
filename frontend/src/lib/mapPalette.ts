@@ -1,14 +1,14 @@
 import { darkenForMap, darkenRecord } from '@/lib/mapColorUtils';
 
-/** Incident clusters (3D map) */
-export const MAP_CLUSTER_COLORS = {
-  small: darkenForMap('#3b82f6', 0.55),
-  medium: darkenForMap('#2563eb', 0.5),
-  large: darkenForMap('#1d4ed8', 0.48),
-} as const;
-
-/** District boundary highlight */
+/** District boundary highlight — shared with incident clusters */
 export const MAP_DISTRICT_COLOR = darkenForMap('#2563eb', 0.48);
+
+/** Incident clusters (2D + 3D) — same hue as district outline */
+export const MAP_CLUSTER_COLORS = {
+  small: MAP_DISTRICT_COLOR,
+  medium: MAP_DISTRICT_COLOR,
+  large: MAP_DISTRICT_COLOR,
+} as const;
 
 /** Place / institution point stroke on dark basemap */
 export const MAP_POINT_STROKE = '#cbd5e1';
