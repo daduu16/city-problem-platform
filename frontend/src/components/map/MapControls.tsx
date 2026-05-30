@@ -34,7 +34,9 @@ export function MapControls({ incidents, showPlacesToggle = true }: Props) {
   const hasMapLayer = useAuthStore((s) => s.hasMapLayer);
   const {
     viewMode,
+    baseMap,
     setViewMode,
+    setBaseMap,
     showHeatmap,
     showClusters,
     showPlaces,
@@ -108,6 +110,38 @@ export function MapControls({ incidents, showPlacesToggle = true }: Props) {
               >
                 <Box className="h-3.5 w-3.5" />
                 {az.map.view3d}
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <p className={MAP_PANEL_SECTION_TITLE_CLASS}>{az.map.basemapTitle}</p>
+            <div className="grid grid-cols-3 gap-1">
+              <Button
+                type="button"
+                variant={baseMap === 'osm' ? 'default' : 'outline'}
+                size="sm"
+                className="h-8 px-2 text-[11px]"
+                onClick={() => setBaseMap('osm')}
+              >
+                {az.map.basemapOsm}
+              </Button>
+              <Button
+                type="button"
+                variant={baseMap === 'google_road' ? 'default' : 'outline'}
+                size="sm"
+                className="h-8 px-2 text-[11px]"
+                onClick={() => setBaseMap('google_road')}
+              >
+                {az.map.basemapGoogleRoad}
+              </Button>
+              <Button
+                type="button"
+                variant={baseMap === 'google_satellite' ? 'default' : 'outline'}
+                size="sm"
+                className="h-8 px-2 text-[11px]"
+                onClick={() => setBaseMap('google_satellite')}
+              >
+                {az.map.basemapGoogleSatellite}
               </Button>
             </div>
           </div>

@@ -8,6 +8,8 @@ type BackendProblem = {
   title: string;
   description: string;
   address: string;
+  lat?: number;
+  lng?: number;
   imageUrl?: string | null;
   mediaUrl?: string | null;
   mediaType?: 'image' | 'video' | null;
@@ -54,6 +56,8 @@ function toProblem(item: BackendProblem): Problem {
     title: item.title,
     description: item.description,
     address: item.address,
+    lat: item.lat,
+    lng: item.lng,
     imageUrl: item.imageUrl || undefined,
     mediaUrl: item.mediaUrl || item.imageUrl || undefined,
     mediaType: item.mediaType || (item.imageUrl ? 'image' : undefined),
@@ -126,6 +130,8 @@ export async function createProblem(input: {
   priority: ProblemPriority;
   description: string;
   address: string;
+  lat?: number;
+  lng?: number;
   imageUrl?: string;
   mediaUrl?: string;
   mediaType?: 'image' | 'video';
@@ -154,6 +160,8 @@ export async function createProblem(input: {
       title: input.title.trim(),
       description: input.description.trim(),
       address: input.address.trim(),
+      lat: input.lat,
+      lng: input.lng,
       imageUrl: input.imageUrl,
       mediaUrl: input.mediaUrl,
       mediaType: input.mediaType,

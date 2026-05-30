@@ -37,6 +37,8 @@ export type Problem = {
   status: ProblemStatus;
   description: string;
   address: string;
+  lat?: number;
+  lng?: number;
   createdAt: string;
   createdByMe: boolean;
   imageUrl?: string;

@@ -72,6 +72,8 @@ export default function ReportProblemScreen() {
   const [mapRegion, setMapRegion] = useState<Region>(defaultRegion);
   const [selectedPoint, setSelectedPoint] = useState<{ latitude: number; longitude: number } | null>(null);
   const [selectedAddress, setSelectedAddress] = useState('');
+  const [mapSearch, setMapSearch] = useState('');
+  const [mapSearchLoading, setMapSearchLoading] = useState(false);
 
   const canSubmit = useMemo(() => {
     return title.trim().length > 0 && description.trim().length > 0 && address.trim().length > 0;
@@ -103,6 +105,15 @@ export default function ReportProblemScreen() {
     setSelectedAddress(await reverseGeocode(point.latitude, point.longitude));
   }, [reverseGeocode]);
 
+  const selectMapPoint = useCallback(
+    async (point: { latitude: number; longitude: number }, label?: string) => {
+      setSelectedPoint(point);
+      setMapRegion({ ...point, latitudeDelta: 0.01, longitudeDelta: 0.01 });
+      setSelectedAddress(label || (await reverseGeocode(point.latitude, point.longitude)));
+    },
+    [reverseGeocode],
+  );
+
   const handlePickLocation = useCallback(async () => {
     try {
       setLocationLoading(true);
@@ -122,12 +133,36 @@ export default function ReportProblemScreen() {
 
   const onMapPress = useCallback(
     async (event: MapPressEvent) => {
-      const point = event.nativeEvent.coordinate;
-      setSelectedPoint(point);
-      setSelectedAddress(await reverseGeocode(point.latitude, point.longitude));
+      await selectMapPoint(event.nativeEvent.coordinate);
     },
-    [reverseGeocode],
+    [selectMapPoint],
   );
+
+  const searchMapLocation = useCallback(async () => {
+    const query = mapSearch.trim();
+    if (query.length < 3) {
+      Alert.alert('Axtarış', 'Axtarmaq üçün ən azı 3 simvol yazın.');
+      return;
+    }
+
+    try {
+      setMapSearchLoading(true);
+      const normalizedQuery = /baku|bakı|azerbaijan|azərbaycan/i.test(query)
+        ? query
+        : `${query}, Bakı, Azərbaycan`;
+      const results = await Location.geocodeAsync(normalizedQuery);
+      const first = results[0];
+      if (!first) {
+        Alert.alert('Tapılmadı', 'Bu ünvan üzrə nəticə tapılmadı.');
+        return;
+      }
+      await selectMapPoint({ latitude: first.latitude, longitude: first.longitude }, query);
+    } catch {
+      Alert.alert('Xəta', 'Ünvan axtarışı alınmadı. Yenidən cəhd edin.');
+    } finally {
+      setMapSearchLoading(false);
+    }
+  }, [mapSearch, selectMapPoint]);
 
   const applyLocation = () => {
     if (!selectedPoint) return;
@@ -230,6 +265,8 @@ export default function ReportProblemScreen() {
         priority,
         description,
         address,
+        lat: selectedPoint?.latitude,
+        lng: selectedPoint?.longitude,
         imageUrl: mediaType === 'image' ? mediaUrl : undefined,
         mediaUrl,
         mediaType,
@@ -385,6 +422,30 @@ export default function ReportProblemScreen() {
             </Pressable>
           </View>
 
+          <View style={styles.mapSearchBar}>
+            <View style={styles.mapSearchInputWrap}>
+              <Ionicons name="search-outline" size={17} color={Color.neutral500} />
+              <TextInput
+                value={mapSearch}
+                onChangeText={setMapSearch}
+                placeholder="Ünvan və ya obyekt axtar"
+                placeholderTextColor={Color.neutral500}
+                returnKeyType="search"
+                onSubmitEditing={searchMapLocation}
+                style={styles.mapSearchInput}
+              />
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              onPress={searchMapLocation}
+              style={({ pressed }) => [styles.mapSearchButton, pressed && styles.pressed]}
+            >
+              <Text style={styles.mapSearchButtonText}>
+                {mapSearchLoading ? 'Axtarılır' : 'Axtar'}
+              </Text>
+            </Pressable>
+          </View>
+
           <MapView
             style={styles.map}
             initialRegion={mapRegion}
@@ -393,7 +454,13 @@ export default function ReportProblemScreen() {
             onPress={onMapPress}
           >
             {selectedPoint ? (
-              <Marker coordinate={selectedPoint} draggable onDragEnd={(e) => onMapPress(e as unknown as MapPressEvent)} />
+              <Marker
+                coordinate={selectedPoint}
+                draggable
+                onDragEnd={(event) => {
+                  void selectMapPoint(event.nativeEvent.coordinate);
+                }}
+              />
             ) : null}
           </MapView>
 
@@ -530,6 +597,44 @@ const styles = StyleSheet.create({
   modalBtn: { paddingVertical: 4, paddingHorizontal: 2 },
   modalBtnText: { color: Color.primary600, fontSize: Typography.caption, fontWeight: '800' },
   modalTitle: { color: Color.neutral900, fontSize: Typography.body, fontWeight: '900' },
+  mapSearchBar: {
+    alignItems: 'center',
+    backgroundColor: Color.white500,
+    borderBottomColor: Color.neutral200,
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+  mapSearchInputWrap: {
+    alignItems: 'center',
+    backgroundColor: Color.neutral50,
+    borderColor: Color.neutral200,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    flex: 1,
+    flexDirection: 'row',
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: Spacing.md,
+  },
+  mapSearchInput: {
+    color: Color.neutral900,
+    flex: 1,
+    fontSize: Typography.caption,
+    fontWeight: '700',
+    paddingVertical: 10,
+  },
+  mapSearchButton: {
+    alignItems: 'center',
+    backgroundColor: Color.primary500,
+    borderRadius: BorderRadius.md,
+    justifyContent: 'center',
+    minHeight: 44,
+    paddingHorizontal: Spacing.md,
+  },
+  mapSearchButtonText: { color: Color.white500, fontSize: Typography.caption, fontWeight: '900' },
   map: { flex: 1 },
   mapInfo: { borderTopColor: 'transparent', borderTopWidth: 0, padding: Spacing.lg, gap: Spacing.md },
   mapAddress: { color: Color.neutral800, fontSize: Typography.caption, fontWeight: '700' },

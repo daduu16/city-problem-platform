@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Marker } from 'react-map-gl/maplibre';
 import type { MapIncidentPin } from '@/lib/mapIncidentPin';
-import { statusMarkerHtml } from '@/lib/incidentStyles';
+import { incidentCategoryMarkerHtml } from '@/lib/incidentCategoryMarkers';
 import { typeMarkerHtml } from '@/lib/incidentTypeStyles';
 import type { IncidentMarkerMode } from '@/stores/mapStore';
 import type { IncidentClusterFeature } from '@/lib/mapClusterUtils';
@@ -64,7 +64,7 @@ export function IncidentMarkers3D({
 				const inner =
 					markerMode === 'type'
 						? typeMarkerHtml(i.type)
-						: statusMarkerHtml(i.status);
+						: incidentCategoryMarkerHtml(i);
 				return (
 					<Marker
 						key={i.id}

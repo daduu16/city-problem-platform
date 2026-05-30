@@ -8,6 +8,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import {
   AttachmentType,
+  DistrictStatus,
   HistoryActionType,
   IncidentPriority,
   IncidentStatus,
@@ -15,6 +16,7 @@ import {
   Prisma,
 } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { DistrictService, NARIMANOV_GEOZONE_ID } from '../geozones/district.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMobileProblemDto } from './dto/create-mobile-problem.dto';
 import {
@@ -40,6 +42,7 @@ export class MobileApiService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    private districtService: DistrictService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -187,6 +190,13 @@ export class MobileApiService {
     const mediaUrl = dto.mediaUrl ?? dto.imageUrl;
     const attachmentType =
       dto.mediaType === 'video' ? AttachmentType.VIDEO : AttachmentType.PHOTO;
+    const lat = dto.lat ?? DEFAULT_LAT;
+    const lng = dto.lng ?? DEFAULT_LNG;
+    const districtStatus = await this.districtService.resolveDistrictStatus(lat, lng);
+    const geozoneId =
+      districtStatus === DistrictStatus.WITHIN_DISTRICT
+        ? NARIMANOV_GEOZONE_ID
+        : null;
 
     const incident = await this.prisma.incident.create({
       data: {
@@ -196,9 +206,11 @@ export class MobileApiService {
         priority,
         type: IncidentType.COMPLAINT,
         categoryId: category.id,
-        lat: DEFAULT_LAT,
-        lng: DEFAULT_LNG,
+        lat,
+        lng,
         address: dto.address.trim(),
+        districtStatus,
+        geozoneId,
         createdById: reporter.id,
         attachments: mediaUrl
           ? {
@@ -280,6 +292,8 @@ export class MobileApiService {
       title: incident.title,
       description: incident.description,
       address: incident.address ?? '',
+      lat: incident.lat,
+      lng: incident.lng,
       imageUrl: media?.type === AttachmentType.PHOTO ? media.fileUrl : undefined,
       mediaUrl: media?.fileUrl,
       mediaType: media?.type === AttachmentType.VIDEO ? 'video' : media ? 'image' : undefined,

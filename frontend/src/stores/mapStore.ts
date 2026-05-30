@@ -24,6 +24,7 @@ export type MapLayerKey =
   | 'greenery';
 
 export type MapViewMode = '2d' | '3d';
+export type MapBaseMap = 'osm' | 'google_road' | 'google_satellite';
 
 export type IncidentMarkerMode = 'status' | 'type';
 
@@ -36,6 +37,7 @@ export type IncidentCreateLocation = {
 
 interface MapState {
   viewMode: MapViewMode;
+  baseMap: MapBaseMap;
   showHeatmap: boolean;
   showClusters: boolean;
   showPlaces: boolean;
@@ -53,6 +55,7 @@ interface MapState {
   incidentCreateMode: IncidentCreateMode;
   incidentCreateLocation: IncidentCreateLocation | null;
   setViewMode: (mode: MapViewMode) => void;
+  setBaseMap: (baseMap: MapBaseMap) => void;
   setShowHeatmap: (v: boolean) => void;
   setShowClusters: (v: boolean) => void;
   setShowPlaces: (v: boolean) => void;
@@ -95,6 +98,7 @@ const defaultLayers: Record<MapLayerKey, boolean> = {
 
 export const useMapStore = create<MapState>((set) => ({
   viewMode: '2d',
+  baseMap: 'osm',
   showHeatmap: false,
   showClusters: true,
   showPlaces: false,
@@ -114,6 +118,7 @@ export const useMapStore = create<MapState>((set) => ({
   incidentCreateMode: false,
   incidentCreateLocation: null,
   setViewMode: (viewMode) => set({ viewMode }),
+  setBaseMap: (baseMap) => set({ baseMap }),
   setShowHeatmap: (showHeatmap) => set({ showHeatmap }),
   setShowClusters: (showClusters) => set({ showClusters }),
   setShowPlaces: (showPlaces) => set({ showPlaces }),

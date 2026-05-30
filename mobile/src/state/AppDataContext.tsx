@@ -10,6 +10,8 @@ type CreateProblemInput = {
   priority: ProblemPriority;
   description: string;
   address: string;
+  lat?: number;
+  lng?: number;
   imageUrl?: string;
   mediaUrl?: string;
   mediaType?: 'image' | 'video';
