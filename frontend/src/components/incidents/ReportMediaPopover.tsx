@@ -44,8 +44,8 @@ const MediaIconButton = forwardRef<
       className={cn(
         'inline-flex h-8 items-center justify-center gap-1.5 rounded-md border px-2 transition-colors',
         variant === 'timeline'
-          ? 'border-white/40 bg-black/45 text-white shadow-sm hover:bg-black/60'
-          : 'h-8 w-8 border-amber-500/40 bg-amber-500/10 text-amber-200 hover:border-amber-400/60 hover:bg-amber-500/20',
+          ? 'border-border/70 bg-background text-foreground shadow-sm hover:bg-muted/70'
+          : 'h-8 w-8 border-primary/25 bg-primary/10 text-primary hover:border-primary/40 hover:bg-primary/15',
         className,
       )}
       aria-label={label}
@@ -132,7 +132,7 @@ export function ReportMediaPopover({
     <div
       className={cn(
         'flex flex-wrap items-center gap-2',
-        isTimeline && 'rounded-md border border-white/20 bg-black/25 p-2',
+        isTimeline && 'rounded-md border border-border/60 bg-muted/40 p-2',
         className,
       )}
     >
@@ -144,8 +144,8 @@ export function ReportMediaPopover({
               className={cn(
                 'block overflow-hidden rounded-md border ring-offset-background transition hover:ring-2',
                 isTimeline
-                  ? 'border-white/30 hover:ring-white/50'
-                  : 'border-border/80 hover:ring-amber-500/50',
+                  ? 'border-border/70 hover:ring-primary/30'
+                  : 'border-border/80 hover:ring-primary/30',
               )}
               aria-label={az.reportMedia.photoAria}
             >

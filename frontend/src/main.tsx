@@ -6,8 +6,6 @@ import App from './App';
 import 'react-day-picker/style.css';
 import './index.css';
 
-document.documentElement.classList.add('dark');
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { staleTime: 30_000, retry: 1 },

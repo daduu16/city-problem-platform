@@ -12,7 +12,7 @@ export const CHART = {
       backgroundColor: hslVar('--popover'),
       border: `1px solid ${hslVar('--border')}`,
       borderRadius: 'var(--radius)',
-      boxShadow: '0 8px 24px -6px rgb(0 0 0 / 0.45)',
+      boxShadow: '0 4px 16px -4px rgb(0 0 0 / 0.1)',
       padding: '10px 12px',
     },
     labelStyle: {

@@ -8,8 +8,18 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  const corsOrigins = process.env.CORS_ORIGIN?.split(',').map((o) => o.trim()).filter(Boolean);
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:5173'],
+    // React Native has no Origin header; allow configured web origins + non-browser clients.
+    origin: corsOrigins?.length
+      ? (origin, callback) => {
+          if (!origin || corsOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(null, false);
+          }
+        }
+      : true,
     credentials: true,
   });
 

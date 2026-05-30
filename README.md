@@ -57,11 +57,15 @@ UI: `http://localhost:5173`
 
 ### 4. Mobile
 
+Start the backend first (`npm run dev:backend`), then:
+
 ```bash
 cd mobile
 npm install
 npm start
 ```
+
+The app talks to **http://localhost:3001** (or your machine LAN IP on a physical device via `EXPO_PUBLIC_API_URL` in `mobile/.env`).
 
 Mobile app uses the NestJS backend compatibility endpoints under `/api/*`:
 

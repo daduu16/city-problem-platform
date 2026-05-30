@@ -147,13 +147,13 @@ export function MapViewPage({ variant }: Props) {
 					</p>
 				)}
 			</header>
-			<div className="relative m-4 mt-0 flex-1 overflow-hidden rounded-xl">
-				<Card className="h-full overflow-hidden border-0 shadow-none">
+			<div className="relative flex-1 overflow-hidden">
+				<Card className="h-full overflow-hidden rounded-none border-0 shadow-none">
 					{isLoading || !mapReady ? (
-						<Skeleton className="h-full w-full rounded-xl" />
+						<Skeleton className="h-full w-full rounded-none" />
 					) : viewMode === "3d" ? (
 						<Suspense
-							fallback={<Skeleton className="h-full w-full rounded-xl" />}
+							fallback={<Skeleton className="h-full w-full rounded-none" />}
 						>
 							<IncidentMap3D
 								incidents={incidents}

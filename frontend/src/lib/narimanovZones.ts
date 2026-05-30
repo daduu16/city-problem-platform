@@ -21,10 +21,10 @@ export const DISTRICT_ZONE_STYLES: Record<
 	DistrictZoneId,
 	{ color: string; fillOpacity: number }
 > = {
-	A: { color: '#2563eb', fillOpacity: 0.14 },
-	B: { color: '#7c3aed', fillOpacity: 0.14 },
-	C: { color: '#d97706', fillOpacity: 0.14 },
-	D: { color: '#059669', fillOpacity: 0.14 },
+	A: { color: '#5d5fef', fillOpacity: 0.16 },
+	B: { color: '#ff4d4f', fillOpacity: 0.16 },
+	C: { color: '#faad14', fillOpacity: 0.16 },
+	D: { color: '#52c41a', fillOpacity: 0.16 },
 };
 
 /** Map fill/outline when the zone is toggled off (incidents still hidden). */

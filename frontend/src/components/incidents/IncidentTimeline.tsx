@@ -32,21 +32,22 @@ const STATUS_VALUES = new Set<string>([
   'ARCHIVED',
 ]);
 
-function HistoryIcon({ actionType }: { actionType: string }) {
-  const className = 'h-3.5 w-3.5 shrink-0 opacity-90';
+function HistoryIcon({ actionType, color }: { actionType: string; color: string }) {
+  const className = 'h-3.5 w-3.5 shrink-0';
+  const props = { className, style: { color }, 'aria-hidden': true as const };
   switch (actionType) {
     case 'CITIZEN_REPORT':
-      return <UserRound className={className} />;
+      return <UserRound {...props} />;
     case 'CREATED':
-      return <FilePlus2 className={className} />;
+      return <FilePlus2 {...props} />;
     case 'ASSIGNED':
-      return <UserPlus className={className} />;
+      return <UserPlus {...props} />;
     case 'COMMENT':
-      return <MessageSquare className={className} />;
+      return <MessageSquare {...props} />;
     case 'STATUS_CHANGED':
-      return <RefreshCw className={className} />;
+      return <RefreshCw {...props} />;
     default:
-      return <RefreshCw className={className} />;
+      return <RefreshCw {...props} />;
   }
 }
 
@@ -78,7 +79,7 @@ function StatusChangeDetail({
   const to = newValue && STATUS_VALUES.has(newValue) ? newValue : null;
   if (!from && !to) {
     return (
-      <p className="text-sm text-foreground/90">
+      <p className="text-sm text-foreground">
         {formatHistoryDetail('STATUS_CHANGED', oldValue, newValue)}
       </p>
     );
@@ -87,7 +88,7 @@ function StatusChangeDetail({
     <div className="flex flex-wrap items-center gap-1.5 text-sm">
       {from && <StatusPill status={from} />}
       {from && to && (
-        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+        <ArrowRight className="h-3.5 w-3.5 text-foreground/50" aria-hidden />
       )}
       {to && <StatusPill status={to} />}
     </div>
@@ -108,7 +109,7 @@ function TimelineEventBody({ item }: { item: HistoryItem }) {
   );
   if (!detail) return null;
 
-  return <p className="text-sm leading-relaxed text-foreground/90">{detail}</p>;
+  return <p className="text-sm leading-relaxed text-foreground">{detail}</p>;
 }
 
 function actorRoleLabel(actionType: string): string | null {
@@ -138,14 +139,14 @@ interface Props {
 export function IncidentTimeline({ history, reports = [], reporterCount }: Props) {
   if (history.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">{az.drawer.timelineEmpty}</p>
+      <p className="text-sm text-foreground/75">{az.drawer.timelineEmpty}</p>
     );
   }
 
   return (
     <div>
       {reporterCount != null && reporterCount > 0 && (
-        <p className="mb-3 text-xs text-muted-foreground">
+        <p className="mb-3 text-xs leading-relaxed text-foreground/70">
           {az.drawer.reportersHint} · {az.drawer.reportersTitle(reporterCount)}
         </p>
       )}
@@ -168,13 +169,13 @@ export function IncidentTimeline({ history, reports = [], reporterCount }: Props
                   aria-hidden
                 />
               )}
-              <span
-                className="relative z-[1] mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ring-2 ring-background"
-                style={{ backgroundColor: style.dotColor }}
-                aria-hidden
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-background/90" />
-              </span>
+                <span
+                  className="relative z-[1] mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ring-2 ring-card"
+                  style={{ backgroundColor: style.dotColor }}
+                  aria-hidden
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                </span>
               <div
                 className="min-w-0 flex-1 rounded-lg border px-3 py-2.5"
                 style={{
@@ -184,16 +185,16 @@ export function IncidentTimeline({ history, reports = [], reporterCount }: Props
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-1.5">
-                    <HistoryIcon actionType={item.actionType} />
+                    <HistoryIcon actionType={item.actionType} color={style.iconColor} />
                     <span
-                      className="text-xs font-semibold uppercase tracking-wide"
+                      className="text-sm font-semibold tracking-tight"
                       style={{ color: style.titleColor }}
                     >
                       {formatHistoryTitle(item.actionType)}
                     </span>
                   </div>
                   <time
-                    className="shrink-0 text-[10px] tabular-nums text-muted-foreground"
+                    className="shrink-0 text-xs tabular-nums text-foreground/65"
                     dateTime={item.createdAt}
                   >
                     {format(new Date(item.createdAt), 'PPp', {
@@ -215,12 +216,12 @@ export function IncidentTimeline({ history, reports = [], reporterCount }: Props
                   />
                 )}
 
-                <p className="mt-2 text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground/85">
+                <p className="mt-2 text-xs text-foreground/75">
+                  <span className="font-semibold text-foreground">
                     {item.createdBy.name}
                   </span>
                   {roleLabel && (
-                    <span className="text-muted-foreground"> · {roleLabel}</span>
+                    <span className="text-foreground/70"> · {roleLabel}</span>
                   )}
                 </p>
               </div>

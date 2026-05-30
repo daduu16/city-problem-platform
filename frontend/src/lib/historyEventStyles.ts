@@ -18,54 +18,61 @@ export interface HistoryEventStyle {
   cardBg: string;
   cardBorder: string;
   titleColor: string;
+  iconColor: string;
 }
 
 const CITIZEN: HistoryEventStyle = {
-  dotColor: '#f59e0b',
-  lineColor: 'rgba(245, 158, 11, 0.45)',
-  cardBg: 'rgba(245, 158, 11, 0.12)',
-  cardBorder: 'rgba(245, 158, 11, 0.35)',
-  titleColor: '#fbbf24',
+  dotColor: '#faad14',
+  lineColor: 'rgba(250, 173, 20, 0.35)',
+  cardBg: 'rgba(250, 173, 20, 0.08)',
+  cardBorder: 'rgba(250, 173, 20, 0.28)',
+  titleColor: '#874d00',
+  iconColor: '#ad6800',
 };
 
 const DISPATCH: HistoryEventStyle = {
-  dotColor: '#38bdf8',
-  lineColor: 'rgba(56, 189, 248, 0.4)',
-  cardBg: 'rgba(56, 189, 248, 0.1)',
-  cardBorder: 'rgba(56, 189, 248, 0.3)',
-  titleColor: '#7dd3fc',
+  dotColor: '#5d5fef',
+  lineColor: 'rgba(93, 95, 239, 0.3)',
+  cardBg: 'rgba(93, 95, 239, 0.07)',
+  cardBorder: 'rgba(93, 95, 239, 0.22)',
+  titleColor: '#3538b8',
+  iconColor: '#5d5fef',
 };
 
 const ASSIGN: HistoryEventStyle = {
-  dotColor: '#a78bfa',
-  lineColor: 'rgba(167, 139, 250, 0.4)',
-  cardBg: 'rgba(167, 139, 250, 0.1)',
-  cardBorder: 'rgba(167, 139, 250, 0.32)',
-  titleColor: '#c4b5fd',
+  dotColor: '#9254de',
+  lineColor: 'rgba(146, 84, 222, 0.3)',
+  cardBg: 'rgba(146, 84, 222, 0.07)',
+  cardBorder: 'rgba(146, 84, 222, 0.22)',
+  titleColor: '#531dab',
+  iconColor: '#9254de',
 };
 
 const COMMENT: HistoryEventStyle = {
-  dotColor: '#94a3b8',
-  lineColor: 'rgba(148, 163, 184, 0.35)',
-  cardBg: 'rgba(148, 163, 184, 0.08)',
-  cardBorder: 'rgba(148, 163, 184, 0.25)',
-  titleColor: '#cbd5e1',
+  dotColor: '#8c8c8c',
+  lineColor: 'rgba(140, 140, 140, 0.28)',
+  cardBg: 'rgba(140, 140, 140, 0.06)',
+  cardBorder: 'rgba(140, 140, 140, 0.2)',
+  titleColor: '#434343',
+  iconColor: '#595959',
 };
 
 const PRIORITY: HistoryEventStyle = {
-  dotColor: '#fb923c',
-  lineColor: 'rgba(251, 146, 60, 0.4)',
-  cardBg: 'rgba(251, 146, 60, 0.1)',
-  cardBorder: 'rgba(251, 146, 60, 0.3)',
-  titleColor: '#fdba74',
+  dotColor: '#fa8c16',
+  lineColor: 'rgba(250, 140, 22, 0.32)',
+  cardBg: 'rgba(250, 140, 22, 0.08)',
+  cardBorder: 'rgba(250, 140, 22, 0.26)',
+  titleColor: '#ad4e00',
+  iconColor: '#d46b08',
 };
 
 const DEFAULT: HistoryEventStyle = {
-  dotColor: '#64748b',
-  lineColor: 'rgba(100, 116, 139, 0.35)',
-  cardBg: 'rgba(100, 116, 139, 0.08)',
-  cardBorder: 'rgba(100, 116, 139, 0.22)',
-  titleColor: '#94a3b8',
+  dotColor: '#8c8c8c',
+  lineColor: 'rgba(140, 140, 140, 0.28)',
+  cardBg: 'rgba(140, 140, 140, 0.06)',
+  cardBorder: 'rgba(140, 140, 140, 0.2)',
+  titleColor: '#434343',
+  iconColor: '#595959',
 };
 
 function statusStyle(status: string): HistoryEventStyle {
@@ -74,8 +81,9 @@ function statusStyle(status: string): HistoryEventStyle {
     dotColor: s.color,
     lineColor: s.bg,
     cardBg: s.bg,
-    cardBorder: s.border,
+    cardBorder: `${s.border}55`,
     titleColor: s.color,
+    iconColor: s.color,
   };
 }
 

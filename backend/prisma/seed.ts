@@ -232,7 +232,7 @@ async function seedMobileContent() {
         summary: 'Tarix: 17 may 2026. Nərimanov RİH rəhbərliyi şəhid Əli Qasımovun ailəsini ziyarət edib.',
         description:
           'Nərimanov Rayon İcra Hakimiyyətinin başçısı Elgin Həbibullayev, Nərimanov Bələdiyyəsinin sədri Təmraz Tağıyev və icra hakimiyyətinin məsul şəxsləri Vətən Müharibəsi şəhidi Əli İbrahim oğlu Qasımovun ailəsini ziyarət etmiş, onun əziz xatirəsini hörmətlə yad etmişlər.',
-        imageUrl: 'http://localhost:4000/news/nar1.jpeg',
+        imageUrl: '/news/nar1.jpeg',
         publishedAt: new Date('2026-05-17T09:00:00.000Z'),
       },
       {
@@ -240,7 +240,7 @@ async function seedMobileContent() {
         summary: 'Tarix: 16 may 2026. RİH başçısı 193 saylı məktəbdə sakinlərlə səyyar görüş-qəbul keçirib.',
         description:
           'Nərimanov Rayon İcra Hakimiyyətinin başçısı Elgin Həbibullayev 193 saylı tam orta məktəbdə sakinlərlə səyyar görüş-qəbulu keçirmişdir. Sakinlərin abadlıq, su-kanalizasiya və yaşıllıqla bağlı müraciətləri dinlənilmişdir.',
-        imageUrl: 'http://localhost:4000/news/nar2.jpg',
+        imageUrl: '/news/nar2.jpg',
         publishedAt: new Date('2026-05-16T12:00:00.000Z'),
       },
       {
@@ -248,7 +248,7 @@ async function seedMobileContent() {
         summary: 'Tarix: 15 may 2026. Ailə dəyərlərinin təbliği məqsədilə rayon tədbiri keçirilib.',
         description:
           'Nərimanov rayonunda 15 May - Beynəlxalq Ailə Günü ərəfəsində ailə dəyərlərinin təbliği və ailə institutunun möhkəmləndirilməsi məqsədilə tədbir keçirilmişdir.',
-        imageUrl: 'http://localhost:4000/news/nar3.jpg',
+        imageUrl: '/news/nar3.jpg',
         publishedAt: new Date('2026-05-15T10:30:00.000Z'),
       },
     ],

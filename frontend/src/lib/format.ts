@@ -27,3 +27,20 @@ export function formatRole(roleKey: string): string {
 export function formatHistoryAction(action: string): string {
   return tHistoryAction(action);
 }
+
+/** Relative time label for dashboard feeds (Azerbaijani). */
+export function formatRelativeTime(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 1) return 'İndi';
+  if (minutes < 60) return `${minutes} dəq əvvəl`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} saat əvvəl`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} gün əvvəl`;
+  return new Date(iso).toLocaleDateString('az-AZ', { day: 'numeric', month: 'short' });
+}
+
+export function formatShortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('az-AZ', { day: 'numeric', month: 'short' });
+}

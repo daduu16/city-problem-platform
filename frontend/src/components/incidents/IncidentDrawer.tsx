@@ -27,6 +27,11 @@ interface Props {
 	onClose: () => void;
 }
 
+const drawerSectionTitle =
+	"text-sm font-semibold tracking-tight text-foreground";
+const drawerSectionHint = "text-xs leading-relaxed text-foreground/70";
+const drawerMetaText = "text-xs text-foreground/75";
+
 function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 	const queryClient = useQueryClient();
 
@@ -71,7 +76,7 @@ function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 					{isLoading ? <Skeleton className="h-6 w-3/4" /> : incident?.title}
 				</h2>
 				{incident && citizenReportTotal > 0 && (
-					<p className="mt-1 text-xs text-muted-foreground">
+					<p className="mt-1 text-xs text-foreground/70">
 						{az.drawer.citizenReportsTitle(citizenReportTotal)}
 						{citizenReportTotal > 1
 							? ` · ${az.drawer.citizenReportsHint}`
@@ -110,21 +115,25 @@ function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 							</Badge>
 						</div>
 
-						<p className="text-sm text-muted-foreground">{incident.description}</p>
+						<p className="text-sm leading-relaxed text-foreground/90">
+							{incident.description}
+						</p>
 
 						{incident.address && (
-							<p className="text-xs text-muted-foreground">📍 {incident.address}</p>
+							<p className={drawerMetaText}>📍 {incident.address}</p>
 						)}
 
 						{incident.assignedTo && (
-							<p className="text-sm">
-								<span className="text-muted-foreground">{az.drawer.assignee}:</span>{" "}
+							<p className="text-sm text-foreground">
+								<span className="font-medium text-foreground/80">
+									{az.drawer.assignee}:
+								</span>{" "}
 								{incident.assignedTo.name}
 							</p>
 						)}
 
 						{incident.deadline && (
-							<p className="text-sm font-medium text-amber-500">
+							<p className="text-sm font-medium text-amber-700">
 								{az.drawer.deadline}:{" "}
 								{format(new Date(incident.deadline), "PPp", { locale: azLocale })}
 							</p>
@@ -134,24 +143,24 @@ function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 							<>
 								<Separator />
 								<section>
-									<h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+									<h4 className={`mb-1 ${drawerSectionTitle}`}>
 										{az.drawer.reportsSection}
 									</h4>
-									<p className="mb-3 text-xs text-muted-foreground">
+									<p className={`mb-3 ${drawerSectionHint}`}>
 										{az.drawer.reportLocationHint}
 									</p>
 									<ul className="space-y-3">
 										{incident.reports.map((report) => (
 											<li
 												key={report.id}
-												className="rounded-lg border bg-muted/30 px-3 py-2.5"
+												className="rounded-lg border border-border/60 bg-muted/40 px-3 py-2.5"
 											>
 												{report.title && (
-													<p className="text-xs font-medium text-foreground/80">
+													<p className="text-xs font-medium text-foreground">
 														{report.title}
 													</p>
 												)}
-												<p className="mt-1 text-sm leading-relaxed text-foreground/90">
+												<p className="mt-1 text-sm leading-relaxed text-foreground">
 													{report.message}
 												</p>
 												{hasReportMedia(report) && (
@@ -164,13 +173,13 @@ function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 												)}
 												{(report.address ||
 													(report.lat != null && report.lng != null)) && (
-													<p className="mt-2 text-xs text-muted-foreground">
+													<p className={`mt-2 ${drawerMetaText}`}>
 														{report.address ??
 															`${report.lat.toFixed(5)}, ${report.lng.toFixed(5)}`}
 													</p>
 												)}
-												<p className="mt-2 text-xs text-muted-foreground">
-													<span className="font-medium text-foreground/85">
+												<p className={`mt-2 ${drawerMetaText}`}>
+													<span className="font-semibold text-foreground">
 														{report.reporter.name}
 													</span>
 													{" · "}
@@ -188,7 +197,7 @@ function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 						<Separator />
 
 						<section>
-							<h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+							<h4 className={`mb-3 ${drawerSectionTitle}`}>
 								{az.drawer.timeline}
 							</h4>
 							<IncidentTimeline
@@ -203,10 +212,10 @@ function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 						<Separator />
 
 						<section>
-							<h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+							<h4 className={`mb-3 ${drawerSectionTitle}`}>
 								{az.drawer.comments}
 							</h4>
-							<p className="mb-3 text-xs text-muted-foreground">
+							<p className={`mb-3 ${drawerSectionHint}`}>
 								{az.drawer.commentsHint}
 							</p>
 							<form

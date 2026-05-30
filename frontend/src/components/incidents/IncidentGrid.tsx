@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useMemo } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import type { ColDef, ICellRendererParams, RowClassParams } from 'ag-grid-community';
@@ -18,6 +19,7 @@ import { cn } from '@/lib/utils';
 interface Props {
   rows: MapIncident[];
   onRowClick: (id: string) => void;
+  toolbar?: ReactNode;
 }
 
 function StatusCellRenderer(params: ICellRendererParams<MapIncident, IncidentStatus>) {
@@ -31,8 +33,8 @@ function PriorityCellRenderer(params: ICellRendererParams<MapIncident>) {
 }
 
 function AddressCellRenderer(params: ICellRendererParams<MapIncident, string>) {
-  if (!params.value) return <span className="text-muted-foreground">—</span>;
-  return <span className="truncate text-muted-foreground">{params.value}</span>;
+  if (!params.value) return <span className="text-foreground/50">—</span>;
+  return <span className="truncate text-foreground/75">{params.value}</span>;
 }
 
 // Human-friendly created date: relative for recent days, otherwise short date
@@ -45,7 +47,7 @@ function formatCreatedAt(value?: string): string {
   return format(date, 'd MMM, HH:mm', { locale: azLocale });
 }
 
-export function IncidentGrid({ rows, onRowClick }: Props) {
+export function IncidentGrid({ rows, onRowClick, toolbar }: Props) {
   const columnDefs = useMemo<ColDef<MapIncident>[]>(
     () => [
       {
@@ -53,21 +55,18 @@ export function IncidentGrid({ rows, onRowClick }: Props) {
         headerName: az.incidents.colTitle,
         flex: 2,
         minWidth: 220,
-        filter: true,
         cellClass: 'ag-cell-primary',
         tooltipField: 'title',
       },
       {
         field: 'status',
         headerName: az.incidents.colStatus,
-        filter: true,
         cellRenderer: StatusCellRenderer,
         width: 160,
       },
       {
         field: 'priority',
         headerName: az.incidents.colPriority,
-        filter: true,
         cellRenderer: PriorityCellRenderer,
         width: 140,
       },
@@ -76,25 +75,22 @@ export function IncidentGrid({ rows, onRowClick }: Props) {
         headerName: az.incidents.colCategory,
         valueGetter: (p) => p.data?.category?.name ?? p.data?.category?.key,
         valueFormatter: (p) => formatCategory(p.value as string),
-        filter: true,
         minWidth: 150,
       },
       {
         field: 'districtStatus',
         headerName: az.incidents.colDistrict,
-        filter: true,
         valueFormatter: (p) =>
           p.value === 'OUTSIDE_DISTRICT' ? tDistrictStatus(p.value as string) : '—',
         width: 160,
         cellClass: (p) =>
-          p.value === 'OUTSIDE_DISTRICT' ? 'text-amber-400 font-medium' : '',
+          p.value === 'OUTSIDE_DISTRICT' ? 'text-amber-700 font-medium' : '',
       },
       {
         field: 'address',
         headerName: az.incidents.colAddress,
         flex: 1.5,
         minWidth: 180,
-        filter: true,
         cellRenderer: AddressCellRenderer,
         tooltipField: 'address',
       },
@@ -102,7 +98,7 @@ export function IncidentGrid({ rows, onRowClick }: Props) {
         field: 'createdAt',
         headerName: az.incidents.colCreated,
         valueFormatter: (p) => formatCreatedAt(p.value as string),
-        cellClass: 'text-muted-foreground',
+        cellClass: 'text-foreground/70',
         width: 170,
       },
     ],
@@ -119,11 +115,12 @@ export function IncidentGrid({ rows, onRowClick }: Props) {
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden border-border/60 shadow-sm">
+      {toolbar}
       <CardContent className="p-0">
         <div
           className={cn(
-            'ag-theme-alpine-dark ag-theme-shadcn incident-grid h-[calc(100vh-13rem)] w-full overflow-hidden',
+            'ag-theme-alpine ag-theme-shadcn incident-grid h-[calc(100vh-16.5rem)] w-full overflow-hidden',
           )}
         >
           <AgGridReact
@@ -133,7 +130,6 @@ export function IncidentGrid({ rows, onRowClick }: Props) {
               sortable: true,
               resizable: true,
               suppressMovable: true,
-              filterParams: { buttons: ['reset'] },
             }}
             animateRows
             suppressCellFocus
@@ -154,9 +150,7 @@ export function IncidentGrid({ rows, onRowClick }: Props) {
               last: 'Son',
               pageSizeSelectorLabel: 'Sətir:',
               loadingOoo: 'Yüklənir…',
-              noRowsToShow: 'Məlumat yoxdur',
-              filterOoo: 'Filtr…',
-              resetFilter: 'Sıfırla',
+              noRowsToShow: az.incidents.noRows,
             }}
           />
         </div>

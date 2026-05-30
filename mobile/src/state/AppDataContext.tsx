@@ -85,7 +85,10 @@ export function AppDataProvider({ children }: PropsWithChildren) {
           createdByMe: myCreatedIds.includes(problem.id),
         })),
       );
-    } catch {
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('[AppData] Backend unreachable, showing mock data:', error);
+      }
       setNews(mockNews);
       setNotifications(mockNotifications.map(withNotificationDefaults));
       setProblems(mockProblems.map(withVoteDefaults));

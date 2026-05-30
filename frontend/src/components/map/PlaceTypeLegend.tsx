@@ -4,6 +4,8 @@ import {
   getPlaceTypeLabel,
 } from '@/lib/placeTypeStyles';
 import { az } from '@/i18n/az';
+import { MAP_GLASS_PANEL_CLASS } from '@/lib/mapGlass';
+import { MAP_PANEL_TITLE_CLASS } from '@/lib/mapPanelStyles';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -12,9 +14,9 @@ export function PlaceTypeLegend() {
   const { visiblePlaceTypes, togglePlaceType } = useMapStore();
 
   return (
-    <Card className="w-full border-border/80 bg-card/95 shadow-lg backdrop-blur">
+    <Card className={`w-full ${MAP_GLASS_PANEL_CLASS}`}>
       <CardHeader className="p-3 pb-2">
-        <CardTitle className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        <CardTitle className={MAP_PANEL_TITLE_CLASS}>
           {az.map.placesTitle}
         </CardTitle>
       </CardHeader>

@@ -10,6 +10,8 @@ import { useNarimanovRayon } from '@/hooks/useNarimanovRayon';
 import { useMapStore } from '@/stores/mapStore';
 import type { MapIncident } from '@/types';
 import { az } from '@/i18n/az';
+import { MAP_GLASS_PANEL_CLASS } from '@/lib/mapGlass';
+import { MAP_PANEL_HINT_CLASS, MAP_PANEL_TITLE_CLASS } from '@/lib/mapPanelStyles';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -39,9 +41,9 @@ export function DistrictZonesLegend({ incidents }: Props) {
 	);
 
 	return (
-		<Card className="border-border/80 bg-card/95 shadow-lg backdrop-blur">
+		<Card className={MAP_GLASS_PANEL_CLASS}>
 			<CardHeader className="p-3 pb-2">
-				<CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+				<CardTitle className={MAP_PANEL_TITLE_CLASS}>
 					{az.map.zonesTitle}
 				</CardTitle>
 			</CardHeader>
@@ -89,7 +91,7 @@ export function DistrictZonesLegend({ incidents }: Props) {
 						);
 					})}
 				</ul>
-				<p className="text-[10px] leading-snug text-muted-foreground">
+				<p className={MAP_PANEL_HINT_CLASS}>
 					{az.map.zonesHint}
 				</p>
 			</CardContent>

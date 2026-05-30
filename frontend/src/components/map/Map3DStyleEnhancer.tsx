@@ -60,29 +60,10 @@ function muteRoadLayers(map: MaplibreMap) {
     if (!isRoad) continue;
 
     try {
-      map.setPaintProperty(id, 'line-color', [
-        'interpolate',
-        ['linear'],
-        ['zoom'],
-        10,
-        'hsl(220 14% 22%)',
-        14,
-        'hsl(220 12% 28%)',
-        16,
-        'hsl(220 10% 32%)',
-      ]);
-      map.setPaintProperty(id, 'line-opacity', 0.85);
+      map.setPaintProperty(id, 'line-opacity', 0.75);
     } catch {
-      /* layer may not support line-color */
+      /* layer may not support line-opacity */
     }
-  }
-}
-
-function muteBackground(map: MaplibreMap) {
-  try {
-    map.setPaintProperty('background', 'background-color', 'hsl(222 24% 6%)');
-  } catch {
-    /* no background layer */
   }
 }
 
@@ -100,7 +81,6 @@ export function Map3DStyleEnhancer({ hideBaseBuildings }: Props) {
     const apply = () => {
       if (!map.isStyleLoaded()) return;
 
-      muteBackground(map);
       muteRoadLayers(map);
 
       const baseVisibility = hideBaseBuildings ? 'none' : 'visible';

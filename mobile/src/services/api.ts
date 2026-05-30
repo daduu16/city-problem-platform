@@ -1,14 +1,7 @@
-import Constants from 'expo-constants';
-import { Platform } from 'react-native';
-
+import { getApiBaseUrl } from '@/config/api';
 import { News, NotificationItem, Problem, ProblemCategory, ProblemPriority, ProblemStatus } from '@/types';
 
-const host = Constants.expoConfig?.hostUri?.split(':')[0];
-const API_BASE_URL = host
-  ? `http://${host}:4000`
-  : Platform.OS === 'android'
-    ? 'http://10.0.2.2:4000'
-    : 'http://localhost:4000';
+export const API_BASE_URL = getApiBaseUrl();
 
 type BackendProblem = {
   id: string;
@@ -76,9 +69,12 @@ function toProblem(item: BackendProblem): Problem {
 
 function normalizeAssetUrl(url?: string | null): string | undefined {
   if (!url) return undefined;
-  if (url.startsWith('http://localhost:4000') || url.startsWith('http://127.0.0.1:4000')) {
-    const path = url.replace(/^https?:\/\/(localhost|127\.0\.0\.1):4000/, '');
-    return `${API_BASE_URL}${path}`;
+  if (url.startsWith('/')) {
+    return `${API_BASE_URL}${url}`;
+  }
+  const legacy = url.match(/^https?:\/\/(localhost|127\.0\.0\.1):(4000|3001)(\/.*)?$/);
+  if (legacy) {
+    return `${API_BASE_URL}${legacy[3] ?? ''}`;
   }
   return url;
 }
@@ -168,5 +164,3 @@ export async function createProblem(input: {
 
   return { ...toProblem(created), createdByMe: true };
 }
-
-export { API_BASE_URL };

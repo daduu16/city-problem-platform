@@ -42,4 +42,40 @@ export class AnalyticsController {
   getHotZones(@CurrentUser() user: JwtPayload) {
     return this.analyticsService.getHotZones(user);
   }
+
+  @RequirePermission('view_dashboard')
+  @Get('by-priority')
+  getByPriority(@CurrentUser() user: JwtPayload) {
+    return this.analyticsService.getByPriority(user);
+  }
+
+  @RequirePermission('view_dashboard')
+  @Get('recent-events')
+  getRecentEvents(
+    @CurrentUser() user: JwtPayload,
+    @Query('limit') limit?: string,
+  ) {
+    return this.analyticsService.getRecentEvents(
+      user,
+      limit ? parseInt(limit, 10) : 8,
+    );
+  }
+
+  @RequirePermission('view_dashboard')
+  @Get('top-zones')
+  getTopZones(@CurrentUser() user: JwtPayload) {
+    return this.analyticsService.getTopZones(user);
+  }
+
+  @RequirePermission('view_dashboard')
+  @Get('resolution-timeline')
+  getResolutionTimeline(
+    @CurrentUser() user: JwtPayload,
+    @Query('days') days?: string,
+  ) {
+    return this.analyticsService.getResolutionTimeline(
+      user,
+      days ? parseInt(days, 10) : 14,
+    );
+  }
 }

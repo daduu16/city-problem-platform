@@ -1,21 +1,28 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { az } from '@/i18n/az';
 import { countIncidentsByCategory } from '@/lib/mapIncidentCounts';
+import { buildMapCategoryCheckboxKeys } from '@/lib/mapIncidentCategory';
+import { canViewCategory } from '@/lib/mapCategories';
+import { INCIDENT_CATEGORY_TREE, pruneCategoryTree } from '@/lib/categoryTree';
 import {
-  buildCategoryLabelMap,
-  buildMapCategoryCheckboxKeys,
-  resolveMapCategoryLabel,
-} from '@/lib/mapIncidentCategory';
+  MAP_PANEL_HINT_CLASS,
+  MAP_PANEL_SECTION_TITLE_CLASS,
+  MAP_PANEL_TITLE_CLASS,
+} from '@/lib/mapPanelStyles';
 import { useAuthStore } from '@/stores/authStore';
 import { useMapStore } from '@/stores/mapStore';
 import type { MapIncident } from '@/types';
+import {
+  CategoryTreeDropdown,
+  getCheckboxCategoryTriggerLabel,
+} from '@/components/shared/CategoryTreeDropdown';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Box, Layers, Map, Search } from 'lucide-react';
+import { MAP_GLASS_PANEL_CLASS } from '@/lib/mapGlass';
+import { Box, Layers, Map } from 'lucide-react';
 
 type Props = {
   /** Incidents after date filter only — used for stable per-category totals. */
@@ -25,7 +32,6 @@ type Props = {
 
 export function MapControls({ incidents, showPlacesToggle = true }: Props) {
   const hasMapLayer = useAuthStore((s) => s.hasMapLayer);
-  const [categoryQuery, setCategoryQuery] = useState('');
   const {
     viewMode,
     setViewMode,
@@ -42,14 +48,17 @@ export function MapControls({ incidents, showPlacesToggle = true }: Props) {
     toggleMap3dFlatView,
   } = useMapStore();
 
-  const categoryLabels = useMemo(
-    () => buildCategoryLabelMap(incidents),
-    [incidents],
-  );
-
   const checkboxKeys = useMemo(
     () => buildMapCategoryCheckboxKeys(incidents, hasMapLayer),
     [incidents, hasMapLayer],
+  );
+
+  const categoryTree = useMemo(
+    () =>
+      pruneCategoryTree(INCIDENT_CATEGORY_TREE, (key) =>
+        canViewCategory(key, hasMapLayer),
+      ),
+    [hasMapLayer],
   );
 
   const categoryCounts = useMemo(
@@ -57,35 +66,28 @@ export function MapControls({ incidents, showPlacesToggle = true }: Props) {
     [incidents, checkboxKeys],
   );
 
-  const filteredCategoryKeys = useMemo(() => {
-    const q = categoryQuery.trim().toLocaleLowerCase('az');
-    if (!q) return checkboxKeys;
-    return checkboxKeys.filter((key) => {
-      const label = resolveMapCategoryLabel(key, categoryLabels).toLocaleLowerCase(
-        'az',
-      );
-      return label.includes(q) || key.toLocaleLowerCase('az').includes(q);
-    });
-  }, [checkboxKeys, categoryLabels, categoryQuery]);
-
-  const allCategoriesChecked =
-    checkboxKeys.length > 0 &&
-    checkboxKeys.every((key) => visibleCategories[key] === true);
-  const someCategoriesChecked = checkboxKeys.some(
-    (key) => visibleCategories[key] === true,
+  const categoryTriggerLabel = useMemo(
+    () =>
+      getCheckboxCategoryTriggerLabel(
+        checkboxKeys,
+        visibleCategories,
+        az.map.categoriesAll,
+        az.map.categoriesSelectedCount,
+      ),
+    [checkboxKeys, visibleCategories],
   );
 
   return (
-    <Card className="flex max-h-full w-full flex-col overflow-hidden border-border/80 bg-card/95 shadow-lg backdrop-blur">
+    <Card className={`flex max-h-full w-full flex-col overflow-hidden ${MAP_GLASS_PANEL_CLASS}`}>
       <CardHeader className="shrink-0 p-3 pb-2">
-        <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <CardTitle className={MAP_PANEL_TITLE_CLASS}>
           {az.map.layersTitle}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-3 px-3 pb-0 pt-0">
+      <CardContent className="flex flex-col gap-3 px-3 pb-3 pt-0">
         <div className="shrink-0 space-y-3">
           <div className="space-y-1.5">
-            <p className="text-xs text-muted-foreground">{az.map.viewMode}</p>
+            <p className={MAP_PANEL_SECTION_TITLE_CLASS}>{az.map.viewMode}</p>
             <div className="grid grid-cols-2 gap-1">
               <Button
                 type="button"
@@ -138,11 +140,11 @@ export function MapControls({ incidents, showPlacesToggle = true }: Props) {
                 checked={showClusters}
                 onCheckedChange={(v) => setShowClusters(v === true)}
               />
-              <Label htmlFor="clusters" className="cursor-pointer text-sm font-normal">
+              <Label htmlFor="clusters" className="cursor-pointer text-sm font-normal text-foreground">
                 {az.map.clustering}
               </Label>
             </div>
-            <p className="pl-6 text-[11px] leading-snug text-muted-foreground">
+            <p className={`pl-6 ${MAP_PANEL_HINT_CLASS}`}>
               {az.map.clusteringHint}
             </p>
           </div>
@@ -152,7 +154,7 @@ export function MapControls({ incidents, showPlacesToggle = true }: Props) {
               checked={showHeatmap}
               onCheckedChange={(v) => setShowHeatmap(v === true)}
             />
-            <Label htmlFor="heatmap" className="cursor-pointer text-sm font-normal">
+            <Label htmlFor="heatmap" className="cursor-pointer text-sm font-normal text-foreground">
               {az.map.heatmap}
             </Label>
           </div>
@@ -163,96 +165,32 @@ export function MapControls({ incidents, showPlacesToggle = true }: Props) {
                 checked={showPlaces}
                 onCheckedChange={(v) => setShowPlaces(v === true)}
               />
-              <Label htmlFor="places" className="cursor-pointer text-sm font-normal">
+              <Label htmlFor="places" className="cursor-pointer text-sm font-normal text-foreground">
                 {az.map.showPlaces}
               </Label>
             </div>
           )}
           <Separator />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <div className="shrink-0 space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {az.map.categoriesTitle}
-              </p>
-              {checkboxKeys.length > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <Checkbox
-                    id="categories-all"
-                    checked={
-                      allCategoriesChecked
-                        ? true
-                        : someCategoriesChecked
-                          ? 'indeterminate'
-                          : false
-                    }
-                    onCheckedChange={() =>
-                      setCategoriesVisibility(checkboxKeys, !allCategoriesChecked)
-                    }
-                    aria-label={az.map.categoriesAllAria}
-                  />
-                  <Label
-                    htmlFor="categories-all"
-                    className="cursor-pointer text-xs font-normal text-muted-foreground"
-                  >
-                    {az.map.categoriesAll}
-                  </Label>
-                </div>
-              )}
-            </div>
-            <div className="px-0.5 py-0.5">
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 z-[1] h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="search"
-                  value={categoryQuery}
-                  onChange={(e) => setCategoryQuery(e.target.value)}
-                  placeholder={az.map.categorySearch}
-                  className="h-8 w-full pl-8 text-sm"
-                  aria-label={az.map.categorySearch}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="max-h-52 overflow-y-auto overflow-x-hidden px-0.5 pt-0.5 pr-1">
-            <div className="space-y-2 pb-3">
-          {filteredCategoryKeys.length === 0 ? (
-            <p className="py-2 text-center text-xs text-muted-foreground">
-              {az.map.categorySearchEmpty}
+          <div className="space-y-1.5">
+            <p className={MAP_PANEL_SECTION_TITLE_CLASS}>
+              {az.map.categoriesTitle}
             </p>
-          ) : (
-            filteredCategoryKeys.map((key) => {
-              const checked = visibleCategories[key] === true;
-              const count = categoryCounts[key] ?? 0;
-              return (
-                <div key={key} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`category-${key}`}
-                    checked={checked}
-                    onCheckedChange={() => toggleCategory(key)}
-                  />
-                  <Label
-                    htmlFor={`category-${key}`}
-                    className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 text-sm font-normal"
-                  >
-                    <span className="truncate">
-                      {resolveMapCategoryLabel(key, categoryLabels)}
-                    </span>
-                    <span
-                      className="shrink-0 tabular-nums text-muted-foreground"
-                      title={az.map.categoryCountHint}
-                    >
-                      {count}
-                    </span>
-                  </Label>
-                </div>
-              );
-            })
-          )}
-            </div>
+            <CategoryTreeDropdown
+              mode="checkbox"
+              tree={categoryTree}
+              triggerLabel={categoryTriggerLabel}
+              searchPlaceholder={az.map.categorySearch}
+              emptyMessage={az.map.categorySearchEmpty}
+              checkedKeys={visibleCategories}
+              onToggleKey={toggleCategory}
+              onToggleKeys={setCategoriesVisibility}
+              checkboxKeys={checkboxKeys}
+              counts={categoryCounts}
+              countHint={az.map.categoryCountHint}
+              allLabel={az.map.categoriesAll}
+              allAriaLabel={az.map.categoriesAllAria}
+              className="h-8 bg-background/80 text-xs"
+            />
           </div>
         </div>
       </CardContent>

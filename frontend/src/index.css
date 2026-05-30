@@ -4,50 +4,51 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    /* SmartRayon light palette */
+    --background: 220 23% 97%;
+    --foreground: 0 0% 15%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 0 0% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 221.2 83.2% 53.3%;
+    --popover-foreground: 0 0% 15%;
+    --primary: 239 83% 65%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 0 0% 15%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 0 0% 55%;
+    --accent: 239 84% 97%;
+    --accent-foreground: 239 83% 55%;
+    --destructive: 359 100% 65%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 91%;
+    --input: 0 0% 91%;
+    --ring: 239 83% 65%;
+    --radius: 0.625rem;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 25%;
+    --sidebar-primary: 239 83% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 221.2 83.2% 53.3%;
-    /* shadcn chart palette — muted */
-    --chart-1: 221 55% 48%;
-    --chart-2: 199 40% 42%;
-    --chart-3: 262 35% 48%;
-    --chart-4: 38 45% 46%;
-    --chart-5: 152 35% 40%;
-    --chart-6: 0 45% 48%;
-    --chart-7: 240 5% 52%;
+    --sidebar-accent: 239 84% 97%;
+    --sidebar-accent-foreground: 239 83% 55%;
+    --sidebar-border: 0 0% 91%;
+    --sidebar-ring: 239 83% 65%;
+    /* Chart palette — SmartRayon status gamma */
+    --chart-1: 239 83% 65%;
+    --chart-2: 199 89% 48%;
+    --chart-3: 262 52% 58%;
+    --chart-4: 42 96% 53%;
+    --chart-5: 100 77% 44%;
+    --chart-6: 359 100% 65%;
+    --chart-7: 0 0% 55%;
     /* Status accents (tables, badges, charts) */
-    --status-new: 38 55% 46%;
-    --status-in-progress: 221 50% 48%;
-    --status-pending: 262 35% 50%;
-    --status-resolved: 152 35% 40%;
-    --status-overdue: 0 55% 48%;
-    --status-archived: 240 5% 52%;
-    --status-warning: 38 55% 46%;
+    --status-new: 42 96% 53%;
+    --status-in-progress: 239 83% 65%;
+    --status-pending: 262 52% 58%;
+    --status-resolved: 100 77% 44%;
+    --status-overdue: 359 100% 65%;
+    --status-archived: 0 0% 55%;
+    --status-warning: 42 96% 53%;
   }
 
   .dark {
@@ -57,42 +58,41 @@
     --card-foreground: 210 20% 98%;
     --popover: 222 22% 8%;
     --popover-foreground: 210 20% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 11%;
+    --primary: 239 83% 65%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 222 16% 15%;
     --secondary-foreground: 210 20% 98%;
     --muted: 222 16% 14%;
     --muted-foreground: 215 16% 62%;
     --accent: 217 33% 18%;
     --accent-foreground: 210 20% 98%;
-    --destructive: 0 72% 51%;
+    --destructive: 359 100% 65%;
     --destructive-foreground: 0 0% 98%;
     --border: 220 16% 17%;
     --input: 220 16% 17%;
-    --ring: 217 91% 60%;
+    --ring: 239 83% 65%;
     --sidebar-background: 222 26% 7%;
     --sidebar-foreground: 215 16% 72%;
-    --sidebar-primary: 217 91% 65%;
+    --sidebar-primary: 239 83% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 217 33% 16%;
     --sidebar-accent-foreground: 210 20% 98%;
     --sidebar-border: 220 16% 15%;
-    --sidebar-ring: 217 91% 60%;
-    /* shadcn chart palette — desaturated for dark UI */
-    --chart-1: 217 40% 58%;
-    --chart-2: 199 28% 52%;
-    --chart-3: 262 26% 56%;
-    --chart-4: 38 38% 52%;
-    --chart-5: 152 28% 48%;
-    --chart-6: 0 38% 54%;
+    --sidebar-ring: 239 83% 65%;
+    --chart-1: 239 70% 68%;
+    --chart-2: 199 60% 55%;
+    --chart-3: 262 45% 62%;
+    --chart-4: 42 85% 58%;
+    --chart-5: 100 65% 50%;
+    --chart-6: 359 90% 68%;
     --chart-7: 215 14% 42%;
-    --status-new: 38 45% 52%;
-    --status-in-progress: 217 40% 58%;
-    --status-pending: 262 28% 58%;
-    --status-resolved: 152 30% 48%;
-    --status-overdue: 0 40% 54%;
+    --status-new: 42 85% 58%;
+    --status-in-progress: 239 70% 68%;
+    --status-pending: 262 45% 62%;
+    --status-resolved: 100 65% 50%;
+    --status-overdue: 359 90% 68%;
     --status-archived: 215 14% 48%;
-    --status-warning: 38 45% 52%;
+    --status-warning: 42 85% 58%;
   }
 }
 
@@ -115,7 +115,6 @@
   #root {
     min-height: 100vh;
   }
-  /* Tabular numbers for data-dense UI (KPIs, tables, charts) */
   .tabular-nums,
   .ag-cell,
   .recharts-text {
@@ -124,7 +123,6 @@
   }
 }
 
-/* Dashboard charts — readable Recharts tooltips on dark theme */
 .dashboard-charts .recharts-default-tooltip,
 .dashboard-charts .recharts-tooltip-wrapper {
   outline: none;
@@ -145,7 +143,6 @@
   color: hsl(var(--muted-foreground)) !important;
 }
 
-/* Refined scrollbars */
 @layer utilities {
   * {
     scrollbar-width: thin;
@@ -167,43 +164,41 @@
   *::-webkit-scrollbar-thumb:hover {
     background-color: hsl(var(--muted-foreground) / 0.5);
   }
+
+  /* Map overlays — stronger frosted glass for text readability over basemap */
+  .map-glass-panel {
+    background-color: hsl(220 18% 91% / 0.82) !important;
+    backdrop-filter: blur(20px) saturate(1.12);
+    -webkit-backdrop-filter: blur(20px) saturate(1.12);
+  }
 }
 
-/* Leaflet */
 .leaflet-container {
   font-family: inherit;
   background: hsl(var(--background));
 }
 
-/* 2D basemap only — invert Carto light tiles; markers/overlays unchanged */
-.leaflet-tile.map-basemap-invert {
-  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.92);
-}
-
-/* Simple 2D map — no Leaflet controls top-left (legends are a separate overlay) */
 .incident-map-2d .leaflet-top.leaflet-left {
   display: none;
 }
 
-/* 2D incident clusters — match district boundary (--map-district-color on MapContainer) */
 .leaflet-container .marker-cluster-small,
 .leaflet-container .marker-cluster-medium,
 .leaflet-container .marker-cluster-large {
-  background-color: color-mix(in srgb, var(--map-district-color, #1e40af) 38%, transparent);
+  background-color: color-mix(in srgb, var(--map-district-color, #5d5fef) 28%, transparent);
 }
 
 .leaflet-container .marker-cluster-small div,
 .leaflet-container .marker-cluster-medium div,
 .leaflet-container .marker-cluster-large div {
-  background-color: var(--map-district-color, #1e40af);
-  color: #f8fafc;
+  background-color: var(--map-district-color, #5d5fef);
+  color: #ffffff;
 }
 
 .leaflet-popup-content-wrapper {
   @apply rounded-lg border border-border bg-card text-card-foreground shadow-md;
 }
 
-/* No map hover popups — incident details open in the side drawer only */
 .maplibregl-popup,
 .leaflet-popup {
   display: none !important;
@@ -218,11 +213,10 @@
   z-index: 15;
 }
 
-/* 3D clusters — same look as Leaflet markercluster on 2D map */
 .incident-map-3d .maplibregl-marker.map-incident-cluster-3d .marker-cluster-small,
 .incident-map-3d .maplibregl-marker.map-incident-cluster-3d .marker-cluster-medium,
 .incident-map-3d .maplibregl-marker.map-incident-cluster-3d .marker-cluster-large {
-  background-color: color-mix(in srgb, var(--map-district-color, #1e40af) 38%, transparent);
+  background-color: color-mix(in srgb, var(--map-district-color, #5d5fef) 28%, transparent);
   border-radius: 50%;
   text-align: center;
   font-weight: 700;
@@ -233,8 +227,8 @@
 .incident-map-3d .maplibregl-marker.map-incident-cluster-3d .marker-cluster-small div,
 .incident-map-3d .maplibregl-marker.map-incident-cluster-3d .marker-cluster-medium div,
 .incident-map-3d .maplibregl-marker.map-incident-cluster-3d .marker-cluster-large div {
-  background-color: var(--map-district-color, #1e40af);
-  color: #f8fafc;
+  background-color: var(--map-district-color, #5d5fef);
+  color: #ffffff;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -276,7 +270,7 @@
   background: transparent !important;
   border: none !important;
   pointer-events: auto !important;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.55));
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
 }
 
 .create-incident-marker-wrapper {
@@ -287,11 +281,11 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #22c55e;
+  background: #52c41a;
   border: 3px solid #fff;
   box-shadow:
-    0 0 0 2px rgba(34, 197, 94, 0.45),
-    0 2px 8px rgba(0, 0, 0, 0.45);
+    0 0 0 2px rgba(82, 196, 26, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.2);
   animation: create-pin-pulse 1.6s ease-in-out infinite;
 }
 
@@ -342,13 +336,12 @@
   }
 }
 
-/* AG Grid — shadcn tokens */
 .ag-theme-shadcn {
   --ag-background-color: transparent;
   --ag-header-background-color: hsl(var(--muted) / 0.5);
   --ag-odd-row-background-color: transparent;
   --ag-row-hover-color: hsl(var(--accent) / 0.55);
-  --ag-selected-row-background-color: hsl(var(--primary) / 0.14);
+  --ag-selected-row-background-color: hsl(var(--primary) / 0.1);
   --ag-border-color: hsl(var(--border) / 0.7);
   --ag-row-border-color: hsl(var(--border) / 0.5);
   --ag-secondary-border-color: hsl(var(--border) / 0.5);
@@ -373,7 +366,6 @@
   --ag-wrapper-border-radius: 0px;
 }
 
-/* Header: compact, uppercase, quiet */
 .incident-grid .ag-header {
   border-bottom: 1px solid hsl(var(--border));
   backdrop-filter: blur(2px);
@@ -390,7 +382,6 @@
   background-color: hsl(var(--border) / 0.6);
 }
 
-/* Rows: subtle separators, smooth hover, no harsh focus ring */
 .incident-grid .ag-row {
   border-bottom: 1px solid hsl(var(--border) / 0.45);
   transition: background-color 0.12s ease;
@@ -401,7 +392,7 @@
 }
 
 .incident-grid .ag-row-selected::before {
-  background-color: hsl(var(--primary) / 0.14) !important;
+  background-color: hsl(var(--primary) / 0.1) !important;
 }
 
 .incident-grid .ag-cell {
@@ -421,7 +412,6 @@
   color: hsl(var(--foreground));
 }
 
-/* Status accent bar on the left edge of each row */
 .incident-grid .incident-row-new {
   box-shadow: inset 3px 0 0 hsl(var(--status-new));
 }
@@ -457,7 +447,6 @@
   background-color: hsl(var(--status-warning) / 0.05) !important;
 }
 
-/* Pagination panel */
 .incident-grid .ag-paging-panel {
   border-top: 1px solid hsl(var(--border));
   height: 48px;
@@ -474,10 +463,9 @@
   background-color: hsl(var(--accent));
 }
 
-/* Floating filter / menu surfaces */
 .ag-theme-shadcn .ag-popup .ag-menu,
 .ag-theme-shadcn .ag-popup .ag-filter {
   border: 1px solid hsl(var(--border));
   border-radius: 10px;
-  box-shadow: 0 12px 32px -8px rgb(0 0 0 / 0.6);
+  box-shadow: 0 8px 24px -4px rgb(0 0 0 / 0.12);
 }

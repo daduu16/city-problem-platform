@@ -22,66 +22,66 @@ export interface StatusStyle {
 export const STATUS_STYLES: Record<IncidentStatus, StatusStyle> = {
   NEW: {
     label: az.status.NEW,
-    color: '#f59e0b',
+    color: '#faad14',
     mapColor: MAP_STATUS_COLORS.NEW.fill,
     mapBorder: MAP_STATUS_COLORS.NEW.border,
-    bg: 'rgba(245, 158, 11, 0.18)',
-    border: '#fbbf24',
+    bg: 'rgba(250, 173, 20, 0.15)',
+    border: '#faad14',
     badgeClass: badgeMuted,
     rowClass: 'incident-row-new',
     markerClass: 'status-marker-new',
   },
   IN_PROGRESS: {
     label: az.status.IN_PROGRESS,
-    color: '#3b82f6',
+    color: '#5d5fef',
     mapColor: MAP_STATUS_COLORS.IN_PROGRESS.fill,
     mapBorder: MAP_STATUS_COLORS.IN_PROGRESS.border,
-    bg: 'rgba(59, 130, 246, 0.18)',
-    border: '#60a5fa',
+    bg: 'rgba(93, 95, 239, 0.12)',
+    border: '#5d5fef',
     badgeClass: badgeMuted,
     rowClass: 'incident-row-in-progress',
     markerClass: 'status-marker-in-progress',
   },
   PENDING: {
     label: az.status.PENDING,
-    color: '#a855f7',
+    color: '#9254de',
     mapColor: MAP_STATUS_COLORS.PENDING.fill,
     mapBorder: MAP_STATUS_COLORS.PENDING.border,
-    bg: 'rgba(168, 85, 247, 0.18)',
-    border: '#c084fc',
+    bg: 'rgba(146, 84, 222, 0.12)',
+    border: '#9254de',
     badgeClass: badgeMuted,
     rowClass: 'incident-row-pending',
     markerClass: 'status-marker-pending',
   },
   RESOLVED: {
     label: az.status.RESOLVED,
-    color: '#22c55e',
+    color: '#52c41a',
     mapColor: MAP_STATUS_COLORS.RESOLVED.fill,
     mapBorder: MAP_STATUS_COLORS.RESOLVED.border,
-    bg: 'rgba(34, 197, 94, 0.18)',
-    border: '#4ade80',
+    bg: 'rgba(82, 196, 26, 0.12)',
+    border: '#52c41a',
     badgeClass: badgeMuted,
     rowClass: 'incident-row-resolved',
     markerClass: 'status-marker-resolved',
   },
   OVERDUE: {
     label: az.status.OVERDUE,
-    color: '#ef4444',
+    color: '#ff4d4f',
     mapColor: MAP_STATUS_COLORS.OVERDUE.fill,
     mapBorder: MAP_STATUS_COLORS.OVERDUE.border,
-    bg: 'rgba(239, 68, 68, 0.22)',
-    border: '#f87171',
-    badgeClass: `${badgeMuted} border-destructive/30 bg-destructive/10 text-destructive-foreground`,
+    bg: 'rgba(255, 77, 79, 0.12)',
+    border: '#ff4d4f',
+    badgeClass: `${badgeMuted} border-destructive/30 bg-destructive/10 text-destructive`,
     rowClass: 'incident-row-overdue',
     markerClass: 'status-marker-overdue',
   },
   ARCHIVED: {
     label: az.status.ARCHIVED,
-    color: '#94a3b8',
+    color: '#8c8c8c',
     mapColor: MAP_STATUS_COLORS.ARCHIVED.fill,
     mapBorder: MAP_STATUS_COLORS.ARCHIVED.border,
-    bg: 'rgba(148, 163, 184, 0.12)',
-    border: '#64748b',
+    bg: 'rgba(140, 140, 140, 0.1)',
+    border: '#bfbfbf',
     badgeClass: `${badgeMuted} opacity-70 line-through decoration-muted-foreground`,
     rowClass: 'incident-row-archived',
     markerClass: 'status-marker-archived',
@@ -94,23 +94,23 @@ export const PRIORITY_STYLES: Record<
 > = {
   CRITICAL: {
     label: az.priority.CRITICAL,
-    color: '#ef4444',
+    color: '#ff4d4f',
     badgeClass:
-      'border-destructive/30 bg-destructive/10 text-destructive-foreground font-medium',
+      'border-destructive/30 bg-destructive/10 text-destructive font-medium',
   },
   HIGH: {
     label: az.priority.HIGH,
-    color: '#f97316',
+    color: '#fa8c16',
     badgeClass: badgeMuted,
   },
   MEDIUM: {
     label: az.priority.MEDIUM,
-    color: '#eab308',
+    color: '#faad14',
     badgeClass: badgeMuted,
   },
   LOW: {
     label: az.priority.LOW,
-    color: '#22c55e',
+    color: '#52c41a',
     badgeClass: badgeMuted,
   },
 };
@@ -133,7 +133,7 @@ export const ACTIVE_MAP_STATUSES = ALL_STATUSES.filter(
 /** Marker HTML per status — shape + color distinguish states on the map */
 export function statusMarkerHtml(status: IncidentStatus): string {
   const s = getStatusStyle(status);
-  const base = `background:${s.mapColor};border:2px solid ${s.mapBorder};box-shadow:0 1px 6px rgba(0,0,0,.55);`;
+  const base = `background:${s.mapColor};border:2px solid ${s.mapBorder};box-shadow:0 1px 4px rgba(0,0,0,.2);`;
 
   switch (status) {
     case 'PENDING':

@@ -1,3 +1,5 @@
+import { MAP_GLASS_PANEL_CLASS } from '@/lib/mapGlass';
+import { MAP_PANEL_TITLE_CLASS } from '@/lib/mapPanelStyles';
 import { Card } from '@/components/ui/card';
 import { az } from '@/i18n/az';
 import {
@@ -16,8 +18,8 @@ export function DistrictInfoPanel({ rayon, incidentCount }: Props) {
   const vertexCount = rayon.feature.geometry.coordinates[0]?.length ?? 0;
 
   return (
-    <Card className="pointer-events-auto absolute bottom-4 left-4 z-[1000] max-w-xs border bg-background/95 p-4 text-sm shadow-lg backdrop-blur">
-      <p className="font-semibold leading-tight">{p.Name_AZ}</p>
+    <Card className={`pointer-events-auto absolute bottom-4 left-4 z-[1000] max-w-xs p-4 text-sm ${MAP_GLASS_PANEL_CLASS}`}>
+      <p className={`${MAP_PANEL_TITLE_CLASS} leading-tight`}>{p.Name_AZ}</p>
       <p className="text-xs text-muted-foreground">
         {p.Name} · {p.Name_RU}
       </p>

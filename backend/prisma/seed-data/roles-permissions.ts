@@ -106,8 +106,11 @@ export const ANALYTICS_KEYS = [
   'kpis',
   'by_category',
   'by_status',
+  'by_priority',
   'timeline',
   'hot_zones',
+  'recent_events',
+  'top_zones',
   'gas_statistics',
   'response_time',
 ] as const;

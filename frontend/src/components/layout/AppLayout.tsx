@@ -40,7 +40,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen bg-background">
       <aside
         className={cn(
-          'flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-in-out',
+          'flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm transition-[width] duration-200 ease-in-out',
           sidebarCollapsed ? 'w-16' : 'w-56',
         )}
       >
@@ -81,11 +81,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               title={sidebarCollapsed ? label : undefined}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center rounded-md text-sm font-medium transition-colors',
+                  'flex items-center rounded-lg text-sm font-medium transition-colors',
                   sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-2 px-3 py-2',
                   isActive
                     ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                    : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                    : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground',
                 )
               }
             >

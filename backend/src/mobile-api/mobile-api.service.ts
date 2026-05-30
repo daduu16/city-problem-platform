@@ -154,8 +154,12 @@ export class MobileApiService {
     return { ok: true, message: 'Şifrə uğurla yeniləndi' };
   }
 
-  findNews() {
-    return this.prisma.news.findMany({ orderBy: { publishedAt: 'desc' } });
+  async findNews() {
+    const items = await this.prisma.news.findMany({ orderBy: { publishedAt: 'desc' } });
+    return items.map((item) => ({
+      ...item,
+      imageUrl: this.resolvePublicAssetUrl(item.imageUrl),
+    }));
   }
 
   findNotifications() {
@@ -306,6 +310,16 @@ export class MobileApiService {
 
   private generateVerificationCode() {
     return `${Math.floor(100000 + Math.random() * 900000)}`;
+  }
+
+  private resolvePublicAssetUrl(url: string): string {
+    const base =
+      process.env.PUBLIC_API_URL?.replace(/\/$/, '') ??
+      `http://localhost:${process.env.PORT ?? 3001}`;
+    if (url.startsWith('/')) {
+      return `${base}${url}`;
+    }
+    return url.replace(/:(4000)(?=\/|$)/, ':3001');
   }
 
   private async sendVerificationEmail(email: string, code: string) {

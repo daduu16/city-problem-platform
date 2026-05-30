@@ -1,5 +1,9 @@
 import { canViewCategory } from '@/lib/mapCategories';
-import { MAP_LEAF_CATEGORY_KEYS, getMapCategoryLabel } from '@/lib/mapCategoryTree';
+import {
+  ALL_INCIDENT_LEAF_CATEGORY_KEYS,
+  mergeCategoryLabelsFromIncidents,
+  resolveCategoryLabel,
+} from '@/lib/categoryTree';
 import type { MapIncident } from '@/types';
 
 /** Category key used for map visibility toggles. */
@@ -23,31 +27,24 @@ export function collectCategoryKeysFromIncidents(
 export function buildCategoryLabelMap(
   incidents: MapIncident[],
 ): Map<string, string> {
-  const labels = new Map<string, string>();
-  for (const incident of incidents) {
-    labels.set(incident.category.key, incident.category.name);
-    if (incident.subcategory) {
-      labels.set(incident.subcategory.key, incident.subcategory.name);
-    }
-  }
-  return labels;
+  return mergeCategoryLabelsFromIncidents(incidents);
 }
 
-/** Checkbox rows: catalog leaves + any keys present in loaded incidents. */
+/** Leaf keys from full catalog + any extra keys on loaded incidents. */
 export function buildMapCategoryCheckboxKeys(
   incidents: MapIncident[],
   hasMapLayer: (accessKey: string) => boolean,
 ): string[] {
   const fromIncidents = collectCategoryKeysFromIncidents(incidents);
   const merged = new Set<string>([
-    ...MAP_LEAF_CATEGORY_KEYS.filter((k) => canViewCategory(k, hasMapLayer)),
+    ...ALL_INCIDENT_LEAF_CATEGORY_KEYS.filter((k) => canViewCategory(k, hasMapLayer)),
     ...fromIncidents.filter((k) => canViewCategory(k, hasMapLayer)),
   ]);
 
   const labels = buildCategoryLabelMap(incidents);
   return [...merged].sort((a, b) =>
-    resolveMapCategoryLabel(a, labels).localeCompare(
-      resolveMapCategoryLabel(b, labels),
+    resolveCategoryLabel(a, labels).localeCompare(
+      resolveCategoryLabel(b, labels),
       'az',
     ),
   );
@@ -57,7 +54,7 @@ export function resolveMapCategoryLabel(
   key: string,
   labels?: Map<string, string>,
 ): string {
-  return labels?.get(key) ?? getMapCategoryLabel(key);
+  return resolveCategoryLabel(key, labels);
 }
 
 export function isIncidentCategoryVisible(

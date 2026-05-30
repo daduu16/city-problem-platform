@@ -103,10 +103,45 @@ export interface DashboardKpis {
   activeProblems: number;
   overdueTasks: number;
   newToday: number;
+  resolvedToday: number;
   avgResolutionHours: number;
   accidentsCount: number;
   slaPercent: number;
   totalOpen: number;
+  resolutionRate: number;
+  healthScore: number;
+  priorityOpen: Record<IncidentPriority, number>;
+}
+
+export type ZoneRiskLevel = 'critical' | 'high' | 'medium' | 'low';
+
+export type DistrictZoneId = 'A' | 'B' | 'C' | 'D';
+
+export interface TopZoneRow {
+  zoneId: DistrictZoneId;
+  label: string;
+  color: string;
+  count: number;
+  riskLevel: ZoneRiskLevel;
+  lat: number;
+  lng: number;
+}
+
+export interface RecentEventRow {
+  id: string;
+  title: string;
+  status: IncidentStatus;
+  priority: IncidentPriority;
+  address: string | null;
+  category: { key: string; name: string };
+  updatedAt: string;
+  createdAt: string;
+}
+
+export interface ResolutionTimelinePoint {
+  date: string;
+  created: number;
+  resolved: number;
 }
 
 export interface Geozone {
