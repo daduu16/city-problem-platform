@@ -78,6 +78,7 @@ function PhotoPopoverContent({ photoUrl }: { photoUrl: string }) {
 
 function VideoPopoverContent({ videoUrl }: { videoUrl: string }) {
   const videoId = parseYouTubeVideoId(videoUrl);
+  const isDirectVideoFile = /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(videoUrl);
   return (
     <>
       <p className="mb-2 text-xs font-medium text-muted-foreground">
@@ -93,6 +94,14 @@ function VideoPopoverContent({ videoUrl }: { videoUrl: string }) {
             allowFullScreen
           />
         </div>
+      ) : isDirectVideoFile ? (
+        <video
+          controls
+          preload="metadata"
+          className="aspect-video w-full rounded-md bg-black"
+        >
+          <source src={videoUrl} />
+        </video>
       ) : (
         <p className="text-xs text-muted-foreground">
           {az.reportMedia.videoInvalid}

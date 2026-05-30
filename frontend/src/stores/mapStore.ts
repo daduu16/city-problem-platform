@@ -24,7 +24,7 @@ export type MapLayerKey =
   | 'greenery';
 
 export type MapViewMode = '2d' | '3d';
-export type MapBaseMap = 'osm' | 'google_road' | 'google_satellite';
+export type MapBaseMap = 'osm';
 
 export type IncidentMarkerMode = 'status' | 'type';
 

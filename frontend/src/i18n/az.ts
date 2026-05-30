@@ -74,7 +74,7 @@ export const az = {
     ) => {
       const engine =
         mapEngine ??
-        (viewMode === '3d' ? '3D xəritə (MapLibre)' : 'OpenStreetMap');
+        (viewMode === '3d' ? '3D xəritə (MapLibre)' : 'Leaflet (OpenStreetMap)');
       return `${engine} · ${count} arxiv hadisəsi`;
     },
     subtitle: (
@@ -89,16 +89,14 @@ export const az = {
           : `${count} hadisə · Nərimanov rayonu`;
       const engine =
         mapEngine ??
-        (viewMode === '3d' ? '3D xəritə (MapLibre)' : 'OpenStreetMap');
+        (viewMode === '3d' ? '3D xəritə (MapLibre)' : 'Leaflet (OpenStreetMap)');
       return `${engine} · ${base}`;
     },
     viewMode: 'Xəritə növü',
-    view2d: 'Sadə (OSM)',
+    view2d: 'Leaflet (OSM)',
     view3d: '3D (məkan)',
     basemapTitle: 'Xəritə bazası',
     basemapOsm: 'OSM',
-    basemapGoogleRoad: 'Google yol',
-    basemapGoogleSatellite: 'Google satelit',
     tilt3d: '3D bucaq',
     tiltFlat: 'Plan görünüşü',
     district: {
@@ -155,6 +153,11 @@ export const az = {
       'Hadisə yaradılsa da, icra üçün ayrılmış son tarix (drawer-də görünür).',
     createFieldPriority: 'Prioritet',
     createFieldAddress: 'Ünvan (istəyə bağlı)',
+    addressSearchPlaceholder: 'Ünvan yazın (min. 3 simvol)',
+    addressSearchHint: 'Axtarış OpenStreetMap Nominatim (free) ilə edilir.',
+    addressSearchLoading: 'Ünvanlar axtarılır…',
+    addressSearchEmpty: 'Nəticə tapılmadı',
+    addressSearchError: 'Ünvan axtarışında xəta baş verdi',
     createCategoryPlaceholder: 'Kateqoriya seçin…',
     createCategoriesLoading: 'Yüklənir…',
     createNoCategories:

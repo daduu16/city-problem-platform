@@ -22,7 +22,16 @@ import { BorderRadius, Color, Shadow, Spacing, Typography } from '@/GlobalStyles
 import { useAppData } from '@/state/AppDataContext';
 import { ProblemCategory, ProblemPriority } from '@/types';
 
-const categories: ProblemCategory[] = ['Su', 'Qaz', 'İşıq', 'Yol', 'Zibil', 'Qəza', 'Təbiət hadisəsi', 'Təhlükəsizlik'];
+const categories: ProblemCategory[] = [
+  'İnfrastruktur',
+  'Kommunal',
+  'Yaşıllıq',
+  'Fövqəladə',
+  'Sanitariya',
+  'İşıqlandırma',
+  'Parklar',
+  'Reklam',
+];
 const priorities: ProblemPriority[] = ['Aşağı', 'Orta', 'Yüksək', 'Təcili'];
 
 const defaultRegion: Region = {
@@ -59,12 +68,15 @@ export default function ReportProblemScreen() {
   const insets = useSafeAreaInsets();
 
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<ProblemCategory>('Su');
+  const [category, setCategory] = useState<ProblemCategory>('İnfrastruktur');
   const [priority, setPriority] = useState<ProblemPriority>('Orta');
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
   const [mediaUrl, setMediaUrl] = useState<string | undefined>(undefined);
   const [mediaType, setMediaType] = useState<'image' | 'video' | undefined>(undefined);
+  const [mediaAsset, setMediaAsset] = useState<
+    { uri: string; fileName?: string | null; mimeType?: string | null } | undefined
+  >(undefined);
   const [locationLoading, setLocationLoading] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
 
@@ -185,8 +197,14 @@ export default function ReportProblemScreen() {
       });
 
       if (!result.canceled && result.assets.length > 0) {
-        setMediaUrl(result.assets[0].uri);
+        const asset = result.assets[0];
+        setMediaUrl(asset.uri);
         setMediaType(type);
+        setMediaAsset({
+          uri: asset.uri,
+          fileName: asset.fileName ?? null,
+          mimeType: asset.mimeType ?? null,
+        });
         Alert.alert('Hazırdır', type === 'image' ? 'Şəkil əlavə olundu.' : 'Video əlavə olundu.');
       }
     } catch {
@@ -209,8 +227,14 @@ export default function ReportProblemScreen() {
       });
 
       if (!result.canceled && result.assets.length > 0) {
-        setMediaUrl(result.assets[0].uri);
+        const asset = result.assets[0];
+        setMediaUrl(asset.uri);
         setMediaType(type);
+        setMediaAsset({
+          uri: asset.uri,
+          fileName: asset.fileName ?? null,
+          mimeType: asset.mimeType ?? null,
+        });
         Alert.alert('Hazırdır', type === 'image' ? 'Şəkil əlavə olundu.' : 'Video əlavə olundu.');
       }
     } catch {
@@ -270,6 +294,7 @@ export default function ReportProblemScreen() {
         imageUrl: mediaType === 'image' ? mediaUrl : undefined,
         mediaUrl,
         mediaType,
+        mediaAsset,
       });
       Alert.alert('Uğurlu', 'Problem göndərildi və bazaya yazıldı.');
       setTitle('');
@@ -277,7 +302,8 @@ export default function ReportProblemScreen() {
       setAddress('');
       setMediaUrl(undefined);
       setMediaType(undefined);
-      setCategory('Su');
+      setMediaAsset(undefined);
+      setCategory('İnfrastruktur');
       setPriority('Orta');
       autoPickerTriggeredRef.current = false;
     } catch (error) {

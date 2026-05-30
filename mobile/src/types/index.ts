@@ -16,14 +16,14 @@ export type NotificationItem = {
 };
 
 export type ProblemCategory =
-  | 'Su'
-  | 'Qaz'
-  | 'İşıq'
-  | 'Yol'
-  | 'Zibil'
-  | 'Qəza'
-  | 'Təbiət hadisəsi'
-  | 'Təhlükəsizlik';
+  | 'İnfrastruktur'
+  | 'Kommunal'
+  | 'Yaşıllıq'
+  | 'Fövqəladə'
+  | 'Sanitariya'
+  | 'İşıqlandırma'
+  | 'Parklar'
+  | 'Reklam';
 
 export type ProblemPriority = 'Aşağı' | 'Orta' | 'Yüksək' | 'Təcili';
 

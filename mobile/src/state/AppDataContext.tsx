@@ -15,6 +15,11 @@ type CreateProblemInput = {
   imageUrl?: string;
   mediaUrl?: string;
   mediaType?: 'image' | 'video';
+  mediaAsset?: {
+    uri: string;
+    fileName?: string | null;
+    mimeType?: string | null;
+  };
 };
 
 type AppDataContextValue = {

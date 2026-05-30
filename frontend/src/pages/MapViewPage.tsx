@@ -45,16 +45,9 @@ export function MapViewPage({ variant }: Props) {
 	const setShowPlaces = useMapStore((s) => s.setShowPlaces);
 	const cancelIncidentCreate = useMapStore((s) => s.cancelIncidentCreate);
 	const viewMode = useMapStore((s) => s.viewMode);
-	const baseMap = useMapStore((s) => s.baseMap);
 	const access = useAuthStore((s) => s.access);
 	const mapEngineLabel =
-		baseMap === "google_satellite"
-			? "Google Satellite"
-			: baseMap === "google_road"
-				? "Google Road"
-				: viewMode === "3d"
-					? "3D xəritə (MapLibre)"
-					: "OpenStreetMap";
+		viewMode === "3d" ? "3D xəritə (MapLibre)" : "Leaflet (OpenStreetMap)";
 
 	useEffect(() => {
 		if (access?.mapLayers) {

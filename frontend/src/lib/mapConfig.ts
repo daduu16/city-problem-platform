@@ -18,7 +18,7 @@ export const BASE_MAP_ATTRIBUTION =
 export const BASE_MAP_2D_INVERT = false;
 export const BASE_MAP_2D_TILE_CLASS = BASE_MAP_2D_INVERT ? 'map-basemap-invert' : '';
 
-export type BaseMapKey = 'osm' | 'google_road' | 'google_satellite';
+export type BaseMapKey = 'osm';
 
 type LeafletBasemapConfig = {
   url: string;
@@ -31,16 +31,6 @@ const LEAFLET_BASEMAPS: Record<BaseMapKey, LeafletBasemapConfig> = {
     url: BASE_MAP_TILE_URL,
     attribution: BASE_MAP_ATTRIBUTION,
     subdomains: 'abcd',
-  },
-  google_road: {
-    url: 'https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
-    attribution: '&copy; Google',
-    subdomains: ['0', '1', '2', '3'],
-  },
-  google_satellite: {
-    url: 'https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
-    attribution: '&copy; Google',
-    subdomains: ['0', '1', '2', '3'],
   },
 };
 

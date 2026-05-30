@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -40,6 +40,13 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+type NominatimResult = {
+	place_id: number;
+	display_name: string;
+	lat: string;
+	lon: string;
+};
+
 function FieldGroup({
 	children,
 	className,
@@ -58,6 +65,12 @@ export function CreateIncidentSheet() {
 	const location = useMapStore((s) => s.incidentCreateLocation);
 	const cancel = useMapStore((s) => s.cancelIncidentCreate);
 	const repick = useMapStore((s) => s.reopenIncidentCreatePicker);
+	const setIncidentCreateLocation = useMapStore(
+		(s) => s.setIncidentCreateLocation,
+	);
+	const [addressResults, setAddressResults] = useState<NominatimResult[]>([]);
+	const [addressLoading, setAddressLoading] = useState(false);
+	const [addressError, setAddressError] = useState<string | null>(null);
 
 	const open = mode === 'form' && location != null;
 
@@ -88,6 +101,7 @@ export function CreateIncidentSheet() {
 	});
 
 	const parentCategoryId = watch('parentCategoryId');
+	const addressValue = watch('address');
 	const subcategories = useMemo(
 		() => (parentCategoryId ? getSubcategories(parentCategoryId) : []),
 		[parentCategoryId, getSubcategories],
@@ -98,9 +112,73 @@ export function CreateIncidentSheet() {
 	}, [open, reset]);
 
 	useEffect(() => {
+		if (!open) {
+			setAddressResults([]);
+			setAddressLoading(false);
+			setAddressError(null);
+		}
+	}, [open]);
+
+	useEffect(() => {
 		setValue('subcategoryId', '');
 		clearErrors('subcategoryId');
 	}, [parentCategoryId, setValue, clearErrors]);
+
+	useEffect(() => {
+		const query = addressValue?.trim() ?? '';
+		if (!open || query.length < 3) {
+			setAddressResults([]);
+			setAddressLoading(false);
+			setAddressError(null);
+			return;
+		}
+
+		const controller = new AbortController();
+		const timeoutId = window.setTimeout(async () => {
+			try {
+				setAddressLoading(true);
+				setAddressError(null);
+
+				const params = new URLSearchParams({
+					format: 'jsonv2',
+					addressdetails: '1',
+					limit: '5',
+					accept_language: 'az',
+					countrycodes: 'az',
+					q: query,
+				});
+				const res = await fetch(
+					`https://nominatim.openstreetmap.org/search?${params.toString()}`,
+					{
+						signal: controller.signal,
+						headers: {
+							'Accept-Language': 'az',
+						},
+					},
+				);
+				if (!res.ok) {
+					throw new Error(`nominatim_http_${res.status}`);
+				}
+				const data = (await res.json()) as NominatimResult[];
+				setAddressResults(data);
+			} catch (error) {
+				if (controller.signal.aborted) return;
+				setAddressResults([]);
+				setAddressError(
+					error instanceof Error ? error.message : 'nominatim_request_failed',
+				);
+			} finally {
+				if (!controller.signal.aborted) {
+					setAddressLoading(false);
+				}
+			}
+		}, 350);
+
+		return () => {
+			controller.abort();
+			window.clearTimeout(timeoutId);
+		};
+	}, [addressValue, open]);
 
 	const noCategories = !categoriesLoading && parents.length === 0;
 
@@ -150,6 +228,16 @@ export function CreateIncidentSheet() {
 		}
 		createMutation.mutate(data);
 	});
+
+	const handleAddressResultSelect = (item: NominatimResult) => {
+		const lat = Number(item.lat);
+		const lng = Number(item.lon);
+		if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+		setValue('address', item.display_name, { shouldDirty: true });
+		setAddressResults([]);
+		setAddressError(null);
+		setIncidentCreateLocation(lat, lng);
+	};
 
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
@@ -314,7 +402,49 @@ export function CreateIncidentSheet() {
 
 								<FieldGroup>
 									<Label htmlFor="create-address">{az.map.createFieldAddress}</Label>
-									<Input id="create-address" {...register('address')} />
+									<Input
+										id="create-address"
+										placeholder={az.map.addressSearchPlaceholder}
+										{...register('address')}
+									/>
+									<p className="text-xs text-muted-foreground">
+										{az.map.addressSearchHint}
+									</p>
+									{addressLoading && (
+										<p className="text-xs text-muted-foreground">
+											{az.map.addressSearchLoading}
+										</p>
+									)}
+									{addressError && (
+										<p className="text-xs text-destructive">
+											{az.map.addressSearchError}
+										</p>
+									)}
+									{!addressLoading &&
+										!addressError &&
+										(addressValue?.trim()?.length ?? 0) >= 3 &&
+										addressResults.length === 0 && (
+											<p className="text-xs text-muted-foreground">
+												{az.map.addressSearchEmpty}
+											</p>
+										)}
+									{addressResults.length > 0 && (
+										<div className="max-h-44 overflow-y-auto rounded-md border bg-background">
+											<ul className="divide-y">
+												{addressResults.map((item) => (
+													<li key={item.place_id}>
+														<button
+															type="button"
+															className="w-full px-3 py-2 text-left text-xs transition hover:bg-muted"
+															onClick={() => handleAddressResultSelect(item)}
+														>
+															{item.display_name}
+														</button>
+													</li>
+												))}
+											</ul>
+										</div>
+									)}
 								</FieldGroup>
 
 								{createMutation.isError &&

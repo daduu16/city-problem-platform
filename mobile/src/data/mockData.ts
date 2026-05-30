@@ -23,7 +23,7 @@ export const mockProblems: Problem[] = [
   {
     id: 'prob_1',
     title: 'Su təzyiqi zəifdir',
-    category: 'Su',
+    category: 'Kommunal',
     priority: 'Orta',
     status: 'Baxılır',
     description: 'Binada su təzyiqi son iki gündür aşağıdır.',
@@ -37,7 +37,7 @@ export const mockProblems: Problem[] = [
   {
     id: 'prob_2',
     title: 'Yol çuxuru təhlükə yaradır',
-    category: 'Yol',
+    category: 'İnfrastruktur',
     priority: 'Yüksək',
     status: 'İcradadır',
     description: 'Əsas yolda böyük çuxur var, avtomobillərə zərər verir.',
@@ -79,4 +79,3 @@ export const mockNotifications: NotificationItem[] = [
     isRead: false,
   },
 ];
-

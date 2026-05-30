@@ -115,7 +115,7 @@ export function MapControls({ incidents, showPlacesToggle = true }: Props) {
           </div>
           <div className="space-y-1.5">
             <p className={MAP_PANEL_SECTION_TITLE_CLASS}>{az.map.basemapTitle}</p>
-            <div className="grid grid-cols-3 gap-1">
+            <div className="grid grid-cols-1 gap-1">
               <Button
                 type="button"
                 variant={baseMap === 'osm' ? 'default' : 'outline'}
@@ -124,24 +124,6 @@ export function MapControls({ incidents, showPlacesToggle = true }: Props) {
                 onClick={() => setBaseMap('osm')}
               >
                 {az.map.basemapOsm}
-              </Button>
-              <Button
-                type="button"
-                variant={baseMap === 'google_road' ? 'default' : 'outline'}
-                size="sm"
-                className="h-8 px-2 text-[11px]"
-                onClick={() => setBaseMap('google_road')}
-              >
-                {az.map.basemapGoogleRoad}
-              </Button>
-              <Button
-                type="button"
-                variant={baseMap === 'google_satellite' ? 'default' : 'outline'}
-                size="sm"
-                className="h-8 px-2 text-[11px]"
-                onClick={() => setBaseMap('google_satellite')}
-              >
-                {az.map.basemapGoogleSatellite}
               </Button>
             </div>
           </div>

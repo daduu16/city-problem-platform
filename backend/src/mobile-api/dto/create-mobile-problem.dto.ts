@@ -10,6 +10,15 @@ import {
 } from 'class-validator';
 
 const categories = [
+  'INFRASTRUCTURE',
+  'UTILITIES',
+  'GREENERY',
+  'WEATHER_EMERGENCY',
+  'SANITATION',
+  'LIGHTING',
+  'PARKS',
+  'ADVERTISING',
+  // Legacy mobile clients
   'SU',
   'QAZ',
   'ISIQ',
