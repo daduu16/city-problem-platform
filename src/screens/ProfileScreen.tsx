@@ -1,8 +1,9 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ReactNode, useState } from 'react';
-import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BorderRadius, Color, Shadow, Spacing, Typography } from '@/GlobalStyles';
 import { RootStackParamList } from '@/navigation/types';
@@ -138,7 +139,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { backgroundColor: Color.white500, flex: 1 },
+  safeArea: { backgroundColor: Color.neutral50, flex: 1 },
   screen: { backgroundColor: Color.neutral50, padding: Spacing.lg, paddingBottom: 40 },
   header: {
     alignItems: 'center',
@@ -187,8 +188,8 @@ const styles = StyleSheet.create({
   sectionTitle: { color: Color.neutral900, flex: 1, fontSize: Typography.body, fontWeight: '900' },
   sectionBody: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md },
   detailRow: {
-    borderTopColor: 'rgba(0,0,0,0.06)',
-    borderTopWidth: 1,
+    borderTopColor: 'transparent',
+    borderTopWidth: 0,
     paddingVertical: 10,
   },
   detailLabel: { color: Color.neutral500, fontSize: 12, fontWeight: '700' },
@@ -206,4 +207,3 @@ const styles = StyleSheet.create({
   logoutText: { color: Color.white500, fontSize: Typography.body, fontWeight: '900' },
   pressed: { opacity: 0.9 },
 });
-

@@ -25,6 +25,8 @@ type BackendProblem = {
   createdAt: string;
 };
 
+type BackendNews = News;
+
 const statusMap: Record<string, ProblemStatus> = {
   YENI: 'Yeni',
   BAXILIR: 'Baxılır',
@@ -65,6 +67,15 @@ function toProblem(item: BackendProblem): Problem {
   };
 }
 
+function normalizeAssetUrl(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith('http://localhost:4000') || url.startsWith('http://127.0.0.1:4000')) {
+    const path = url.replace(/^https?:\/\/(localhost|127\.0\.0\.1):4000/, '');
+    return `${API_BASE_URL}${path}`;
+  }
+  return url;
+}
+
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
@@ -89,7 +100,11 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export async function fetchNews(): Promise<News[]> {
-  return apiFetch<News[]>('/api/news');
+  const data = await apiFetch<BackendNews[]>('/api/news');
+  return data.map((item) => ({
+    ...item,
+    imageUrl: normalizeAssetUrl(item.imageUrl) || item.imageUrl,
+  }));
 }
 
 export async function fetchNotifications(): Promise<NotificationItem[]> {

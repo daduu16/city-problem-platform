@@ -1,3 +1,4 @@
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
@@ -9,7 +10,6 @@ import {
   Modal,
   Platform,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -56,6 +56,7 @@ function SelectPill({
 export default function ReportProblemScreen() {
   const { addProblem } = useAppData();
   const autoCameraTriggeredRef = useRef(false);
+  const insets = useSafeAreaInsets();
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<ProblemCategory>('Su');
@@ -146,7 +147,7 @@ export default function ReportProblemScreen() {
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         quality: 0.8,
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
       });
 
       if (!result.canceled && result.assets.length > 0) {
@@ -269,7 +270,7 @@ export default function ReportProblemScreen() {
 
       <Modal visible={mapVisible} animationType="slide" onRequestClose={() => setMapVisible(false)}>
         <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
+          <View style={[styles.modalHeader, { paddingTop: Math.max(insets.top, 8) }]}>
             <Pressable onPress={() => setMapVisible(false)} style={styles.modalBtn}>
               <Text style={styles.modalBtnText}>Bağla</Text>
             </Pressable>
@@ -387,15 +388,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingBottom: Spacing.md,
   },
   modalBtn: { paddingVertical: 4, paddingHorizontal: 2 },
   modalBtnText: { color: Color.primary600, fontSize: Typography.caption, fontWeight: '800' },
   modalTitle: { color: Color.neutral900, fontSize: Typography.body, fontWeight: '900' },
   map: { flex: 1 },
   mapInfo: {
-    borderTopColor: Color.neutral200,
-    borderTopWidth: 1,
+    borderTopColor: 'transparent',
+    borderTopWidth: 0,
     padding: Spacing.lg,
     gap: Spacing.md,
   },

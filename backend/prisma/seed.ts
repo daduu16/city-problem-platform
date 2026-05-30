@@ -11,7 +11,7 @@ async function main() {
 
   const user = await prisma.user.create({
     data: {
-      fullName: 'Demo İstifadəçi',
+      fullName: 'Demo Istifadeci',
       email: 'demo@city.az',
       phone: '0500000001',
       finCode: 'AA1BB22',
@@ -23,25 +23,28 @@ async function main() {
   await prisma.news.createMany({
     data: [
       {
-        title: 'Şəhərdə yeni park açıldı',
-        summary: 'Yeni park sakinlər üçün istirahət məkanı olacaq.',
-        description: 'Yeni parkda uşaq zonası, idman sahəsi və velosiped yolu istifadəyə verildi.',
-        imageUrl: 'https://picsum.photos/seed/citynews1/800/500',
-        publishedAt: new Date('2026-05-06T10:00:00.000Z'),
+        title: 'Sehid Eli Qasimovun ailesi ziyaret olunub',
+        summary: 'Tarix: 17 may 2026. Nerimanov RIH rehberliyi sehid Eli Qasimovun ailesini ziyaret edib.',
+        description:
+          'Nerimanov Rayon Icra Hakimiyyetinin bascisi Elgin Hebibullayev, Nerimanov Belediyyesinin sedri Temraz Tagiyev ve Icra Hakimiyyetinin mesul sexsleri Veten Muharibesi sehidi Eli Ibrahim oglu Qasimovun ailesini ziyaret etmis, onun eziz xatiresini hormet ve ehtiramla yad etmisler. Sehid Eli Qasimov Tertar rayonunun Talis kendi ugrunda ve Agdere istiqametinde geden doyuslerde qehremancasina sehid olmusdur. O, olumunden sonra "Suqovusanin azad olunmasina gore", "Igidliye gore" ve "Veten ugrunda" medallari ile teltif edilmisdir. Gorusde sehid ailesine dovlet qaygisinin davam etdiyi bildirilib.',
+        imageUrl: 'http://localhost:4000/news/nar1.jpeg',
+        publishedAt: new Date('2026-05-17T09:00:00.000Z'),
       },
       {
-        title: 'Yolların təmiri sürətlənir',
-        summary: 'Əsas küçələrdə asfalt yenilənməsi davam edir.',
-        description: 'Təmir işləri mərhələli şəkildə aparılır və alternativ marşrutlardan istifadə tövsiyə olunur.',
-        imageUrl: 'https://picsum.photos/seed/citynews2/800/500',
-        publishedAt: new Date('2026-05-05T14:30:00.000Z'),
+        title: 'Nerimanov rayonunda seyyar qebullar davam edir',
+        summary: 'Tarix: 16 may 2026. RIH bascisi 193 sayli mektebde sakinlerle seyyar gorus-qebul kecirib.',
+        description:
+          'Nerimanov Rayon Icra Hakimiyyetinin bascisi Elgin Hebibullayev 193 sayli tam orta mektebde sakinlerle seyyar gorus-qebulu kecirmisdir. Gorusde RIHBA-nin mesul sexsleri, erazi icra numayendeleri, belediyye, rayonun idare, muessise ve xidmet sahelerinin rehberleri, hemcinin sakinler istirak etmisler. Sakinler abadliq islerinin aparilmasi, su ve kanalizasiya xetlerinin yenilenmesi, qurumus agaclarin budanmasi ve diger sosial problemlerle bagli muraciet etmisler. Qaldirilan meselelerin helli ucun aidiyyeti qurumlara tapshiriqlar verilib ve icrasi nezarete goturulub.',
+        imageUrl: 'http://localhost:4000/news/nar2.jpg',
+        publishedAt: new Date('2026-05-16T12:00:00.000Z'),
       },
       {
-        title: 'İctimai nəqliyyatda yeni marşrut',
-        summary: 'Yeni avtobus xətti bir neçə rayonu birləşdirəcək.',
-        description: 'Yeni marşrut şəhərin şərq və qərb hissələrini birləşdirir, pik saatlarda sıxlığı azaltmaq üçün planlanıb.',
-        imageUrl: 'https://picsum.photos/seed/citynews3/800/500',
-        publishedAt: new Date('2026-05-04T08:15:00.000Z'),
+        title: 'Nerimanov rayonunda 15 May - Beynelxalq Aile Gunu qeyd olunub',
+        summary: 'Tarix: 15 may 2026. Aile deyerlerinin tebligi meqsedile rayon tedbiri kecirilib.',
+        description:
+          'Nerimanov rayonunda "15 May - Beynelxalq Aile Gunu" erefesinde aile deyerlerinin tebligi ve aile institutunun mohkemlendirilmesi meqsedile tedbir kecirilmisdir. Tedbirde agsaqqallar, genc aileler ve rayon ictimaiyyetinin numayendeleri istirak etmisler. Nerimanov Rayon Icra Hakimiyyeti bascisinin muavini Irade Muradova ailenin cemiyyetin esas sutunlarindan biri oldugunu vurgulayib. Tedbir Aile, Qadin ve Usaq Problemleri uzre Dovlet Komitesinin numayendesi Kamila Eliyeva, Nerimanov Rayon Agsaqqallar Surasinin sedri Arif Humbetov ve diger cixislarla davam edib.',
+        imageUrl: 'http://localhost:4000/news/nar3.jpg',
+        publishedAt: new Date('2026-05-15T10:30:00.000Z'),
       },
     ],
   });
@@ -49,13 +52,12 @@ async function main() {
   await prisma.notification.createMany({
     data: [
       {
-        title: 'Səyyar qəbul elanı',
-        message:
-          'Nərimanov rayon sakinlərinin nəzərinə! 06.05.2026-cı il tarixdə, saat 15:00-da 202 №-li tam orta məktəbdə (Ş.İ.Xətai prospekti 47) Nərimanov Rayon İcra Hakimiyyəti başçısının rayon sakinləri ilə növbəti səyyar qəbulu keçiriləcəkdir.',
+        title: 'Seyyar qebul elani',
+        message: 'Nerimanov rayonunda novbeti seyyar qebul ucun elani izleyin.',
       },
       {
-        title: 'Su təchizatı məlumatı',
-        message: 'Bu gün 22:00-dan 23:30-a qədər planlı su kəsintisi olacaq.',
+        title: 'Xeber yenilendi',
+        message: 'Xeberler bolmesine yeni materiallar elave olundu.',
       },
     ],
   });
@@ -63,27 +65,27 @@ async function main() {
   await prisma.problem.createMany({
     data: [
       {
-        title: 'Su təzyiqi zəifdir',
-        description: 'Binada su təzyiqi son iki gündür aşağıdır.',
-        address: 'Nərimanov r., Ağa Neymətulla küç. 12',
+        title: 'Su tezyiqi zeifdir',
+        description: 'Binada su tezyiqi son iki gundur asagidir.',
+        address: 'Nerimanov r., Aga Neymetulla kuc. 12',
         category: 'SU',
         priority: 'ORTA',
         status: 'BAXILIR',
         userId: user.id,
       },
       {
-        title: 'Yol çuxuru təhlükə yaradır',
-        description: 'Əsas yolda böyük çuxur var, maşınlara zərər verir.',
-        address: 'Yasamal r., İnşaatçılar pr. 56',
+        title: 'Yol cuxuru tehlukedir',
+        description: 'Esas yolda boyuk cuxur var, masinlara zerer verir.',
+        address: 'Yasamal r., Insaatcilar pr. 56',
         category: 'YOL',
         priority: 'YUKSEK',
         status: 'ICRADADIR',
         userId: user.id,
       },
       {
-        title: 'İşıq kəsintisi',
-        description: 'Axşam saatlarında tez-tez işıq sönür.',
-        address: 'Xətai r., Babək pr. 101',
+        title: 'Isiq kesintisi',
+        description: 'Axsam saatlarinda tez-tez isiq sonur.',
+        address: 'Xetai r., Babek pr. 101',
         category: 'ISIQ',
         priority: 'TECILI',
         status: 'YENI',
@@ -92,7 +94,7 @@ async function main() {
     ],
   });
 
-  console.log('Seed tamamlandı');
+  console.log('Seed tamamlandi');
 }
 
 main()

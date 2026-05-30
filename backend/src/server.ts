@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express from 'express';
+import path from 'path';
 import { z } from 'zod';
 
 import { comparePassword, hashPassword, signToken } from './auth.js';
@@ -20,6 +21,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
+app.use('/news', express.static(path.resolve('public/news')));
 
 app.get('/health', (_req, res) => {
   res.json({ ok: true });
@@ -39,8 +41,10 @@ app.post('/api/auth/register', async (req, res) => {
   }
 
   const { fullName, email, phone, finCode, password } = parsed.data;
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedPhone = phone.trim();
   const exists = await prisma.user.findFirst({
-    where: { OR: [{ email }, { phone }] },
+    where: { OR: [{ email: normalizedEmail }, { phone: normalizedPhone }] },
   });
   if (exists) {
     return res.status(409).json({ message: 'Bu e-poçt və ya telefon artıq qeydiyyatdan keçib' });
@@ -49,20 +53,28 @@ app.post('/api/auth/register', async (req, res) => {
   const verificationCode = `${Math.floor(100000 + Math.random() * 900000)}`;
   const verificationExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
   const passwordHash = await hashPassword(password);
-  const user = await prisma.user.create({
-    data: {
-      fullName,
-      email,
-      phone,
-      finCode: finCode.toUpperCase(),
-      passwordHash,
-      emailVerified: false,
-      verificationCode,
-      verificationExpiresAt,
-    },
-  });
+  let user;
+  try {
+    user = await prisma.user.create({
+      data: {
+        fullName,
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        finCode: finCode.toUpperCase(),
+        passwordHash,
+        emailVerified: false,
+        verificationCode,
+        verificationExpiresAt,
+      },
+    });
+  } catch (error: any) {
+    if (error?.code === 'P2002') {
+      return res.status(409).json({ message: 'Bu e-poçt və ya telefon artıq qeydiyyatdan keçib' });
+    }
+    throw error;
+  }
 
-  await sendVerificationEmail(email, verificationCode);
+  await sendVerificationEmail(normalizedEmail, verificationCode);
   const token = signToken(user.id, user.email);
   return res.status(201).json({
     token,

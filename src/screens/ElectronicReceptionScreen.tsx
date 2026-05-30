@@ -1,12 +1,13 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
-import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BorderRadius, Color, Shadow, Spacing, Typography } from '@/GlobalStyles';
-import { HomeStackParamList } from '@/navigation/AppNavigator';
+import { ElectronicStackParamList } from '@/navigation/AppNavigator';
 
-type Props = NativeStackScreenProps<HomeStackParamList, 'ElectronicReception'>;
+type Props = NativeStackScreenProps<ElectronicStackParamList, 'ElectronicReception'>;
 
 const receptionOptions = [
   'İcra Hakimiyyətinin başçısı',

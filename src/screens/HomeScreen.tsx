@@ -1,7 +1,8 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import NewsCard from '@/components/NewsCard';
 import { BorderRadius, Color, Shadow, Spacing, Typography } from '@/GlobalStyles';
@@ -26,7 +27,13 @@ export default function HomeScreen({ navigation }: Props) {
         <View style={styles.header}>
           <View style={styles.searchBox}>
             <Ionicons name="search-outline" size={20} color={Color.neutral500} />
-            <TextInput placeholder="Xəbər axtar..." placeholderTextColor={Color.neutral500} value={query} onChangeText={setQuery} style={styles.searchInput} />
+            <TextInput
+              placeholder="Xeber axtar..."
+              placeholderTextColor={Color.neutral500}
+              value={query}
+              onChangeText={setQuery}
+              style={styles.searchInput}
+            />
           </View>
 
           <Pressable accessibilityRole="button" onPress={() => navigation.navigate('Notifications')} style={styles.notifButton}>
@@ -43,21 +50,8 @@ export default function HomeScreen({ navigation }: Props) {
           ItemSeparatorComponent={() => <View style={{ height: Spacing.lg }} />}
           ListHeaderComponent={
             <View style={styles.listHeader}>
-              <Text style={styles.title}>Elektron xidmətlər</Text>
-              <View style={styles.serviceRow}>
-                <Pressable onPress={() => navigation.navigate('ElectronicReception')} style={({ pressed }) => [styles.serviceCard, pressed && styles.pressed]}>
-                  <Ionicons name="hand-left-outline" size={44} color={Color.primary600} />
-                  <Text style={styles.serviceText}>Vətəndaşların qəbulunun elektron qeydiyyatı</Text>
-                </Pressable>
-
-                <Pressable onPress={() => navigation.navigate('ElectronicAppeal')} style={({ pressed }) => [styles.serviceCard, pressed && styles.pressed]}>
-                  <Ionicons name="globe-outline" size={44} color={Color.primary600} />
-                  <Text style={styles.serviceText}>Elektron müraciət</Text>
-                </Pressable>
-              </View>
-
-              <Text style={[styles.title, { marginTop: Spacing.xl }]}>Xəbərlər</Text>
-              <Text style={styles.subtitle}>Şəhərdə baş verən yeniliklər</Text>
+              <Text style={styles.title}>Xeberler</Text>
+              <Text style={styles.subtitle}>Seherde bas veren yenilikler</Text>
             </View>
           }
           renderItem={({ item }) => <NewsCard item={item} onPress={() => navigation.navigate('NewsDetail', { news: item })} />}
@@ -68,7 +62,7 @@ export default function HomeScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { backgroundColor: Color.white500, flex: 1 },
+  safeArea: { backgroundColor: Color.neutral50, flex: 1 },
   screen: { backgroundColor: Color.neutral50, flex: 1 },
   header: {
     alignItems: 'center',
@@ -121,28 +115,5 @@ const styles = StyleSheet.create({
   listHeader: { marginBottom: Spacing.lg },
   title: { color: Color.neutral900, fontSize: 24, fontWeight: '900' },
   subtitle: { color: Color.neutral500, fontSize: Typography.body, fontWeight: '600', marginTop: 6 },
-  serviceRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    marginTop: Spacing.lg,
-  },
-  serviceCard: {
-    alignItems: 'center',
-    backgroundColor: '#E9EDF2',
-    borderRadius: BorderRadius.md,
-    flex: 1,
-    minHeight: 150,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.lg,
-  },
-  serviceText: {
-    color: Color.neutral900,
-    fontSize: 14,
-    fontWeight: '500',
-    lineHeight: 20,
-    marginTop: Spacing.md,
-    textAlign: 'center',
-  },
   pressed: { opacity: 0.86 },
 });

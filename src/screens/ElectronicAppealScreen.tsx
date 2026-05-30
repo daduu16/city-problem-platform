@@ -1,12 +1,13 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useState } from 'react';
 
 import { BorderRadius, Color, Shadow, Spacing, Typography } from '@/GlobalStyles';
-import { HomeStackParamList } from '@/navigation/AppNavigator';
+import { ElectronicStackParamList } from '@/navigation/AppNavigator';
 
-type Props = NativeStackScreenProps<HomeStackParamList, 'ElectronicAppeal'>;
+type Props = NativeStackScreenProps<ElectronicStackParamList, 'ElectronicAppeal'>;
 
 export default function ElectronicAppealScreen({ navigation }: Props) {
   const [appealType, setAppealType] = useState<'Təklif' | 'Ərizə' | 'Şikayət'>('Təklif');
