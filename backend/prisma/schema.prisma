@@ -45,6 +45,8 @@ model Problem {
   description String
   address     String
   imageUrl    String?
+  mediaUrl    String?
+  mediaType   String?
   status      String          @default("YENI")
   priority    String
   category    String

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { ResizeMode, Video } from 'expo-av';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import PriorityBadge from '@/components/PriorityBadge';
@@ -27,7 +28,25 @@ export default function ProblemCard({ item, onPress, onToggleUpvote }: Props) {
 
   return (
     <Pressable accessibilityRole="button" disabled={!onPress} onPress={onPress} style={({ pressed }) => [styles.card, pressed && onPress && styles.pressed]}>
-      {item.imageUrl ? <Image source={{ uri: item.imageUrl }} style={styles.image} /> : null}
+      {item.mediaType === 'video' && item.mediaUrl ? (
+        <View style={styles.videoPreview}>
+          <Video
+            source={{ uri: item.mediaUrl }}
+            style={styles.video}
+            resizeMode={ResizeMode.COVER}
+            isMuted
+            isLooping
+            shouldPlay
+            useNativeControls={false}
+          />
+          <View style={styles.videoOverlay}>
+            <Ionicons name="play-circle-outline" size={34} color={Color.white500} />
+            <Text style={styles.videoPreviewText}>Video</Text>
+          </View>
+        </View>
+      ) : item.imageUrl ? (
+        <Image source={{ uri: item.imageUrl }} style={styles.image} />
+      ) : null}
       <View style={styles.body}>
         <View style={styles.row}>
           <Text numberOfLines={2} style={styles.title}>
@@ -98,6 +117,28 @@ const styles = StyleSheet.create({
   image: {
     height: 140,
     width: '100%',
+  },
+  videoPreview: {
+    height: 140,
+    overflow: 'hidden',
+    position: 'relative',
+    width: '100%',
+  },
+  video: { height: '100%', width: '100%' },
+  videoOverlay: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    bottom: 0,
+    justifyContent: 'center',
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  videoPreviewText: {
+    color: Color.white500,
+    fontSize: 12,
+    fontWeight: '800',
   },
   body: {
     padding: Spacing.lg,

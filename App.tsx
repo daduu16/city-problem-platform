@@ -6,6 +6,7 @@ import LoginScreen from './Login';
 import SignupScreen from './Signup';
 import VerifyEmailScreen from './VerifyEmail';
 import ForgotPasswordScreen from './ForgotPassword';
+import ChangePasswordScreen from './ChangePassword';
 import AppNavigator from '@/navigation/AppNavigator';
 import { RootStackParamList } from '@/navigation/types';
 import { AppDataProvider } from '@/state/AppDataContext';
@@ -22,6 +23,7 @@ export default function App() {
           <RootStack.Screen name="Signup" component={SignupScreen} />
           <RootStack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
           <RootStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+          <RootStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
           <RootStack.Screen name="Home" component={AppNavigator} />
         </RootStack.Navigator>
       </NavigationContainer>

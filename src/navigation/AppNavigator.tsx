@@ -125,20 +125,26 @@ export default function AppNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
+        sceneContainerStyle: { backgroundColor: Color.neutral50 },
         tabBarActiveTintColor: Color.primary600,
         tabBarInactiveTintColor: Color.neutral500,
+        tabBarBackground: () => <View style={[StyleSheet.absoluteFillObject, { backgroundColor: Color.neutral50 }]} />,
         tabBarStyle: {
+          position: 'absolute',
           backgroundColor: Color.neutral50,
           borderTopColor: Color.neutral50,
           borderTopWidth: 0,
           elevation: 0,
           shadowColor: 'transparent',
           shadowOpacity: 0,
-          height: 74,
-          paddingBottom: 12,
-          paddingTop: 8,
+          shadowRadius: 0,
+          overflow: 'visible',
+          height: 82,
+          paddingBottom: 14,
+          paddingTop: 6,
         },
-        tabBarLabelStyle: { fontWeight: '700', fontSize: 12 },
+        tabBarItemStyle: { paddingBottom: 2 },
+        tabBarLabelStyle: { fontWeight: '700', fontSize: 12, marginBottom: 1 },
         tabBarIcon: ({ color, size }) => {
           if (route.name === 'ReportTab') return null;
 
@@ -194,14 +200,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     top: -18,
+    zIndex: 10,
   },
   centerButtonInner: {
     alignItems: 'center',
     backgroundColor: Color.primary500,
     borderRadius: 34,
+    borderWidth: 4,
+    borderColor: Color.neutral50,
     height: 68,
     justifyContent: 'center',
     width: 68,
-    ...Shadow.primaryButton,
+    elevation: 0,
+    shadowColor: 'transparent',
+    shadowOpacity: 0,
+    shadowRadius: 0,
   },
 });

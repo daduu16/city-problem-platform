@@ -12,6 +12,7 @@ export type NotificationItem = {
   title: string;
   message: string;
   createdAt: string;
+  isRead: boolean;
 };
 
 export type ProblemCategory =
@@ -39,6 +40,8 @@ export type Problem = {
   createdAt: string;
   createdByMe: boolean;
   imageUrl?: string;
+  mediaUrl?: string;
+  mediaType?: 'image' | 'video';
   upvotes: number;
   hasUpvoted: boolean;
 };

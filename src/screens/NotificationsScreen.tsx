@@ -10,7 +10,7 @@ import { useAppData } from '@/state/AppDataContext';
 type Props = NativeStackScreenProps<HomeStackParamList, 'Notifications'>;
 
 export default function NotificationsScreen({ navigation }: Props) {
-  const { notifications } = useAppData();
+  const { notifications, markNotificationAsRead } = useAppData();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -29,7 +29,15 @@ export default function NotificationsScreen({ navigation }: Props) {
           contentContainerStyle={styles.content}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.md }} />}
           renderItem={({ item }) => (
-            <View style={styles.card}>
+            <Pressable
+              onPress={() => markNotificationAsRead(item.id)}
+              style={({ pressed }) => [
+                styles.card,
+                item.isRead ? styles.cardRead : styles.cardUnread,
+                pressed && styles.pressed,
+              ]}
+            >
+              {!item.isRead ? <View style={styles.unreadDot} /> : null}
               <Text style={styles.title}>{item.title}</Text>
               <Text style={styles.message}>{item.message}</Text>
               <Text style={styles.date}>
@@ -39,7 +47,7 @@ export default function NotificationsScreen({ navigation }: Props) {
                   day: '2-digit',
                 })}
               </Text>
-            </View>
+            </Pressable>
           )}
         />
       </View>
@@ -60,18 +68,48 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   backButton: { alignItems: 'center', height: 40, justifyContent: 'center', width: 40 },
-  topTitle: { color: Color.neutral900, flex: 1, fontSize: Typography.body, fontWeight: '900', textAlign: 'center' },
+  topTitle: {
+    color: Color.neutral900,
+    flex: 1,
+    fontSize: Typography.body,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
   content: { padding: Spacing.lg, paddingBottom: 30 },
   card: {
-    backgroundColor: Color.white500,
-    borderColor: Color.neutral200,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
     padding: Spacing.lg,
+    position: 'relative',
     ...Shadow.surface,
   },
+  cardUnread: {
+    backgroundColor: '#EEF6FF',
+    borderColor: '#BFDBFE',
+  },
+  cardRead: {
+    backgroundColor: Color.white500,
+    borderColor: Color.neutral200,
+    opacity: 0.88,
+  },
+  unreadDot: {
+    backgroundColor: Color.primary600,
+    borderRadius: 4,
+    height: 8,
+    position: 'absolute',
+    right: 10,
+    top: 10,
+    width: 8,
+  },
   title: { color: Color.neutral900, fontSize: Typography.body, fontWeight: '900' },
-  message: { color: Color.neutral800, fontSize: Typography.caption, fontWeight: '600', lineHeight: 21, marginTop: Spacing.sm },
+  message: {
+    color: Color.neutral800,
+    fontSize: Typography.caption,
+    fontWeight: '600',
+    lineHeight: 21,
+    marginTop: Spacing.sm,
+  },
   date: { color: Color.primary600, fontSize: 12, fontWeight: '800', marginTop: Spacing.md },
+  pressed: { opacity: 0.88 },
 });
 

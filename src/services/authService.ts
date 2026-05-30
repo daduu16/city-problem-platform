@@ -26,7 +26,7 @@ async function authFetch<T>(path: string, body: object): Promise<T> {
 export async function login(identifier: string, password: string) {
   if (!identifier.trim()) throw new Error('E-poçt və ya telefon daxil edin');
   if (password.length < 3) throw new Error('Şifrə ən az 3 simvol olmalıdır');
-  return authFetch<{ token: string; user: { id: string; fullName: string; email: string; phone: string } }>(
+  return authFetch<{ token: string; user: { id: string; fullName: string; email: string; phone: string; finCode?: string } }>(
     '/api/auth/login',
     { identifier: identifier.trim(), password },
   );

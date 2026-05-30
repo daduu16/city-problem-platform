@@ -1,6 +1,7 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { ResizeMode, Video } from 'expo-av';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BorderRadius, Color, Shadow, Spacing, Typography } from '@/GlobalStyles';
@@ -42,7 +43,20 @@ export default function ProblemDetailScreen() {
         </View>
 
         <ScrollView bounces={false} contentContainerStyle={styles.content}>
-          {problem.imageUrl ? <Image source={{ uri: problem.imageUrl }} style={styles.image} /> : null}
+          {problem.mediaType === 'video' && problem.mediaUrl ? (
+            <View style={styles.videoPreview}>
+              <Video
+                source={{ uri: problem.mediaUrl }}
+                style={styles.video}
+                resizeMode={ResizeMode.CONTAIN}
+                shouldPlay={false}
+                isLooping={false}
+                useNativeControls
+              />
+            </View>
+          ) : problem.imageUrl ? (
+            <Image source={{ uri: problem.imageUrl }} style={styles.image} />
+          ) : null}
 
           <View style={styles.card}>
             <Text style={styles.title}>{problem.title}</Text>
@@ -117,6 +131,14 @@ const styles = StyleSheet.create({
   topTitle: { color: Color.neutral900, flex: 1, fontSize: Typography.body, fontWeight: '900', textAlign: 'center' },
   content: { padding: Spacing.lg, paddingBottom: 40 },
   image: { borderRadius: BorderRadius.md, height: 220, width: '100%', ...Shadow.surface },
+  videoPreview: {
+    borderRadius: BorderRadius.md,
+    height: 220,
+    overflow: 'hidden',
+    width: '100%',
+    ...Shadow.surface,
+  },
+  video: { height: '100%', width: '100%' },
   card: {
     backgroundColor: Color.white500,
     borderColor: Color.neutral200,

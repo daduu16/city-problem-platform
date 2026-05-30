@@ -16,6 +16,8 @@ type BackendProblem = {
   description: string;
   address: string;
   imageUrl?: string | null;
+  mediaUrl?: string | null;
+  mediaType?: 'image' | 'video' | null;
   category: string;
   categoryLabel?: string;
   priority: string;
@@ -60,6 +62,8 @@ function toProblem(item: BackendProblem): Problem {
     description: item.description,
     address: item.address,
     imageUrl: item.imageUrl || undefined,
+    mediaUrl: item.mediaUrl || item.imageUrl || undefined,
+    mediaType: item.mediaType || (item.imageUrl ? 'image' : undefined),
     category: categoryMap[item.category] || (item.categoryLabel as ProblemCategory),
     priority: priorityMap[item.priority] || (item.priorityLabel as ProblemPriority),
     status: statusMap[item.status] || (item.statusLabel as ProblemStatus),
@@ -111,7 +115,8 @@ export async function fetchNews(): Promise<News[]> {
 }
 
 export async function fetchNotifications(): Promise<NotificationItem[]> {
-  return apiFetch<NotificationItem[]>('/api/notifications');
+  const data = await apiFetch<NotificationItem[]>('/api/notifications');
+  return data.map((item) => ({ ...item, isRead: item.isRead ?? false }));
 }
 
 export async function fetchProblems(): Promise<Problem[]> {
@@ -126,6 +131,8 @@ export async function createProblem(input: {
   description: string;
   address: string;
   imageUrl?: string;
+  mediaUrl?: string;
+  mediaType?: 'image' | 'video';
 }): Promise<Problem> {
   const categoryCode: Record<ProblemCategory, string> = {
     Su: 'SU',
@@ -152,6 +159,8 @@ export async function createProblem(input: {
       description: input.description.trim(),
       address: input.address.trim(),
       imageUrl: input.imageUrl,
+      mediaUrl: input.mediaUrl,
+      mediaType: input.mediaType,
       category: categoryCode[input.category],
       priority: priorityCode[input.priority],
     }),

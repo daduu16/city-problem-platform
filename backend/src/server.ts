@@ -240,8 +240,18 @@ app.post('/api/problems', async (req, res) => {
     description: z.string().min(5),
     address: z.string().min(5),
     imageUrl: z.string().trim().optional().refine((value) => !value || value.length > 0, { message: 'Şəkil URL-i boş ola bilməz' }),
+    mediaUrl: z.string().trim().optional().refine((value) => !value || value.length > 0, { message: 'Media URL-i boş ola bilməz' }),
+    mediaType: z.enum(['image', 'video']).optional(),
     category: z.enum(problemCategories),
     priority: z.enum(problemPriorities),
+  }).superRefine((data, ctx) => {
+    if ((data.mediaUrl && !data.mediaType) || (!data.mediaUrl && data.mediaType)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Media tipi və URL birlikdə göndərilməlidir',
+        path: ['mediaType'],
+      });
+    }
   });
 
   const parsed = schema.safeParse(req.body);
@@ -265,6 +275,7 @@ app.post('/api/problems', async (req, res) => {
   const created = await prisma.problem.create({
     data: {
       ...parsed.data,
+      imageUrl: parsed.data.imageUrl ?? (parsed.data.mediaType === 'image' ? parsed.data.mediaUrl : undefined),
       status: 'YENI',
       userId: demoUser.id,
     },

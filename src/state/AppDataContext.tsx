@@ -11,14 +11,26 @@ type CreateProblemInput = {
   description: string;
   address: string;
   imageUrl?: string;
+  mediaUrl?: string;
+  mediaType?: 'image' | 'video';
 };
 
 type AppDataContextValue = {
+  currentUser: {
+    id: string;
+    fullName: string;
+    email: string;
+    phone: string;
+    finCode?: string;
+  } | null;
   news: News[];
   notifications: NotificationItem[];
   problems: Problem[];
   loading: boolean;
+  unreadNotificationsCount: number;
   addProblem: (input: CreateProblemInput) => Promise<void>;
+  setCurrentUser: (user: AppDataContextValue['currentUser']) => void;
+  markNotificationAsRead: (notificationId: string) => void;
   toggleProblemUpvote: (problemId: string) => void;
   refresh: () => Promise<void>;
 };
@@ -26,6 +38,7 @@ type AppDataContextValue = {
 const AppDataContext = createContext<AppDataContextValue | null>(null);
 
 export function AppDataProvider({ children }: PropsWithChildren) {
+  const [currentUser, setCurrentUser] = useState<AppDataContextValue['currentUser']>(null);
   const [news, setNews] = useState<News[]>(mockNews);
   const [notifications, setNotifications] = useState<NotificationItem[]>(mockNotifications);
   const [problems, setProblems] = useState<Problem[]>(mockProblems);
@@ -41,6 +54,14 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     [],
   );
 
+  const withNotificationDefaults = useCallback(
+    (notification: NotificationItem): NotificationItem => ({
+      ...notification,
+      isRead: notification.isRead ?? false,
+    }),
+    [],
+  );
+
   const refresh = useCallback(async () => {
     try {
       setLoading(true);
@@ -51,7 +72,13 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       ]);
 
       setNews(newsData);
-      setNotifications(notificationsData);
+      const mergedNotifications = [
+        ...mockNotifications.map(withNotificationDefaults),
+        ...notificationsData.map(withNotificationDefaults),
+      ].filter(
+        (item, index, array) => array.findIndex((candidate) => candidate.id === item.id) === index,
+      );
+      setNotifications(mergedNotifications);
       setProblems(
         problemsData.map((problem) => ({
           ...withVoteDefaults(problem),
@@ -60,12 +87,12 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       );
     } catch {
       setNews(mockNews);
-      setNotifications(mockNotifications);
+      setNotifications(mockNotifications.map(withNotificationDefaults));
       setProblems(mockProblems.map(withVoteDefaults));
     } finally {
       setLoading(false);
     }
-  }, [myCreatedIds, withVoteDefaults]);
+  }, [myCreatedIds, withNotificationDefaults, withVoteDefaults]);
 
   useEffect(() => {
     refresh();
@@ -92,17 +119,46 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     );
   }, []);
 
+  const markNotificationAsRead = useCallback((notificationId: string) => {
+    setNotifications((current) =>
+      current.map((notification) =>
+        notification.id === notificationId ? { ...notification, isRead: true } : notification,
+      ),
+    );
+  }, []);
+
+  const unreadNotificationsCount = useMemo(
+    () => notifications.filter((notification) => !notification.isRead).length,
+    [notifications],
+  );
+
   const value = useMemo<AppDataContextValue>(
     () => ({
+      currentUser,
       news,
       notifications,
       problems,
       loading,
+      unreadNotificationsCount,
       addProblem,
+      setCurrentUser,
+      markNotificationAsRead,
       toggleProblemUpvote,
       refresh,
     }),
-    [news, notifications, problems, loading, addProblem, toggleProblemUpvote, refresh],
+    [
+      currentUser,
+      news,
+      notifications,
+      problems,
+      loading,
+      unreadNotificationsCount,
+      addProblem,
+      setCurrentUser,
+      markNotificationAsRead,
+      toggleProblemUpvote,
+      refresh,
+    ],
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

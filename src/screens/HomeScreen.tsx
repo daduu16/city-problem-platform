@@ -12,7 +12,7 @@ import { useAppData } from '@/state/AppDataContext';
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomeMain'>;
 
 export default function HomeScreen({ navigation }: Props) {
-  const { news } = useAppData();
+  const { news, unreadNotificationsCount } = useAppData();
   const [query, setQuery] = useState('');
 
   const filteredNews = useMemo(() => {
@@ -38,7 +38,11 @@ export default function HomeScreen({ navigation }: Props) {
 
           <Pressable accessibilityRole="button" onPress={() => navigation.navigate('Notifications')} style={styles.notifButton}>
             <Ionicons name="notifications-outline" size={22} color={Color.neutral900} />
-            <View style={styles.notifDot} />
+            {unreadNotificationsCount > 0 ? (
+              <View style={styles.notifDot}>
+                <Text style={styles.notifDotText}>{unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}</Text>
+              </View>
+            ) : null}
           </Pressable>
         </View>
 
@@ -104,12 +108,21 @@ const styles = StyleSheet.create({
   },
   notifDot: {
     backgroundColor: Color.danger500,
-    borderRadius: 5,
-    height: 10,
+    borderRadius: 9,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
     position: 'absolute',
-    right: 12,
-    top: 12,
-    width: 10,
+    right: 8,
+    top: 8,
+    paddingHorizontal: 4,
+  },
+  notifDotText: {
+    color: Color.white500,
+    fontSize: 10,
+    fontWeight: '900',
+    lineHeight: 12,
   },
   listContent: { paddingBottom: 24, paddingHorizontal: Spacing.lg, paddingTop: Spacing.xl },
   listHeader: { marginBottom: Spacing.lg },

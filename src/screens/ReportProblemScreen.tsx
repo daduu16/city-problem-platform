@@ -55,7 +55,7 @@ function SelectPill({
 
 export default function ReportProblemScreen() {
   const { addProblem } = useAppData();
-  const autoCameraTriggeredRef = useRef(false);
+  const autoPickerTriggeredRef = useRef(false);
   const insets = useSafeAreaInsets();
 
   const [title, setTitle] = useState('');
@@ -63,8 +63,10 @@ export default function ReportProblemScreen() {
   const [priority, setPriority] = useState<ProblemPriority>('Orta');
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
-  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
+  const [mediaUrl, setMediaUrl] = useState<string | undefined>(undefined);
+  const [mediaType, setMediaType] = useState<'image' | 'video' | undefined>(undefined);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
 
   const [mapVisible, setMapVisible] = useState(false);
   const [mapRegion, setMapRegion] = useState<Region>(defaultRegion);
@@ -95,10 +97,7 @@ export default function ReportProblemScreen() {
 
   const goToCurrentLocation = useCallback(async () => {
     const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-    const point = {
-      latitude: current.coords.latitude,
-      longitude: current.coords.longitude,
-    };
+    const point = { latitude: current.coords.latitude, longitude: current.coords.longitude };
     setSelectedPoint(point);
     setMapRegion({ ...point, latitudeDelta: 0.01, longitudeDelta: 0.01 });
     setSelectedAddress(await reverseGeocode(point.latitude, point.longitude));
@@ -136,7 +135,31 @@ export default function ReportProblemScreen() {
     setMapVisible(false);
   };
 
-  const openCamera = useCallback(async () => {
+  const pickFromLibrary = useCallback(async (type: 'image' | 'video') => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('İcazə tələb olunur', 'Qalereyaya giriş üçün icazə verməyiniz lazımdır.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        allowsEditing: type === 'image',
+        quality: 0.8,
+        mediaTypes: type === 'image' ? ['images'] : ['videos'],
+      });
+
+      if (!result.canceled && result.assets.length > 0) {
+        setMediaUrl(result.assets[0].uri);
+        setMediaType(type);
+        Alert.alert('Hazırdır', type === 'image' ? 'Şəkil əlavə olundu.' : 'Video əlavə olundu.');
+      }
+    } catch {
+      Alert.alert('Xəta', 'Media seçilə bilmədi. Yenidən cəhd edin.');
+    }
+  }, []);
+
+  const openCamera = useCallback(async (type: 'image' | 'video') => {
     try {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
@@ -145,19 +168,50 @@ export default function ReportProblemScreen() {
       }
 
       const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
+        allowsEditing: type === 'image',
         quality: 0.8,
-        mediaTypes: ['images'],
+        mediaTypes: type === 'image' ? ['images'] : ['videos'],
       });
 
       if (!result.canceled && result.assets.length > 0) {
-        setImageUrl(result.assets[0].uri);
-        Alert.alert('Hazırdır', 'Şəkil əlavə olundu.');
+        setMediaUrl(result.assets[0].uri);
+        setMediaType(type);
+        Alert.alert('Hazırdır', type === 'image' ? 'Şəkil əlavə olundu.' : 'Video əlavə olundu.');
       }
     } catch {
       Alert.alert('Xəta', 'Kamera açıla bilmədi. Yenidən cəhd edin.');
     }
   }, []);
+
+  const openMediaPicker = useCallback(() => {
+    Alert.alert('Media əlavə et', 'Şəkil və ya video seçin', [
+      { text: 'Şəkil (qalereya)', onPress: () => pickFromLibrary('image') },
+      { text: 'Video (qalereya)', onPress: () => pickFromLibrary('video') },
+      { text: 'Şəkil (kamera)', onPress: () => openCamera('image') },
+      { text: 'Video (kamera)', onPress: () => openCamera('video') },
+      { text: 'Ləğv et', style: 'cancel' },
+    ]);
+  }, [openCamera, pickFromLibrary]);
+
+  const generateAiDescription = useCallback(() => {
+    if (!mediaUrl) {
+      Alert.alert('Media tələb olunur', 'AI təsvir üçün əvvəlcə şəkil və ya video əlavə edin.');
+      return;
+    }
+
+    setAiGenerating(true);
+    setTimeout(() => {
+      const template = [
+        `Müraciət ${category.toLowerCase()} kateqoriyasına aiddir və prioritet səviyyəsi "${priority}" olaraq qiymətləndirilir.`,
+        address ? `Hadisə ünvanı: ${address}.` : 'Hadisə ünvanı xəritə üzərindən dəqiqləşdirilib.',
+        mediaType === 'video'
+          ? 'Videoda problemin mövcud vəziyyəti görünür və operativ baxış üçün aidiyyəti quruma yönləndirilməsi xahiş olunur.'
+          : 'Şəkildə problemin mövcud vəziyyəti görünür və operativ baxış üçün aidiyyəti quruma yönləndirilməsi xahiş olunur.',
+      ].join(' ');
+      setDescription(template);
+      setAiGenerating(false);
+    }, 700);
+  }, [address, category, mediaType, mediaUrl, priority]);
 
   const handleSubmit = async () => {
     if (!canSubmit) {
@@ -170,15 +224,25 @@ export default function ReportProblemScreen() {
     }
 
     try {
-      await addProblem({ title, category, priority, description, address, imageUrl });
+      await addProblem({
+        title,
+        category,
+        priority,
+        description,
+        address,
+        imageUrl: mediaType === 'image' ? mediaUrl : undefined,
+        mediaUrl,
+        mediaType,
+      });
       Alert.alert('Uğurlu', 'Problem göndərildi və bazaya yazıldı.');
       setTitle('');
       setDescription('');
       setAddress('');
-      setImageUrl(undefined);
+      setMediaUrl(undefined);
+      setMediaType(undefined);
       setCategory('Su');
       setPriority('Orta');
-      autoCameraTriggeredRef.current = false;
+      autoPickerTriggeredRef.current = false;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Serverə göndərmək alınmadı.';
       Alert.alert('Xəta', message);
@@ -187,11 +251,11 @@ export default function ReportProblemScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!autoCameraTriggeredRef.current) {
-        autoCameraTriggeredRef.current = true;
-        openCamera();
+      if (!autoPickerTriggeredRef.current) {
+        autoPickerTriggeredRef.current = true;
+        openMediaPicker();
       }
-    }, [openCamera]),
+    }, [openMediaPicker]),
   );
 
   return (
@@ -203,7 +267,13 @@ export default function ReportProblemScreen() {
 
           <View style={styles.card}>
             <FieldLabel>Problem başlığı</FieldLabel>
-            <TextInput value={title} onChangeText={setTitle} placeholder="Məs: Su borusu partlayıb" placeholderTextColor={Color.neutral500} style={styles.input} />
+            <TextInput
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Məs: Su borusu partlayıb"
+              placeholderTextColor={Color.neutral500}
+              style={styles.input}
+            />
 
             <View style={styles.twoCol}>
               <View style={{ flex: 1 }}>
@@ -216,6 +286,62 @@ export default function ReportProblemScreen() {
               </View>
             </View>
 
+            <FieldLabel>Ünvan</FieldLabel>
+            <TextInput
+              value={address}
+              onChangeText={setAddress}
+              placeholder="Məs: Yasamal r., ..."
+              placeholderTextColor={Color.neutral500}
+              style={styles.input}
+            />
+
+            <Pressable
+              accessibilityRole="button"
+              onPress={handlePickLocation}
+              style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
+            >
+              <Ionicons name="map-outline" size={18} color={Color.primary600} />
+              <Text style={styles.secondaryButtonText}>{locationLoading ? 'Axtarılır...' : 'Məkanı seç'}</Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              onPress={openMediaPicker}
+              style={({ pressed }) => [styles.mediaButton, pressed && styles.pressed]}
+            >
+              <Ionicons name="images-outline" size={20} color={Color.primary600} />
+              <View style={styles.mediaButtonContent}>
+                <Text style={styles.mediaButtonTitle}>Şəkil və ya video əlavə et</Text>
+                <Text style={styles.mediaButtonSubtitle}>Qalereya və ya kamera ilə media seçin</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={Color.neutral500} />
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              onPress={handlePickLocation}
+              style={({ pressed }) => [styles.locationPreview, pressed && styles.pressed]}
+            >
+              <Ionicons name="location-outline" size={18} color={Color.primary600} />
+              <Text style={styles.locationPreviewText} numberOfLines={2}>
+                {address || 'Məkan seçilməyib'}
+              </Text>
+            </Pressable>
+
+            {mediaUrl ? (
+              <View style={styles.imageHint}>
+                <Ionicons name="checkmark-circle" size={18} color={Color.success500} />
+                <Text style={styles.imageHintText}>
+                  {mediaType === 'video' ? 'Video əlavə olundu' : 'Şəkil əlavə olundu'}
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.imageHintMuted}>
+                <Ionicons name="information-circle-outline" size={18} color={Color.neutral500} />
+                <Text style={styles.imageHintTextMuted}>İlk addım olaraq şəkil və ya video seçin</Text>
+              </View>
+            )}
+
             <FieldLabel>Təsvir</FieldLabel>
             <TextInput
               value={description}
@@ -227,41 +353,20 @@ export default function ReportProblemScreen() {
               style={[styles.input, styles.textarea]}
             />
 
-            <FieldLabel>Ünvan</FieldLabel>
-            <TextInput value={address} onChangeText={setAddress} placeholder="Məs: Yasamal r., ..." placeholderTextColor={Color.neutral500} style={styles.input} />
-
-            <View style={styles.actionsRow}>
-              <Pressable accessibilityRole="button" onPress={handlePickLocation} style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
-                <Ionicons name="map-outline" size={18} color={Color.primary600} />
-                <Text style={styles.secondaryButtonText}>{locationLoading ? 'Axtarılır...' : 'Məkanı seç'}</Text>
-              </Pressable>
-
-              <Pressable accessibilityRole="button" onPress={openCamera} style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
-                <Ionicons name="camera-outline" size={18} color={Color.primary600} />
-                <Text style={styles.secondaryButtonText}>Şəkil əlavə et</Text>
-              </Pressable>
-            </View>
-
-            <Pressable accessibilityRole="button" onPress={handlePickLocation} style={({ pressed }) => [styles.locationPreview, pressed && styles.pressed]}>
-              <Ionicons name="location-outline" size={18} color={Color.primary600} />
-              <Text style={styles.locationPreviewText} numberOfLines={2}>
-                {address || 'Məkan seçilməyib'}
-              </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={generateAiDescription}
+              style={({ pressed }) => [styles.aiButton, pressed && styles.pressed]}
+            >
+              <Ionicons name="sparkles-outline" size={16} color={Color.primary600} />
+              <Text style={styles.aiButtonText}>{aiGenerating ? 'AI təsvir hazırlanır...' : 'AI ilə təsvir yarat'}</Text>
             </Pressable>
 
-            {imageUrl ? (
-              <View style={styles.imageHint}>
-                <Ionicons name="checkmark-circle" size={18} color={Color.success500} />
-                <Text style={styles.imageHintText}>Şəkil əlavə olundu</Text>
-              </View>
-            ) : (
-              <View style={styles.imageHintMuted}>
-                <Ionicons name="information-circle-outline" size={18} color={Color.neutral500} />
-                <Text style={styles.imageHintTextMuted}>İlk addım olaraq şəkil çəkin</Text>
-              </View>
-            )}
-
-            <Pressable accessibilityRole="button" onPress={handleSubmit} style={({ pressed }) => [styles.submit, !canSubmit && styles.submitDisabled, pressed && styles.pressed]}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={handleSubmit}
+              style={({ pressed }) => [styles.submit, !canSubmit && styles.submitDisabled, pressed && styles.pressed]}
+            >
               <Text style={styles.submitText}>Problemi göndər</Text>
             </Pressable>
           </View>
@@ -280,8 +385,16 @@ export default function ReportProblemScreen() {
             </Pressable>
           </View>
 
-          <MapView style={styles.map} initialRegion={mapRegion} region={mapRegion} onRegionChangeComplete={setMapRegion} onPress={onMapPress}>
-            {selectedPoint ? <Marker coordinate={selectedPoint} draggable onDragEnd={(e) => onMapPress(e as unknown as MapPressEvent)} /> : null}
+          <MapView
+            style={styles.map}
+            initialRegion={mapRegion}
+            region={mapRegion}
+            onRegionChangeComplete={setMapRegion}
+            onPress={onMapPress}
+          >
+            {selectedPoint ? (
+              <Marker coordinate={selectedPoint} draggable onDragEnd={(e) => onMapPress(e as unknown as MapPressEvent)} />
+            ) : null}
           </MapView>
 
           <View style={styles.mapInfo}>
@@ -313,7 +426,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     ...Shadow.surface,
   },
-  label: { color: Color.neutral800, fontSize: Typography.caption, fontWeight: '800', marginBottom: 8 },
+  label: { color: Color.neutral800, fontSize: Typography.caption, fontWeight: '800', marginBottom: 8, marginTop: Spacing.lg },
   input: {
     backgroundColor: Color.neutral50,
     borderColor: Color.neutral200,
@@ -326,7 +439,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   textarea: { height: 120 },
-  twoCol: { flexDirection: 'row', gap: Spacing.md, marginTop: Spacing.lg },
+  twoCol: { flexDirection: 'row', gap: Spacing.md },
   select: {
     alignItems: 'center',
     backgroundColor: Color.neutral50,
@@ -340,18 +453,30 @@ const styles = StyleSheet.create({
   },
   selectText: { color: Color.neutral900, fontSize: Typography.body, fontWeight: '700' },
   selectPlaceholder: { color: Color.neutral500, fontWeight: '600' },
-  actionsRow: { flexDirection: 'row', gap: Spacing.md, marginTop: Spacing.lg },
   secondaryButton: {
     alignItems: 'center',
     backgroundColor: Color.accent100,
     borderRadius: BorderRadius.md,
-    flex: 1,
     flexDirection: 'row',
     gap: 8,
     justifyContent: 'center',
+    marginTop: Spacing.lg,
     paddingVertical: 12,
   },
-  secondaryButtonText: { color: Color.primary600, fontSize: Typography.caption, fontWeight: '900' },
+  secondaryButtonText: { color: Color.primary600, fontSize: Typography.caption, fontWeight: '900', textAlign: 'center' },
+  mediaButton: {
+    alignItems: 'center',
+    backgroundColor: Color.accent100,
+    borderRadius: BorderRadius.md,
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 12,
+  },
+  mediaButtonContent: { flex: 1 },
+  mediaButtonTitle: { color: Color.primary600, fontSize: Typography.caption, fontWeight: '900' },
+  mediaButtonSubtitle: { color: Color.neutral500, fontSize: 12, fontWeight: '700', marginTop: 2 },
   locationPreview: {
     alignItems: 'center',
     backgroundColor: Color.neutral50,
@@ -368,6 +493,18 @@ const styles = StyleSheet.create({
   imageHintMuted: { alignItems: 'center', flexDirection: 'row', gap: 8, marginTop: Spacing.md },
   imageHintText: { color: Color.neutral800, fontSize: Typography.caption, fontWeight: '800' },
   imageHintTextMuted: { color: Color.neutral500, fontSize: Typography.caption, fontWeight: '700' },
+  aiButton: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: Color.accent100,
+    borderRadius: 999,
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: Spacing.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  aiButtonText: { color: Color.primary600, fontSize: 12, fontWeight: '900' },
   submit: {
     alignItems: 'center',
     backgroundColor: Color.primary500,
@@ -394,12 +531,7 @@ const styles = StyleSheet.create({
   modalBtnText: { color: Color.primary600, fontSize: Typography.caption, fontWeight: '800' },
   modalTitle: { color: Color.neutral900, fontSize: Typography.body, fontWeight: '900' },
   map: { flex: 1 },
-  mapInfo: {
-    borderTopColor: 'transparent',
-    borderTopWidth: 0,
-    padding: Spacing.lg,
-    gap: Spacing.md,
-  },
+  mapInfo: { borderTopColor: 'transparent', borderTopWidth: 0, padding: Spacing.lg, gap: Spacing.md },
   mapAddress: { color: Color.neutral800, fontSize: Typography.caption, fontWeight: '700' },
   currentBtn: {
     alignItems: 'center',
@@ -413,4 +545,3 @@ const styles = StyleSheet.create({
   },
   currentBtnText: { color: Color.white500, fontSize: Typography.caption, fontWeight: '800' },
 });
-

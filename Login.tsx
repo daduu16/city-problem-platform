@@ -10,10 +10,12 @@ import { AuthTextInput } from '@/components/auth/AuthTextInput';
 import { Color, Spacing, Typography } from '@/GlobalStyles';
 import { RootStackParamList } from '@/navigation/types';
 import { login } from '@/services/authService';
+import { useAppData } from '@/state/AppDataContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 export default function LoginScreen({ navigation, route }: Props) {
+  const { setCurrentUser } = useAppData();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -26,7 +28,14 @@ export default function LoginScreen({ navigation, route }: Props) {
   const handleLogin = async () => {
     try {
       setErrorMessage('');
-      await login(identifier, password);
+      const auth = await login(identifier, password);
+      setCurrentUser({
+        id: auth.user.id,
+        fullName: auth.user.fullName,
+        email: auth.user.email,
+        phone: auth.user.phone,
+        finCode: auth.user.finCode,
+      });
       navigation.navigate('Home');
     } catch (error: any) {
       setErrorMessage(error.message);
