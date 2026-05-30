@@ -273,6 +273,8 @@ model IncidentReport {
   lat        Float
   lng        Float
   address    String?
+  photoUrl   String?  @map("photo_url")
+  videoUrl   String?  @map("video_url")
   createdAt  DateTime @default(now()) @map("created_at")
 
   incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)

@@ -1,9 +1,6 @@
 /** Radius (meters) to treat citizen reports as the same on-map incident. */
 export const INCIDENT_MERGE_RADIUS_M = 90;
 
-/** Reports within this window can attach to the same open incident. */
-export const INCIDENT_MERGE_TIME_WINDOW_MS = 14 * 24 * 3600000;
-
 export function haversineMeters(
   lat1: number,
   lng1: number,

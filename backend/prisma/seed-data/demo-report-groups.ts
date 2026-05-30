@@ -2,10 +2,9 @@ import {
   DistrictStatus,
   IncidentPriority,
   IncidentStatus,
-  IncidentType,
 } from '@prisma/client';
 import type { ReportGroup } from './group-reports';
-import { groupIncidentType, primaryReport } from './group-reports';
+import { primaryReport } from './group-reports';
 import { SEED_DESCRIPTION_TAG } from './demo-reports';
 
 export type ReportGroupOps = {
@@ -26,7 +25,6 @@ const DEFAULT_OPS: ReportGroupOps = {
 
 function opsForGroup(group: ReportGroup): ReportGroupOps {
   const p = primaryReport(group);
-  const type = groupIncidentType(group);
 
   if (p.categoryKey === 'water' && p.title.includes('partlayış')) {
     return {
@@ -62,16 +60,16 @@ function opsForGroup(group: ReportGroup): ReportGroupOps {
       assign: true,
     };
   }
-  if (p.daysAgo >= 7) {
-    return {
-      status: IncidentStatus.RESOLVED,
-      priority: IncidentPriority.MEDIUM,
-    };
-  }
   if (p.daysAgo >= 12) {
     return {
       status: IncidentStatus.ARCHIVED,
       priority: IncidentPriority.LOW,
+    };
+  }
+  if (p.daysAgo >= 7) {
+    return {
+      status: IncidentStatus.RESOLVED,
+      priority: IncidentPriority.MEDIUM,
     };
   }
 

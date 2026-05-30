@@ -69,18 +69,12 @@ export function useIncidentSupercluster(
 		};
 
 		update();
-		map.on('move', update);
 		map.on('moveend', update);
-		map.on('zoom', update);
 		map.on('zoomend', update);
-		map.on('idle', update);
 
 		return () => {
-			map.off('move', update);
 			map.off('moveend', update);
-			map.off('zoom', update);
 			map.off('zoomend', update);
-			map.off('idle', update);
 		};
 	}, [enabled, index, mapRef]);
 

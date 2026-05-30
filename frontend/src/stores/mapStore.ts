@@ -60,6 +60,7 @@ interface MapState {
   initPlaceTypes: (types: string[]) => void;
   toggleLayer: (key: MapLayerKey) => void;
   toggleCategory: (categoryKey: string) => void;
+  setCategoriesVisibility: (categoryKeys: string[], visible: boolean) => void;
   toggleStatus: (status: IncidentStatus) => void;
   toggleZone: (zoneId: DistrictZoneId) => void;
   toggleMap3dFlatView: () => void;
@@ -143,6 +144,14 @@ export const useMapStore = create<MapState>((set) => ({
         [categoryKey]: s.visibleCategories[categoryKey] !== true,
       },
     })),
+  setCategoriesVisibility: (categoryKeys, visible) =>
+    set((s) => {
+      const next = { ...s.visibleCategories };
+      for (const key of categoryKeys) {
+        next[key] = visible;
+      }
+      return { visibleCategories: next };
+    }),
   toggleStatus: (status) =>
     set((s) => ({
       visibleStatuses: {

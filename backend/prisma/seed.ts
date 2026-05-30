@@ -19,7 +19,6 @@ import { buildDemoOperatorIncidents } from './seed-data/demo-operator-incidents'
 import {
   buildDemoReports,
   type CitizenReporterKey,
-  SEED_DESCRIPTION_TAG,
 } from './seed-data/demo-reports';
 import { groupReports, primaryReport } from './seed-data/group-reports';
 import { centroidFromCoordinates } from '../src/incidents/incident-proximity';
@@ -497,6 +496,7 @@ async function main() {
     incidentId: string,
     createdAt: Date,
     timeline: ReturnType<typeof buildReportGroupTimelineSeed>,
+    reportIds?: string[],
   ) {
     for (const entry of timeline) {
       const eventAt = new Date(createdAt.getTime() + entry.offsetMs);
@@ -513,6 +513,13 @@ async function main() {
         });
       }
 
+      const metadata =
+        entry.actionType === HistoryActionType.CITIZEN_REPORT &&
+        entry.reportIndex != null &&
+        reportIds?.[entry.reportIndex]
+          ? { reportId: reportIds[entry.reportIndex] }
+          : undefined;
+
       await prisma.incidentHistory.create({
         data: {
           incidentId,
@@ -521,6 +528,7 @@ async function main() {
           newValue: entry.newValue,
           createdById: actorId,
           createdAt: eventAt,
+          metadata,
         },
       });
     }
@@ -596,9 +604,10 @@ async function main() {
     seededCount++;
 
     const sortedReports = [...group.reports].sort((a, b) => a.daysAgo - b.daysAgo);
+    const reportIds: string[] = [];
     for (const r of sortedReports) {
       const reportAt = createdAtFromDaysAgo(r.daysAgo);
-      await prisma.incidentReport.create({
+      const created = await prisma.incidentReport.create({
         data: {
           incidentId: incident.id,
           reporterId: citizenReporterIds[r.reporterKey],
@@ -607,9 +616,12 @@ async function main() {
           lat: r.lat,
           lng: r.lng,
           address: r.address,
+          photoUrl: r.photoUrl,
+          videoUrl: r.videoUrl,
           createdAt: reportAt,
         },
       });
+      reportIds.push(created.id);
       reportRows++;
     }
 
@@ -622,7 +634,7 @@ async function main() {
     }
 
     const timeline = buildReportGroupTimelineSeed(group);
-    await seedTimeline(incident.id, createdAt, timeline);
+    await seedTimeline(incident.id, createdAt, timeline, reportIds);
 
     if (districtStatus === DistrictStatus.OUTSIDE_DISTRICT) {
       await prisma.auditLog.create({
@@ -700,10 +712,12 @@ async function main() {
 
     seededCount++;
 
+    const lateReportIds: string[] = [];
     if (demo.lateReports?.length) {
-      for (const r of demo.lateReports) {
+      const sortedLate = [...demo.lateReports].sort((a, b) => b.daysAgo - a.daysAgo);
+      for (const r of sortedLate) {
         const reportAt = createdAtFromDaysAgo(r.daysAgo);
-        await prisma.incidentReport.create({
+        const created = await prisma.incidentReport.create({
           data: {
             incidentId: incident.id,
             reporterId: citizenReporterIds[r.reporterKey],
@@ -712,9 +726,12 @@ async function main() {
             lat: r.lat,
             lng: r.lng,
             address: r.address,
+            photoUrl: r.photoUrl,
+            videoUrl: r.videoUrl,
             createdAt: reportAt,
           },
         });
+        lateReportIds.push(created.id);
         reportRows++;
       }
 
@@ -728,7 +745,12 @@ async function main() {
     }
 
     const timeline = buildOperatorIncidentTimelineSeed(demo);
-    await seedTimeline(incident.id, createdAt, timeline);
+    await seedTimeline(
+      incident.id,
+      createdAt,
+      timeline,
+      lateReportIds.length > 0 ? lateReportIds : undefined,
+    );
   }
 
   console.log(

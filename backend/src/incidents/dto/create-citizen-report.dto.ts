@@ -4,7 +4,9 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUrl,
   IsUUID,
+  Matches,
   MinLength,
 } from 'class-validator';
 import { IncidentType } from '@prisma/client';
@@ -47,4 +49,17 @@ export class CreateCitizenReportDto {
   @IsOptional()
   @IsString()
   address?: string;
+
+  @ApiPropertyOptional({ description: 'Public URL of a photo attached to the report' })
+  @IsOptional()
+  @IsUrl()
+  photoUrl?: string;
+
+  @ApiPropertyOptional({ description: 'YouTube watch URL for video evidence' })
+  @IsOptional()
+  @IsUrl()
+  @Matches(/^https?:\/\/(www\.|m\.)?(youtube\.com\/(watch\?v=|embed\/|shorts\/)|youtu\.be\/)/i, {
+    message: 'videoUrl must be a YouTube link',
+  })
+  videoUrl?: string;
 }

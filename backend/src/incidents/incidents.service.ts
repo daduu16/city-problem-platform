@@ -274,7 +274,7 @@ export class IncidentsService {
       return this.attachCitizenReportToExisting(duplicate.id, dto, user);
     }
 
-    return this.createIncidentWithFirstReport(dto, user, scope);
+    return this.createIncidentWithFirstReport(dto, user);
   }
 
   /** Dispatcher creates an incident directly (no citizen report row). */
@@ -358,7 +358,6 @@ export class IncidentsService {
   private async createIncidentWithFirstReport(
     dto: CreateCitizenReportDto,
     user: JwtPayload,
-    scope: Awaited<ReturnType<AccessControlService['getScope']>>,
   ) {
     const slaHours = 24;
 
@@ -397,7 +396,7 @@ export class IncidentsService {
       include: incidentInclude,
     });
 
-    await this.prisma.incidentReport.create({
+    const report = await this.prisma.incidentReport.create({
       data: {
         incidentId: incident.id,
         reporterId: user.sub,
@@ -406,6 +405,8 @@ export class IncidentsService {
         lat: dto.lat,
         lng: dto.lng,
         address: dto.address,
+        photoUrl: dto.photoUrl,
+        videoUrl: dto.videoUrl,
       },
     });
 
@@ -418,6 +419,7 @@ export class IncidentsService {
       HistoryActionType.CITIZEN_REPORT,
       null,
       dto.message,
+      { reportId: report.id },
     );
     await this.audit.log({
       userId: user.sub,
@@ -565,7 +567,7 @@ export class IncidentsService {
   ) {
     await this.findOne(incidentId, user);
 
-    await this.prisma.incidentReport.create({
+    const report = await this.prisma.incidentReport.create({
       data: {
         incidentId,
         reporterId: user.sub,
@@ -574,6 +576,8 @@ export class IncidentsService {
         lat: dto.lat,
         lng: dto.lng,
         address: dto.address,
+        photoUrl: dto.photoUrl,
+        videoUrl: dto.videoUrl,
       },
     });
 
@@ -585,6 +589,7 @@ export class IncidentsService {
       HistoryActionType.CITIZEN_REPORT,
       null,
       dto.message,
+      { reportId: report.id },
     );
 
     await this.audit.log({
@@ -612,6 +617,7 @@ export class IncidentsService {
     actionType: HistoryActionType,
     oldValue: string | null | undefined,
     newValue: string | null | undefined,
+    metadata?: Prisma.InputJsonValue,
   ) {
     await this.prisma.incidentHistory.create({
       data: {
@@ -620,6 +626,7 @@ export class IncidentsService {
         oldValue: oldValue ?? undefined,
         newValue: newValue ?? undefined,
         createdById: userId,
+        metadata: metadata ?? undefined,
       },
     });
   }

@@ -37,6 +37,7 @@ export function MapControls({ incidents, showPlacesToggle = true }: Props) {
     setShowClusters,
     setShowPlaces,
     toggleCategory,
+    setCategoriesVisibility,
     map3dFlatView,
     toggleMap3dFlatView,
   } = useMapStore();
@@ -66,6 +67,13 @@ export function MapControls({ incidents, showPlacesToggle = true }: Props) {
       return label.includes(q) || key.toLocaleLowerCase('az').includes(q);
     });
   }, [checkboxKeys, categoryLabels, categoryQuery]);
+
+  const allCategoriesChecked =
+    checkboxKeys.length > 0 &&
+    checkboxKeys.every((key) => visibleCategories[key] === true);
+  const someCategoriesChecked = checkboxKeys.some(
+    (key) => visibleCategories[key] === true,
+  );
 
   return (
     <Card className="flex max-h-full w-full flex-col overflow-hidden border-border/80 bg-card/95 shadow-lg backdrop-blur">
@@ -165,9 +173,35 @@ export function MapControls({ incidents, showPlacesToggle = true }: Props) {
 
         <div className="flex flex-col gap-2">
           <div className="shrink-0 space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {az.map.categoriesTitle}
-            </p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {az.map.categoriesTitle}
+              </p>
+              {checkboxKeys.length > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <Checkbox
+                    id="categories-all"
+                    checked={
+                      allCategoriesChecked
+                        ? true
+                        : someCategoriesChecked
+                          ? 'indeterminate'
+                          : false
+                    }
+                    onCheckedChange={() =>
+                      setCategoriesVisibility(checkboxKeys, !allCategoriesChecked)
+                    }
+                    aria-label={az.map.categoriesAllAria}
+                  />
+                  <Label
+                    htmlFor="categories-all"
+                    className="cursor-pointer text-xs font-normal text-muted-foreground"
+                  >
+                    {az.map.categoriesAll}
+                  </Label>
+                </div>
+              )}
+            </div>
             <div className="px-0.5 py-0.5">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 z-[1] h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />

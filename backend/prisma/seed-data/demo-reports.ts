@@ -16,7 +16,15 @@ export type DemoReportSeed = {
   reporterKey: CitizenReporterKey;
   daysAgo: number;
   address?: string;
+  photoUrl?: string;
+  videoUrl?: string;
 };
+
+/** Stable demo media URLs for seed data */
+export const DEMO_REPORT_PHOTO_URL =
+  'https://picsum.photos/seed/narimanov-trash/640/480';
+/** Known-embeddable YouTube watch URL for demo iframes */
+export const DEMO_REPORT_VIDEO_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
 
 export const NARIMANOV_BBOX = {
   latMin: 40.3995,
@@ -68,6 +76,7 @@ function curatedReports(): DemoReportSeed[] {
       reporterKey: 'citizen1',
       daysAgo: 0,
       type: IncidentType.ACCIDENT,
+      videoUrl: DEMO_REPORT_VIDEO_URL,
     }),
     report({
       locIndex: 0,
@@ -95,6 +104,8 @@ function curatedReports(): DemoReportSeed[] {
       categoryKey: 'broken_lamps',
       reporterKey: 'citizen2',
       daysAgo: 0,
+      photoUrl: 'https://picsum.photos/seed/narimanov-lamps/640/480',
+      videoUrl: DEMO_REPORT_VIDEO_URL,
     }),
     report({
       locIndex: 3,
@@ -113,6 +124,17 @@ function curatedReports(): DemoReportSeed[] {
       categoryKey: 'road_surface',
       reporterKey: 'citizen1',
       daysAgo: 1,
+      videoUrl: DEMO_REPORT_VIDEO_URL,
+    }),
+    report({
+      locIndex: 1,
+      spreadSeed: 'road-video-only',
+      title: 'Küçə deformasiyası — video sübut',
+      message: 'Yolun vəziyyətini videoda çəkmişəm, zəhmət olmasa baxın.',
+      categoryKey: 'road_surface',
+      reporterKey: 'citizen2',
+      daysAgo: 0,
+      videoUrl: DEMO_REPORT_VIDEO_URL,
     }),
     report({
       locIndex: 5,
@@ -151,6 +173,8 @@ function curatedReports(): DemoReportSeed[] {
       categoryKey: 'overflow_bins',
       reporterKey: 'citizen3',
       daysAgo: 2,
+      photoUrl: DEMO_REPORT_PHOTO_URL,
+      videoUrl: DEMO_REPORT_VIDEO_URL,
     }),
     report({
       locIndex: 6,
@@ -223,6 +247,7 @@ function volumeReports(): DemoReportSeed[] {
             `vol-${day}-${row}-${col}-r${r}`,
             85,
           );
+          const cell = day * 100 + row * 10 + col + r;
           out.push({
             title: topic.title,
             message: `${topic.message} (gün ${day + 1}, müraciət ${r + 1})`,
@@ -233,6 +258,8 @@ function volumeReports(): DemoReportSeed[] {
             reporterKey: reporters[(row + col + r + day) % reporters.length],
             daysAgo: day,
             address: `Nərimanov r-n, Bakı (xana ${row + 1}×${col + 1})`,
+            photoUrl: cell % 6 === 0 ? DEMO_REPORT_PHOTO_URL : undefined,
+            videoUrl: cell % 5 === 0 ? DEMO_REPORT_VIDEO_URL : undefined,
           });
         }
       }

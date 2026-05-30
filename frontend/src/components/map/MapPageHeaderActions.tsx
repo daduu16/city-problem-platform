@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { az } from '@/i18n/az';
 import { useAuthStore } from '@/stores/authStore';
 import { useMapStore } from '@/stores/mapStore';
@@ -28,7 +28,11 @@ export function MapPageHeaderActions({ showCreate }: Props) {
 					variant={creating ? 'secondary' : 'default'}
 					onClick={() => (creating ? cancelCreate() : startCreate())}
 				>
-					<Plus className="h-4 w-4" />
+					{creating ? (
+						<X className="h-4 w-4" aria-hidden />
+					) : (
+						<Plus className="h-4 w-4" aria-hidden />
+					)}
 					{creating ? az.map.createCancel : az.map.createButton}
 				</Button>
 			)}

@@ -7,6 +7,8 @@ import { az } from "@/i18n/az";
 import { formatCategory } from "@/lib/format";
 import { getCitizenReportTotal } from "@/lib/citizenReports";
 import { IncidentTimeline } from "@/components/incidents/IncidentTimeline";
+import { ReportMediaPopover } from "@/components/incidents/ReportMediaPopover";
+import { hasReportMedia } from "@/lib/normalizeReportMedia";
 import { getStatusStyle } from "@/lib/incidentStyles";
 import { DistrictStatusBadge } from "./DistrictStatusBadge";
 import { StatusBadge } from "./StatusBadge";
@@ -152,6 +154,14 @@ function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 												<p className="mt-1 text-sm leading-relaxed text-foreground/90">
 													{report.message}
 												</p>
+												{hasReportMedia(report) && (
+													<ReportMediaPopover
+														className="mt-2"
+														showInlinePreview
+														photoUrl={report.photoUrl}
+														videoUrl={report.videoUrl}
+													/>
+												)}
 												{(report.address ||
 													(report.lat != null && report.lng != null)) && (
 													<p className="mt-2 text-xs text-muted-foreground">
@@ -183,6 +193,7 @@ function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 							</h4>
 							<IncidentTimeline
 								history={incident.history}
+								reports={incident.reports}
 								reporterCount={
 									uniqueReporters > 0 ? uniqueReporters : undefined
 								}

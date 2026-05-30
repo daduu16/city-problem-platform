@@ -17,7 +17,9 @@ import {
 import { getHistoryEventStyle } from '@/lib/historyEventStyles';
 import { formatStatus } from '@/lib/format';
 import { getStatusStyle } from '@/lib/incidentStyles';
+import { resolveReportForHistoryItem } from '@/lib/reportMedia';
 import type { IncidentStatus } from '@/types';
+import { ReportMediaPopover } from '@/components/incidents/ReportMediaPopover';
 
 type HistoryItem = IncidentDetail['history'][number];
 
@@ -125,12 +127,15 @@ function actorRoleLabel(actionType: string): string | null {
   }
 }
 
+type ReportItem = IncidentDetail['reports'][number];
+
 interface Props {
   history: HistoryItem[];
+  reports?: ReportItem[];
   reporterCount?: number;
 }
 
-export function IncidentTimeline({ history, reporterCount }: Props) {
+export function IncidentTimeline({ history, reports = [], reporterCount }: Props) {
   if (history.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">{az.drawer.timelineEmpty}</p>
@@ -149,6 +154,10 @@ export function IncidentTimeline({ history, reporterCount }: Props) {
           const style = getHistoryEventStyle(item.actionType, item.newValue);
           const isLast = index === history.length - 1;
           const roleLabel = actorRoleLabel(item.actionType);
+          const linkedReport =
+            item.actionType === 'CITIZEN_REPORT'
+              ? resolveReportForHistoryItem(item, reports)
+              : undefined;
 
           return (
             <li key={item.id} className="relative flex gap-3 pb-5">
@@ -196,6 +205,15 @@ export function IncidentTimeline({ history, reporterCount }: Props) {
                 <div className="mt-2">
                   <TimelineEventBody item={item} />
                 </div>
+
+                {linkedReport && (
+                  <ReportMediaPopover
+                    className="mt-2"
+                    variant="timeline"
+                    photoUrl={linkedReport.photoUrl}
+                    videoUrl={linkedReport.videoUrl}
+                  />
+                )}
 
                 <p className="mt-2 text-xs text-muted-foreground">
                   <span className="font-medium text-foreground/85">

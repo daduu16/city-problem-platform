@@ -20,6 +20,8 @@ export interface TimelineSeedEntry {
   newValue?: string;
   actor: TimelineActorKey;
   offsetMs: number;
+  /** Index into incident reports (sorted by daysAgo asc) for CITIZEN_REPORT metadata */
+  reportIndex?: number;
 }
 
 function lifecycleForOps(ops: SeededReportGroup['ops']): LifecycleHistoryEntry[] {
@@ -60,6 +62,7 @@ export function buildReportGroupTimelineSeed(
       newValue: report.message,
       actor: report.reporterKey,
       offsetMs: -preWindowMs + spread + index * 45 * 60_000,
+      reportIndex: index,
     });
   });
 
@@ -110,6 +113,7 @@ export function buildOperatorIncidentTimelineSeed(
         newValue: report.message,
         actor: report.reporterKey,
         offsetMs: (demo.daysAgo - report.daysAgo) * 24 * 3600000 + index * 3600000,
+        reportIndex: index,
       });
     });
   }

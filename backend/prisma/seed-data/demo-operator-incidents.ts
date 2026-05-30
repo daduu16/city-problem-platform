@@ -5,7 +5,11 @@ import {
   IncidentType,
 } from '@prisma/client';
 import { spreadWithinRadius } from './incident-spread';
-import { SEED_DESCRIPTION_TAG, type DemoReportSeed } from './demo-reports';
+import {
+  DEMO_REPORT_VIDEO_URL,
+  SEED_DESCRIPTION_TAG,
+  type DemoReportSeed,
+} from './demo-reports';
 
 export type DemoOperatorIncident = {
   title: string;
@@ -65,6 +69,7 @@ export function buildDemoOperatorIncidents(): DemoOperatorIncident[] {
           reporterKey: 'citizen2',
           daysAgo: 1,
           address: base.address,
+          videoUrl: DEMO_REPORT_VIDEO_URL,
         },
         {
           title: 'Planlı yol təmiri — Nərimanov pr.',

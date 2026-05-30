@@ -11,14 +11,6 @@ import {
 
 const OPEN_STATUSES = ['NEW', 'IN_PROGRESS', 'PENDING', 'OVERDUE'] as const;
 
-export interface ReportCoordinateInput {
-  lat: number;
-  lng: number;
-  title: string;
-  message: string;
-  address?: string;
-}
-
 @Injectable()
 export class IncidentAggregationService {
   constructor(
@@ -114,9 +106,5 @@ export class IncidentAggregationService {
       where: { id: incidentId },
       data: { lat: centroid.lat, lng: centroid.lng },
     });
-  }
-
-  computeCentroid(points: Array<{ lat: number; lng: number }>) {
-    return centroidFromCoordinates(points);
   }
 }

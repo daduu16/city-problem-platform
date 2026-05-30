@@ -77,6 +77,8 @@ export interface IncidentDetail extends MapIncident {
     lat: number;
     lng: number;
     address?: string | null;
+    photoUrl?: string | null;
+    videoUrl?: string | null;
     createdAt: string;
     reporter: { id: string; name: string };
   }>;
@@ -85,6 +87,7 @@ export interface IncidentDetail extends MapIncident {
     actionType: string;
     oldValue?: string | null;
     newValue?: string | null;
+    metadata?: { reportId?: string } | null;
     createdAt: string;
     createdBy: { id: string; name: string };
   }>;
