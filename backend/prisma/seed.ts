@@ -221,6 +221,53 @@ async function grantGasOnlyAccess(userId: string, categoryKeyToId: Map<string, s
   });
 }
 
+async function seedMobileContent() {
+  await prisma.news.deleteMany();
+  await prisma.mobileNotification.deleteMany();
+
+  await prisma.news.createMany({
+    data: [
+      {
+        title: 'Şəhid Əli Qasımovun ailəsi ziyarət olunub',
+        summary: 'Tarix: 17 may 2026. Nərimanov RİH rəhbərliyi şəhid Əli Qasımovun ailəsini ziyarət edib.',
+        description:
+          'Nərimanov Rayon İcra Hakimiyyətinin başçısı Elgin Həbibullayev, Nərimanov Bələdiyyəsinin sədri Təmraz Tağıyev və icra hakimiyyətinin məsul şəxsləri Vətən Müharibəsi şəhidi Əli İbrahim oğlu Qasımovun ailəsini ziyarət etmiş, onun əziz xatirəsini hörmətlə yad etmişlər.',
+        imageUrl: 'http://localhost:4000/news/nar1.jpeg',
+        publishedAt: new Date('2026-05-17T09:00:00.000Z'),
+      },
+      {
+        title: 'Nərimanov rayonunda səyyar qəbullar davam edir',
+        summary: 'Tarix: 16 may 2026. RİH başçısı 193 saylı məktəbdə sakinlərlə səyyar görüş-qəbul keçirib.',
+        description:
+          'Nərimanov Rayon İcra Hakimiyyətinin başçısı Elgin Həbibullayev 193 saylı tam orta məktəbdə sakinlərlə səyyar görüş-qəbulu keçirmişdir. Sakinlərin abadlıq, su-kanalizasiya və yaşıllıqla bağlı müraciətləri dinlənilmişdir.',
+        imageUrl: 'http://localhost:4000/news/nar2.jpg',
+        publishedAt: new Date('2026-05-16T12:00:00.000Z'),
+      },
+      {
+        title: 'Nərimanov rayonunda Beynəlxalq Ailə Günü qeyd olunub',
+        summary: 'Tarix: 15 may 2026. Ailə dəyərlərinin təbliği məqsədilə rayon tədbiri keçirilib.',
+        description:
+          'Nərimanov rayonunda 15 May - Beynəlxalq Ailə Günü ərəfəsində ailə dəyərlərinin təbliği və ailə institutunun möhkəmləndirilməsi məqsədilə tədbir keçirilmişdir.',
+        imageUrl: 'http://localhost:4000/news/nar3.jpg',
+        publishedAt: new Date('2026-05-15T10:30:00.000Z'),
+      },
+    ],
+  });
+
+  await prisma.mobileNotification.createMany({
+    data: [
+      {
+        title: 'Səyyar qəbul elanı',
+        message: 'Nərimanov rayonunda növbəti səyyar qəbul üçün elanları izləyin.',
+      },
+      {
+        title: 'Xəbərlər yeniləndi',
+        message: 'Xəbərlər bölməsinə yeni materiallar əlavə olundu.',
+      },
+    ],
+  });
+}
+
 async function main() {
   const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
 
@@ -241,6 +288,7 @@ async function main() {
   });
 
   await seedRolesAndPermissions();
+  await seedMobileContent();
   const categoryKeyToId = await seedCategories();
   const allCategoryIds = [...categoryKeyToId.values()];
 

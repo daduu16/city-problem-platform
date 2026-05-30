@@ -77,6 +77,12 @@ export const ROLES: Array<{
     permissions: ['view_dashboard', 'view_map', 'view_incidents'],
   },
   {
+    key: 'citizen',
+    name: 'Citizen',
+    incidentScope: 'ALL',
+    permissions: ['view_map', 'view_incidents', 'create_incident'],
+  },
+  {
     key: 'utility_operator',
     name: 'Utility Operator',
     incidentScope: 'ORGANIZATION',

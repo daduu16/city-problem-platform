@@ -18,6 +18,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
 import { CategoriesModule } from './categories/categories.module';
 import { NotificationModule } from './notifications/notification.module';
 import { AiModule } from './ai/ai.module';
+import { MobileApiModule } from './mobile-api/mobile-api.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { AiModule } from './ai/ai.module';
     CategoriesModule,
     NotificationModule,
     AiModule,
+    MobileApiModule,
   ],
   providers: [
     {

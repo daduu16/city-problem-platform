@@ -10,6 +10,7 @@ Enterprise-grade municipal incident dispatch and analytics platform (GIS + dispa
 |-------|-------------|
 | Frontend | React, TypeScript, Vite, TanStack Query, Zustand, React Router, Mapbox (react-map-gl), AG Grid, Recharts, Socket.IO client, Tailwind, React Hook Form + Zod |
 | Backend | NestJS, Prisma, PostgreSQL + PostGIS, Redis, Socket.IO, JWT + RBAC |
+| Mobile | Expo, React Native, TypeScript, React Navigation |
 | DevOps | Docker Compose, NGINX (production) |
 
 ## Quick start
@@ -54,6 +55,23 @@ npm run dev
 
 UI: `http://localhost:5173`
 
+### 4. Mobile
+
+```bash
+cd mobile
+npm install
+npm start
+```
+
+Mobile app uses the NestJS backend compatibility endpoints under `/api/*`:
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/news`
+- `GET /api/notifications`
+- `GET /api/problems`
+- `POST /api/problems`
+
 ### Demo accounts
 
 | Email | Password | Role |
@@ -70,6 +88,7 @@ UI: `http://localhost:5173`
 ```
 frontend/          React SPA (dispatcher dashboard)
 backend/           NestJS API + WebSocket gateway
+mobile/            Expo React Native citizen app
 docker-compose.yml PostGIS + Redis
 nginx/             Reverse proxy (production)
 ```

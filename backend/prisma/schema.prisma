@@ -124,6 +124,10 @@ model User {
   email            String   @unique
   passwordHash     String   @map("password_hash")
   name             String
+  finCode          String?  @map("fin_code")
+  emailVerified    Boolean  @default(true) @map("email_verified")
+  verificationCode String?  @map("verification_code")
+  verificationExpiresAt DateTime? @map("verification_expires_at")
   department       String?
   phone            String?
   isActive         Boolean  @default(true) @map("is_active")
@@ -148,6 +152,27 @@ model User {
   auditLogs         AuditLog[]
 
   @@map("users")
+}
+
+model News {
+  id          String   @id @default(uuid())
+  title       String
+  summary     String
+  description String
+  imageUrl    String   @map("image_url")
+  publishedAt DateTime @map("published_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("news")
+}
+
+model MobileNotification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("mobile_notifications")
 }
 
 model UserCategoryAccess {
