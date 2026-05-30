@@ -19,6 +19,7 @@ type AppDataContextValue = {
   problems: Problem[];
   loading: boolean;
   addProblem: (input: CreateProblemInput) => Promise<void>;
+  toggleProblemUpvote: (problemId: string) => void;
   refresh: () => Promise<void>;
 };
 
@@ -30,6 +31,15 @@ export function AppDataProvider({ children }: PropsWithChildren) {
   const [problems, setProblems] = useState<Problem[]>(mockProblems);
   const [loading, setLoading] = useState(true);
   const [myCreatedIds, setMyCreatedIds] = useState<string[]>([]);
+
+  const withVoteDefaults = useCallback(
+    (problem: Problem): Problem => ({
+      ...problem,
+      upvotes: problem.upvotes ?? 0,
+      hasUpvoted: problem.hasUpvoted ?? false,
+    }),
+    [],
+  );
 
   const refresh = useCallback(async () => {
     try {
@@ -44,18 +54,18 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       setNotifications(notificationsData);
       setProblems(
         problemsData.map((problem) => ({
-          ...problem,
+          ...withVoteDefaults(problem),
           createdByMe: myCreatedIds.includes(problem.id),
         })),
       );
     } catch {
       setNews(mockNews);
       setNotifications(mockNotifications);
-      setProblems(mockProblems);
+      setProblems(mockProblems.map(withVoteDefaults));
     } finally {
       setLoading(false);
     }
-  }, [myCreatedIds]);
+  }, [myCreatedIds, withVoteDefaults]);
 
   useEffect(() => {
     refresh();
@@ -64,7 +74,22 @@ export function AppDataProvider({ children }: PropsWithChildren) {
   const addProblem = useCallback(async (input: CreateProblemInput) => {
     const created = await createProblem(input);
     setMyCreatedIds((current) => [created.id, ...current]);
-    setProblems((current) => [{ ...created, createdByMe: true }, ...current]);
+    setProblems((current) => [{ ...withVoteDefaults(created), createdByMe: true }, ...current]);
+  }, [withVoteDefaults]);
+
+  const toggleProblemUpvote = useCallback((problemId: string) => {
+    setProblems((current) =>
+      current.map((problem) => {
+        if (problem.id !== problemId) return problem;
+        const hasUpvoted = !(problem.hasUpvoted ?? false);
+        const currentVotes = problem.upvotes ?? 0;
+        return {
+          ...problem,
+          hasUpvoted,
+          upvotes: hasUpvoted ? currentVotes + 1 : Math.max(0, currentVotes - 1),
+        };
+      }),
+    );
   }, []);
 
   const value = useMemo<AppDataContextValue>(
@@ -74,9 +99,10 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       problems,
       loading,
       addProblem,
+      toggleProblemUpvote,
       refresh,
     }),
-    [news, notifications, problems, loading, addProblem, refresh],
+    [news, notifications, problems, loading, addProblem, toggleProblemUpvote, refresh],
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
@@ -89,4 +115,3 @@ export function useAppData() {
   }
   return ctx;
 }
-

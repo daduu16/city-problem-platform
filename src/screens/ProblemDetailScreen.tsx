@@ -4,21 +4,31 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BorderRadius, Color, Shadow, Spacing, Typography } from '@/GlobalStyles';
-import { MyReportsStackParamList, ProblemsStackParamList } from '@/navigation/AppNavigator';
+import { ProblemsStackParamList } from '@/navigation/AppNavigator';
+import { useAppData } from '@/state/AppDataContext';
 
-type ProblemRoute = RouteProp<ProblemsStackParamList, 'ProblemDetail'> | RouteProp<MyReportsStackParamList, 'ProblemDetail'>;
+type ProblemRoute = RouteProp<ProblemsStackParamList, 'ProblemDetail'>;
 
-const statusColors = {
+const statusColors: Record<string, string> = {
   Yeni: '#DBEAFE',
-  Baxılır: '#DCFCE7',
-  İcradadır: '#FEF3C7',
+  'Baxılır': '#DCFCE7',
+  'İcradadır': '#FEF3C7',
   'Həll edildi': '#E5E7EB',
-} as const;
+};
+
+function getUpvoteColor(votes: number) {
+  const scale = ['#2563EB', '#1D4ED8', '#EA580C', '#DC2626', '#B91C1C', '#991B1B'];
+  const step = Math.min(scale.length - 1, Math.floor((votes || 0) / 20));
+  return scale[step];
+}
 
 export default function ProblemDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute<ProblemRoute>();
-  const { problem } = route.params;
+  const { problems, toggleProblemUpvote } = useAppData();
+  const routeProblem = route.params.problem;
+  const problem = problems.find((item) => item.id === routeProblem.id) ?? routeProblem;
+  const voteColor = getUpvoteColor(problem.upvotes);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -46,9 +56,29 @@ export default function ProblemDetailScreen() {
                 <Text style={styles.metaValue}>{problem.priority}</Text>
               </View>
             </View>
-            <View style={[styles.statusPill, { backgroundColor: statusColors[problem.status] }]}>
+            <View style={[styles.statusPill, { backgroundColor: statusColors[problem.status] || '#E5E7EB' }]}>
               <Text style={styles.statusText}>Status: {problem.status}</Text>
             </View>
+
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => toggleProblemUpvote(problem.id)}
+              style={({ pressed }) => [
+                styles.upvoteButton,
+                { borderColor: voteColor },
+                problem.hasUpvoted && { backgroundColor: voteColor },
+                pressed && styles.pressed,
+              ]}
+            >
+              <Ionicons
+                name={problem.hasUpvoted ? 'arrow-up-circle' : 'arrow-up-circle-outline'}
+                size={16}
+                color={problem.hasUpvoted ? Color.white500 : voteColor}
+              />
+              <Text style={[styles.upvoteText, { color: problem.hasUpvoted ? Color.white500 : voteColor }]}>
+                Dəstək ver ({problem.upvotes})
+              </Text>
+            </Pressable>
 
             <Text style={styles.sectionTitle}>Təsvir</Text>
             <Text style={styles.sectionText}>{problem.description}</Text>
@@ -117,8 +147,21 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   statusText: { color: Color.neutral900, fontSize: 12, fontWeight: '900' },
+  upvoteButton: {
+    alignItems: 'center',
+    backgroundColor: Color.accent100,
+    borderWidth: 1,
+    borderRadius: 999,
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: Spacing.md,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    alignSelf: 'flex-start',
+  },
+  upvoteText: { fontSize: 12, fontWeight: '900' },
   sectionTitle: { color: Color.neutral900, fontSize: Typography.caption, fontWeight: '900', marginTop: Spacing.lg },
   sectionText: { color: Color.neutral800, fontSize: Typography.body, fontWeight: '600', lineHeight: 22, marginTop: 6 },
   date: { color: Color.primary600, fontSize: Typography.caption, fontWeight: '800', marginTop: Spacing.xl },
+  pressed: { opacity: 0.88 },
 });
-

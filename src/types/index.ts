@@ -39,5 +39,6 @@ export type Problem = {
   createdAt: string;
   createdByMe: boolean;
   imageUrl?: string;
+  upvotes: number;
+  hasUpvoted: boolean;
 };
-

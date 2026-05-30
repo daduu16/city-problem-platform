@@ -8,14 +8,22 @@ import { Problem } from '@/types';
 type Props = {
   item: Problem;
   onPress?: () => void;
+  onToggleUpvote?: () => void;
 };
 
-export default function ProblemCard({ item, onPress }: Props) {
+function getUpvoteColor(votes: number) {
+  const scale = ['#2563EB', '#1D4ED8', '#EA580C', '#DC2626', '#B91C1C', '#991B1B'];
+  const step = Math.min(scale.length - 1, Math.floor((votes || 0) / 20));
+  return scale[step];
+}
+
+export default function ProblemCard({ item, onPress, onToggleUpvote }: Props) {
   const dateText = new Date(item.createdAt).toLocaleDateString('az-AZ', {
     year: 'numeric',
     month: 'short',
     day: '2-digit',
   });
+  const voteColor = getUpvoteColor(item.upvotes);
 
   return (
     <Pressable accessibilityRole="button" disabled={!onPress} onPress={onPress} style={({ pressed }) => [styles.card, pressed && onPress && styles.pressed]}>
@@ -44,7 +52,28 @@ export default function ProblemCard({ item, onPress }: Props) {
             {item.address}
           </Text>
         </View>
-        <Text style={styles.date}>{dateText}</Text>
+        <View style={styles.footerRow}>
+          <Text style={styles.date}>{dateText}</Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={onToggleUpvote}
+            style={({ pressed }) => [
+              styles.voteButton,
+              { borderColor: voteColor },
+              item.hasUpvoted && { backgroundColor: voteColor },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Ionicons
+              name={item.hasUpvoted ? 'arrow-up-circle' : 'arrow-up-circle-outline'}
+              size={14}
+              color={item.hasUpvoted ? Color.white500 : voteColor}
+            />
+            <Text style={[styles.voteText, { color: item.hasUpvoted ? Color.white500 : voteColor }]}>
+              {item.upvotes}
+            </Text>
+          </Pressable>
+        </View>
       </View>
     </Pressable>
   );
@@ -133,10 +162,28 @@ const styles = StyleSheet.create({
     color: Color.neutral500,
     fontSize: 12,
     fontWeight: '700',
+  },
+  footerRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: Spacing.sm,
+  },
+  voteButton: {
+    alignItems: 'center',
+    backgroundColor: Color.accent100,
+    borderWidth: 1,
+    borderRadius: 999,
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  voteText: {
+    fontSize: 12,
+    fontWeight: '900',
   },
   pressed: {
     opacity: 0.85,
   },
 });
-

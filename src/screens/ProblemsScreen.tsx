@@ -31,7 +31,7 @@ function isResolvedStatus(status: string) {
 
 export default function ProblemsScreen({ onlyMine }: Props) {
   const navigation = useNavigation<NativeStackNavigationProp<ProblemsStackParamList, 'ProblemDetail'>>();
-  const { problems } = useAppData();
+  const { problems, toggleProblemUpvote } = useAppData();
 
   const [scopeFilter, setScopeFilter] = useState<ScopeFilterKey>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilterKey>('all');
@@ -75,16 +75,16 @@ export default function ProblemsScreen({ onlyMine }: Props) {
 
               <Pressable
                 onPress={() => setShowFilters((prev) => !prev)}
-                style={({ pressed }) => [styles.filterToggleButton, pressed && { opacity: 0.9 }]}
+                style={({ pressed }) => [styles.filterToggleButton, pressed && styles.pressed]}
               >
                 <View style={styles.filterToggleLeft}>
-                  <Ionicons name="options-outline" size={18} color={Color.primary600} />
+                  <Ionicons name="options-outline" size={15} color={Color.primary600} />
                   <Text style={styles.filterToggleText}>Filtrlər</Text>
                 </View>
                 <Ionicons
                   name={showFilters ? 'chevron-up-outline' : 'chevron-down-outline'}
-                  size={18}
-                  color={Color.neutral500}
+                  size={15}
+                  color={Color.primary600}
                 />
               </Pressable>
 
@@ -182,7 +182,11 @@ export default function ProblemsScreen({ onlyMine }: Props) {
             </View>
           }
           renderItem={({ item }) => (
-            <ProblemCard item={item} onPress={() => navigation.navigate('ProblemDetail', { problem: item })} />
+            <ProblemCard
+              item={item}
+              onPress={() => navigation.navigate('ProblemDetail', { problem: item })}
+              onToggleUpvote={() => toggleProblemUpvote(item.id)}
+            />
           )}
           ListEmptyComponent={
             <View style={styles.emptyWrap}>
@@ -204,25 +208,27 @@ const styles = StyleSheet.create({
   subtitle: { color: Color.neutral500, fontSize: Typography.body, fontWeight: '600', marginTop: 6 },
   filterToggleButton: {
     alignItems: 'center',
-    backgroundColor: Color.white500,
-    borderColor: Color.neutral200,
-    borderRadius: 14,
+    alignSelf: 'flex-start',
+    backgroundColor: Color.accent100,
+    borderColor: '#c7ddff',
+    borderRadius: 999,
     borderWidth: 1,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 6,
+    justifyContent: 'center',
     marginTop: Spacing.lg,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   filterToggleLeft: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
   },
   filterToggleText: {
-    color: Color.neutral900,
-    fontSize: Typography.body,
-    fontWeight: '800',
+    color: Color.primary600,
+    fontSize: 12,
+    fontWeight: '900',
   },
 
   filtersCard: {
@@ -289,4 +295,5 @@ const styles = StyleSheet.create({
 
   emptyWrap: { alignItems: 'center', paddingTop: Spacing.xl },
   emptyText: { color: Color.neutral500, fontSize: Typography.body, fontWeight: '600' },
+  pressed: { opacity: 0.86 },
 });

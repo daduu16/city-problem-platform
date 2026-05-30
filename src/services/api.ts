@@ -23,6 +23,7 @@ type BackendProblem = {
   status: string;
   statusLabel?: string;
   createdAt: string;
+  upvotes?: number;
 };
 
 type BackendNews = News;
@@ -64,6 +65,8 @@ function toProblem(item: BackendProblem): Problem {
     status: statusMap[item.status] || (item.statusLabel as ProblemStatus),
     createdAt: item.createdAt,
     createdByMe: false,
+    upvotes: item.upvotes ?? 0,
+    hasUpvoted: false,
   };
 }
 
