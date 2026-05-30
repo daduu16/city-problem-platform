@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -65,6 +65,8 @@ function SelectPill({
 export default function ReportProblemScreen() {
   const { addProblem } = useAppData();
   const autoPickerTriggeredRef = useRef(false);
+  const aiTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const aiTypingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const insets = useSafeAreaInsets();
 
   const [title, setTitle] = useState('');
@@ -252,25 +254,53 @@ export default function ReportProblemScreen() {
     ]);
   }, [openCamera, pickFromLibrary]);
 
+  const clearAiTyping = useCallback(() => {
+    if (aiTypingTimeoutRef.current) {
+      clearTimeout(aiTypingTimeoutRef.current);
+      aiTypingTimeoutRef.current = null;
+    }
+    if (aiTypingIntervalRef.current) {
+      clearInterval(aiTypingIntervalRef.current);
+      aiTypingIntervalRef.current = null;
+    }
+  }, []);
+
   const generateAiDescription = useCallback(() => {
     if (!mediaUrl) {
       Alert.alert('Media tələb olunur', 'AI təsvir üçün əvvəlcə şəkil və ya video əlavə edin.');
       return;
     }
 
+    clearAiTyping();
     setAiGenerating(true);
-    setTimeout(() => {
-      const template = [
-        `Müraciət ${category.toLowerCase()} kateqoriyasına aiddir və prioritet səviyyəsi "${priority}" olaraq qiymətləndirilir.`,
-        address ? `Hadisə ünvanı: ${address}.` : 'Hadisə ünvanı xəritə üzərindən dəqiqləşdirilib.',
-        mediaType === 'video'
-          ? 'Videoda problemin mövcud vəziyyəti görünür və operativ baxış üçün aidiyyəti quruma yönləndirilməsi xahiş olunur.'
-          : 'Şəkildə problemin mövcud vəziyyəti görünür və operativ baxış üçün aidiyyəti quruma yönləndirilməsi xahiş olunur.',
-      ].join(' ');
-      setDescription(template);
-      setAiGenerating(false);
-    }, 700);
-  }, [address, category, mediaType, mediaUrl, priority]);
+    setDescription('');
+
+    const template = [
+      `Müraciət ${category.toLowerCase()} kateqoriyasına aiddir və prioritet səviyyəsi "${priority}" olaraq qiymətləndirilir.`,
+      address ? `Hadisə ünvanı: ${address}.` : 'Hadisə ünvanı xəritə üzərindən dəqiqləşdirilib.',
+      mediaType === 'video'
+        ? 'Videoda problemin mövcud vəziyyəti görünür və operativ baxış üçün aidiyyəti quruma yönləndirilməsi xahiş olunur.'
+        : 'Şəkildə problemin mövcud vəziyyəti görünür və operativ baxış üçün aidiyyəti quruma yönləndirilməsi xahiş olunur.',
+    ].join(' ');
+
+    let cursor = 0;
+    aiTypingTimeoutRef.current = setTimeout(() => {
+      aiTypingIntervalRef.current = setInterval(() => {
+        cursor += 1;
+        setDescription(template.slice(0, cursor));
+        if (cursor >= template.length) {
+          clearAiTyping();
+          setAiGenerating(false);
+        }
+      }, 18);
+    }, 180);
+  }, [address, category, clearAiTyping, mediaType, mediaUrl, priority]);
+
+  useEffect(() => {
+    return () => {
+      clearAiTyping();
+    };
+  }, [clearAiTyping]);
 
   const handleSubmit = async () => {
     if (!canSubmit) {
@@ -306,6 +336,8 @@ export default function ReportProblemScreen() {
       setCategory('İnfrastruktur');
       setPriority('Orta');
       autoPickerTriggeredRef.current = false;
+      clearAiTyping();
+      setAiGenerating(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Serverə göndərmək alınmadı.';
       Alert.alert('Xəta', message);
@@ -408,7 +440,13 @@ export default function ReportProblemScreen() {
             <FieldLabel>Təsvir</FieldLabel>
             <TextInput
               value={description}
-              onChangeText={setDescription}
+              onChangeText={(text) => {
+                if (aiGenerating) {
+                  clearAiTyping();
+                  setAiGenerating(false);
+                }
+                setDescription(text);
+              }}
               placeholder="Problemi ətraflı yazın..."
               placeholderTextColor={Color.neutral500}
               multiline

@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AuthActionButton } from '@/components/auth/AuthActionButton';
-import { AuthLogo } from '@/components/auth/AuthLogo';
 import { AuthTextInput } from '@/components/auth/AuthTextInput';
 import { Color, Spacing, Typography } from '@/GlobalStyles';
 import { RootStackParamList } from '@/navigation/types';
@@ -63,7 +62,6 @@ export default function SignupScreen({ navigation }: Props) {
 
           <View style={styles.content}>
             <View style={styles.header}>
-              <AuthLogo />
               <Text style={styles.title}>Yeni hesab yaradın</Text>
               <Text style={styles.subtitle}>E-poçt, telefon və FİN kod ilə qeydiyyat.</Text>
             </View>
@@ -135,4 +133,3 @@ const styles = StyleSheet.create({
   partnerLogo: { height: 56, width: '82%' },
   logoFallback: { color: Color.primary600, fontSize: 11, fontWeight: '700' },
 });
-

@@ -15,6 +15,12 @@ export type MockLeaderboardEntry = {
   resolvedProblems: number;
 };
 
+export type MockGamificationSummary = {
+  points: number;
+  createdProblems: number;
+  resolvedProblems: number;
+};
+
 export const mockNews: News[] = [
   {
     id: 'news_1',
@@ -45,6 +51,7 @@ export const mockProblems: Problem[] = [
     address: 'Nərimanov r., Ağa Nemətulla küç. 12',
     createdAt: '2026-05-06T07:20:00.000Z',
     createdByMe: true,
+    assignedToRole: 'citizen',
     imageUrl: 'https://picsum.photos/seed/problem1/700/450',
     upvotes: 24,
     hasUpvoted: false,
@@ -59,39 +66,56 @@ export const mockProblems: Problem[] = [
     address: 'Yasamal r., İnşaatçılar pr. 56',
     createdAt: '2026-05-05T16:10:00.000Z',
     createdByMe: false,
+    assignedToRole: 'executor',
+    assignedByOperator: true,
     upvotes: 61,
     hasUpvoted: true,
+  },
+  {
+    id: 'prob_3',
+    title: 'Qaranlıq sahədə işıqlandırma işləmir',
+    category: 'İşıqlandırma',
+    priority: 'Yüksək',
+    status: 'Baxılır',
+    description: 'Operator tərəfindən icraçıya yönləndirilib. Ərazi gecə saatlarında tam qaranlıq qalır.',
+    address: 'Nərimanov r., Təbriz küç. 41',
+    createdAt: '2026-05-30T18:20:00.000Z',
+    createdByMe: false,
+    assignedToRole: 'executor',
+    assignedByOperator: true,
+    imageUrl: 'https://picsum.photos/seed/problem3/700/450',
+    upvotes: 11,
+    hasUpvoted: false,
   },
 ];
 
 export const mockNotifications: NotificationItem[] = [
   {
-    id: 'notif_azeriisiq_1',
-    title: 'Azərişıq — elektrik kəsintiləri',
-    message: 'Azərişıq — elektrik kəsintiləri.',
-    createdAt: '2026-05-30T08:30:00.000Z',
+    id: 'notif_real_water_28may',
+    title: '28 May tarixində su kəsintisi',
+    message: 'Məlumat: 28 May tarixində təmir işləri ilə əlaqədar saat 10:00-18:00 aralığında su verilişi dayandırılacaq.',
+    createdAt: '2026-05-30T07:30:00.000Z',
     isRead: false,
+    type: 'general',
+    targetRole: 'all',
   },
   {
-    id: 'notif_azeriqaz_1',
-    title: 'Azəriqaz — qaz təchizatı problemləri',
-    message: 'Azəriqaz — qaz təchizatı problemləri.',
-    createdAt: '2026-05-30T09:10:00.000Z',
+    id: 'notif_real_power_interval',
+    title: 'İşığın verilməsində fasilələr',
+    message: 'Xəbərdarlıq: Şəbəkə yüklənməsi səbəbi ilə bu axşam 19:00-23:00 saatlarında elektrik verilişində aralıqlı fasilələr gözlənilir.',
+    createdAt: '2026-05-30T08:10:00.000Z',
     isRead: false,
+    type: 'general',
+    targetRole: 'all',
   },
   {
-    id: 'notif_azersu_1',
-    title: 'Azərsu — su kəsintisi və qəza məlumatları',
-    message: 'Azərsu — su kəsintisi və qəza məlumatları.',
-    createdAt: '2026-05-30T09:40:00.000Z',
+    id: 'notif_real_dyp_road_close',
+    title: 'DYP: Yol sabah bağlı olacaq',
+    message: 'DYP məlumatı: Tədbirlə əlaqədar Nərimanov rayonu, Təbriz küçəsinin bir hissəsi sabah saat 09:00-dan 14:00-dək nəqliyyat üçün bağlanacaq.',
+    createdAt: '2026-05-30T08:45:00.000Z',
     isRead: false,
-  },
-  {
-    id: 'notif_fhn_1',
-    title: 'Fövqəladə Hallar Nazirliyi — sel, subasma, güclü külək, yanğın, təxliyə və xəbərdarlıqlar',
-    message: 'Fövqəladə Hallar Nazirliyi — sel, subasma, güclü külək, yanğın, təxliyə və xəbərdarlıqlar.',
-    createdAt: '2026-05-30T10:05:00.000Z',
-    isRead: false,
+    type: 'general',
+    targetRole: 'all',
   },
 ];
 
@@ -131,3 +155,9 @@ export const mockMonthlyLeaderboard: MockLeaderboardEntry[] = [
   { id: 'mo_4', fullName: 'Rauf Qasımov', points: 430, createdProblems: 36, resolvedProblems: 25 },
   { id: 'mo_5', fullName: 'Leyla İsmayılova', points: 390, createdProblems: 33, resolvedProblems: 22 },
 ];
+
+export const mockGamificationSummary: MockGamificationSummary = {
+  points: 135,
+  createdProblems: 11,
+  resolvedProblems: 8,
+};

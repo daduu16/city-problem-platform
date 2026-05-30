@@ -13,6 +13,9 @@ export type NotificationItem = {
   message: string;
   createdAt: string;
   isRead: boolean;
+  type?: 'general' | 'executor_task';
+  problemId?: string;
+  targetRole?: 'citizen' | 'executor' | 'all';
 };
 
 export type ProblemCategory =
@@ -44,6 +47,9 @@ export type Problem = {
   imageUrl?: string;
   mediaUrl?: string;
   mediaType?: 'image' | 'video';
+  assignedToRole?: 'executor' | 'citizen';
+  assignedByOperator?: boolean;
+  resolvedPhotoUrl?: string;
   upvotes: number;
   hasUpvoted: boolean;
 };

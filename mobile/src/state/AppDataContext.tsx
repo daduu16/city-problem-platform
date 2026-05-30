@@ -1,6 +1,7 @@
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import {
+  mockGamificationSummary,
   mockMonthlyLeaderboard,
   mockNews,
   mockNotifications,
@@ -36,6 +37,7 @@ type AppDataContextValue = {
     email: string;
     phone: string;
     finCode?: string;
+    role: 'citizen' | 'executor';
   } | null;
   news: News[];
   notifications: NotificationItem[];
@@ -75,6 +77,7 @@ type AppDataContextValue = {
   loading: boolean;
   unreadNotificationsCount: number;
   addProblem: (input: CreateProblemInput) => Promise<void>;
+  resolveProblemAsExecutor: (problemId: string, photoUrl: string) => void;
   setCurrentUser: (user: AppDataContextValue['currentUser']) => void;
   markNotificationAsRead: (notificationId: string) => void;
   toggleProblemUpvote: (problemId: string) => void;
@@ -164,6 +167,21 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     setProblems((current) => [{ ...withVoteDefaults(created), createdByMe: true }, ...current]);
   }, [withVoteDefaults]);
 
+  const resolveProblemAsExecutor = useCallback((problemId: string, photoUrl: string) => {
+    setProblems((current) =>
+      current.map((problem) => {
+        if (problem.id !== problemId) return problem;
+        return {
+          ...problem,
+          status: 'Həll edildi',
+          resolvedPhotoUrl: photoUrl,
+          mediaUrl: photoUrl,
+          mediaType: 'image',
+        };
+      }),
+    );
+  }, []);
+
   const toggleProblemUpvote = useCallback((problemId: string) => {
     setProblems((current) =>
       current.map((problem) => {
@@ -188,20 +206,32 @@ export function AppDataProvider({ children }: PropsWithChildren) {
   }, []);
 
   const unreadNotificationsCount = useMemo(
-    () => notifications.filter((notification) => !notification.isRead).length,
-    [notifications],
+    () => {
+      const role = currentUser?.role ?? 'citizen';
+      return notifications.filter((notification) => {
+        if (notification.isRead) return false;
+        if (!notification.targetRole || notification.targetRole === 'all') return true;
+        return notification.targetRole === role;
+      }).length;
+    },
+    [currentUser?.role, notifications],
   );
 
   const gamification = useMemo(() => {
     const myProblems = problems.filter((problem) => problem.createdByMe);
-    const createdProblems = myProblems.length;
-    const resolvedProblems = myProblems.filter((problem) =>
-      isResolvedStatus(problem.status),
-    ).length;
+    const hasRealPersonalData = myProblems.length > 0;
+    const createdProblems = hasRealPersonalData
+      ? myProblems.length
+      : mockGamificationSummary.createdProblems;
+    const resolvedProblems = hasRealPersonalData
+      ? myProblems.filter((problem) => isResolvedStatus(problem.status)).length
+      : mockGamificationSummary.resolvedProblems;
 
     const basePoints = createdProblems * 5;
     const resolvedBonusPoints = resolvedProblems * 10;
-    const points = basePoints + resolvedBonusPoints;
+    const points = hasRealPersonalData
+      ? basePoints + resolvedBonusPoints
+      : mockGamificationSummary.points;
 
     const level = Math.floor(points / 100) + 1;
     const levelStart = (level - 1) * 100;
@@ -249,12 +279,17 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     () => ({
       currentUser,
       news,
-      notifications,
+      notifications: notifications.filter((notification) => {
+        const role = currentUser?.role ?? 'citizen';
+        if (!notification.targetRole || notification.targetRole === 'all') return true;
+        return notification.targetRole === role;
+      }),
       problems,
       gamification,
       loading,
       unreadNotificationsCount,
       addProblem,
+      resolveProblemAsExecutor,
       setCurrentUser,
       markNotificationAsRead,
       toggleProblemUpvote,
@@ -269,6 +304,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       loading,
       unreadNotificationsCount,
       addProblem,
+      resolveProblemAsExecutor,
       setCurrentUser,
       markNotificationAsRead,
       toggleProblemUpvote,
