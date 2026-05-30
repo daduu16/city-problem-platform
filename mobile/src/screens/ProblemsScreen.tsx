@@ -31,7 +31,7 @@ function isResolvedStatus(status: string) {
 
 export default function ProblemsScreen({ onlyMine }: Props) {
   const navigation = useNavigation<NativeStackNavigationProp<ProblemsStackParamList, 'ProblemDetail'>>();
-  const { problems, toggleProblemUpvote } = useAppData();
+  const { problems, toggleProblemUpvote, gamification } = useAppData();
 
   const [scopeFilter, setScopeFilter] = useState<ScopeFilterKey>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilterKey>('all');
@@ -72,6 +72,25 @@ export default function ProblemsScreen({ onlyMine }: Props) {
             <View style={styles.header}>
               <Text style={styles.title}>{title}</Text>
               <Text style={styles.subtitle}>{subtitle}</Text>
+              <View style={styles.pointsHero}>
+                <View style={styles.pointsHeroTop}>
+                  <View style={styles.pointsHeroBadge}>
+                    <Ionicons name="sparkles-outline" size={14} color={Color.white500} />
+                    <Text style={styles.pointsHeroBadgeText}>Xal sistemi</Text>
+                  </View>
+                  <Text style={styles.pointsHeroLevel}>Lv.{gamification.level}</Text>
+                </View>
+                <Text style={styles.pointsHeroValue}>{gamification.points} xal</Text>
+                <Text style={styles.pointsHeroHint}>
+                  {gamification.createdProblems} yaradılan × 5 + {gamification.resolvedProblems} həll olunan × 10
+                </Text>
+                <View style={styles.progressTrack}>
+                  <View style={[styles.progressFill, { width: `${gamification.progressPct}%` }]} />
+                </View>
+                <Text style={styles.progressLabel}>
+                  Növbəti səviyyə üçün {Math.max(0, gamification.nextLevelAt - gamification.points)} xal
+                </Text>
+              </View>
 
               <Pressable
                 onPress={() => setShowFilters((prev) => !prev)}
@@ -206,6 +225,58 @@ const styles = StyleSheet.create({
   header: { marginBottom: Spacing.lg },
   title: { color: Color.neutral900, fontSize: 24, fontWeight: '900' },
   subtitle: { color: Color.neutral500, fontSize: Typography.body, fontWeight: '600', marginTop: 6 },
+  pointsHero: {
+    backgroundColor: '#0f172a',
+    borderRadius: 16,
+    marginTop: Spacing.lg,
+    padding: 12,
+  },
+  pointsHeroTop: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
+  pointsHeroBadge: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 999,
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  pointsHeroBadgeText: {
+    color: Color.white500,
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  pointsHeroLevel: { color: '#bae6fd', fontSize: 12, fontWeight: '800' },
+  pointsHeroValue: {
+    color: Color.white500,
+    fontSize: 26,
+    fontWeight: '900',
+    marginTop: 8,
+  },
+  pointsHeroHint: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  progressTrack: {
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderRadius: 999,
+    height: 8,
+    marginTop: 10,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    backgroundColor: '#38bdf8',
+    borderRadius: 999,
+    height: '100%',
+  },
+  progressLabel: {
+    color: '#94a3b8',
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 8,
+  },
   filterToggleButton: {
     alignItems: 'center',
     alignSelf: 'flex-start',

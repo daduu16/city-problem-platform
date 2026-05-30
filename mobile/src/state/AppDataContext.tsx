@@ -1,6 +1,13 @@
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { mockNews, mockNotifications, mockProblems } from '@/data/mockData';
+import {
+  mockMonthlyLeaderboard,
+  mockNews,
+  mockNotifications,
+  mockPointActivities,
+  mockProblems,
+  mockWeeklyLeaderboard,
+} from '@/data/mockData';
 import { createProblem, fetchNews, fetchNotifications, fetchProblems } from '@/services/api';
 import { News, NotificationItem, Problem, ProblemCategory, ProblemPriority } from '@/types';
 
@@ -33,6 +40,38 @@ type AppDataContextValue = {
   news: News[];
   notifications: NotificationItem[];
   problems: Problem[];
+  gamification: {
+    points: number;
+    createdProblems: number;
+    resolvedProblems: number;
+    basePoints: number;
+    resolvedBonusPoints: number;
+    level: number;
+    nextLevelAt: number;
+    progressPct: number;
+    recentActivities: Array<{
+      id: string;
+      title: string;
+      points: number;
+      createdAt: string;
+    }>;
+    leaderboard: {
+      weekly: Array<{
+        id: string;
+        fullName: string;
+        points: number;
+        createdProblems: number;
+        resolvedProblems: number;
+      }>;
+      monthly: Array<{
+        id: string;
+        fullName: string;
+        points: number;
+        createdProblems: number;
+        resolvedProblems: number;
+      }>;
+    };
+  };
   loading: boolean;
   unreadNotificationsCount: number;
   addProblem: (input: CreateProblemInput) => Promise<void>;
@@ -43,6 +82,17 @@ type AppDataContextValue = {
 };
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
+
+function normalizeStatus(value: string) {
+  return value
+    .toLocaleLowerCase('az')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function isResolvedStatus(status: string) {
+  return normalizeStatus(status).includes('hell edildi');
+}
 
 export function AppDataProvider({ children }: PropsWithChildren) {
   const [currentUser, setCurrentUser] = useState<AppDataContextValue['currentUser']>(null);
@@ -142,12 +192,66 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     [notifications],
   );
 
+  const gamification = useMemo(() => {
+    const myProblems = problems.filter((problem) => problem.createdByMe);
+    const createdProblems = myProblems.length;
+    const resolvedProblems = myProblems.filter((problem) =>
+      isResolvedStatus(problem.status),
+    ).length;
+
+    const basePoints = createdProblems * 5;
+    const resolvedBonusPoints = resolvedProblems * 10;
+    const points = basePoints + resolvedBonusPoints;
+
+    const level = Math.floor(points / 100) + 1;
+    const levelStart = (level - 1) * 100;
+    const nextLevelAt = level * 100;
+    const levelDelta = nextLevelAt - levelStart;
+    const progressPct = levelDelta > 0 ? Math.min(100, ((points - levelStart) / levelDelta) * 100) : 0;
+
+    const realActivities = myProblems
+      .map((problem) => {
+        const resolved = isResolvedStatus(problem.status);
+        return {
+          id: `activity_${problem.id}`,
+          title: resolved
+            ? `Problem həll edildi: ${problem.title}`
+            : `Problem yaradıldı: ${problem.title}`,
+          points: resolved ? 15 : 5,
+          createdAt: problem.createdAt,
+        };
+      })
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+    const recentActivities =
+      realActivities.length > 0
+        ? realActivities.slice(0, 5)
+        : mockPointActivities.slice(0, 5);
+
+    return {
+      points,
+      createdProblems,
+      resolvedProblems,
+      basePoints,
+      resolvedBonusPoints,
+      level,
+      nextLevelAt,
+      progressPct,
+      recentActivities,
+      leaderboard: {
+        weekly: mockWeeklyLeaderboard,
+        monthly: mockMonthlyLeaderboard,
+      },
+    };
+  }, [problems]);
+
   const value = useMemo<AppDataContextValue>(
     () => ({
       currentUser,
       news,
       notifications,
       problems,
+      gamification,
       loading,
       unreadNotificationsCount,
       addProblem,
@@ -161,6 +265,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       news,
       notifications,
       problems,
+      gamification,
       loading,
       unreadNotificationsCount,
       addProblem,

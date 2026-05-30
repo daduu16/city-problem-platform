@@ -1,5 +1,20 @@
 import { News, NotificationItem, Problem } from '@/types';
 
+export type MockPointActivity = {
+  id: string;
+  title: string;
+  points: number;
+  createdAt: string;
+};
+
+export type MockLeaderboardEntry = {
+  id: string;
+  fullName: string;
+  points: number;
+  createdProblems: number;
+  resolvedProblems: number;
+};
+
 export const mockNews: News[] = [
   {
     id: 'news_1',
@@ -78,4 +93,41 @@ export const mockNotifications: NotificationItem[] = [
     createdAt: '2026-05-30T10:05:00.000Z',
     isRead: false,
   },
+];
+
+export const mockPointActivities: MockPointActivity[] = [
+  {
+    id: 'points_1',
+    title: 'Yeni problem yaradıldı',
+    points: 5,
+    createdAt: '2026-05-29T10:20:00.000Z',
+  },
+  {
+    id: 'points_2',
+    title: 'Problem həll edildi',
+    points: 10,
+    createdAt: '2026-05-30T09:45:00.000Z',
+  },
+  {
+    id: 'points_3',
+    title: 'Yeni problem yaradıldı',
+    points: 5,
+    createdAt: '2026-05-30T12:10:00.000Z',
+  },
+];
+
+export const mockWeeklyLeaderboard: MockLeaderboardEntry[] = [
+  { id: 'wk_1', fullName: 'Aysel Məmmədova', points: 145, createdProblems: 13, resolvedProblems: 8 },
+  { id: 'wk_2', fullName: 'Orxan Hüseynov', points: 130, createdProblems: 12, resolvedProblems: 7 },
+  { id: 'wk_3', fullName: 'Nigar Əliyeva', points: 115, createdProblems: 11, resolvedProblems: 6 },
+  { id: 'wk_4', fullName: 'Rauf Qasımov', points: 95, createdProblems: 9, resolvedProblems: 5 },
+  { id: 'wk_5', fullName: 'Leyla İsmayılova', points: 80, createdProblems: 8, resolvedProblems: 4 },
+];
+
+export const mockMonthlyLeaderboard: MockLeaderboardEntry[] = [
+  { id: 'mo_1', fullName: 'Orxan Hüseynov', points: 520, createdProblems: 44, resolvedProblems: 30 },
+  { id: 'mo_2', fullName: 'Aysel Məmmədova', points: 495, createdProblems: 42, resolvedProblems: 28 },
+  { id: 'mo_3', fullName: 'Nigar Əliyeva', points: 470, createdProblems: 40, resolvedProblems: 27 },
+  { id: 'mo_4', fullName: 'Rauf Qasımov', points: 430, createdProblems: 36, resolvedProblems: 25 },
+  { id: 'mo_5', fullName: 'Leyla İsmayılova', points: 390, createdProblems: 33, resolvedProblems: 22 },
 ];
