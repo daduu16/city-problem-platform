@@ -8,6 +8,8 @@ type BackendProblem = {
   title: string;
   description: string;
   address: string;
+  lat?: number;
+  lng?: number;
   imageUrl?: string | null;
   mediaUrl?: string | null;
   mediaType?: 'image' | 'video' | null;
@@ -38,14 +40,23 @@ const priorityMap: Record<string, ProblemPriority> = {
 };
 
 const categoryMap: Record<string, ProblemCategory> = {
-  SU: 'Su',
-  QAZ: 'Qaz',
-  ISIQ: 'İşıq',
-  YOL: 'Yol',
-  ZIBIL: 'Zibil',
-  QEZA: 'Qəza',
-  TEBIET_HADISESI: 'Təbiət hadisəsi',
-  TEHLUKESIZLIK: 'Təhlükəsizlik',
+  INFRASTRUCTURE: 'İnfrastruktur',
+  UTILITIES: 'Kommunal',
+  GREENERY: 'Yaşıllıq',
+  WEATHER_EMERGENCY: 'Fövqəladə',
+  SANITATION: 'Sanitariya',
+  LIGHTING: 'İşıqlandırma',
+  PARKS: 'Parklar',
+  ADVERTISING: 'Reklam',
+  // Legacy backend/mobile codes support
+  SU: 'Kommunal',
+  QAZ: 'Kommunal',
+  ISIQ: 'İşıqlandırma',
+  YOL: 'İnfrastruktur',
+  ZIBIL: 'Sanitariya',
+  QEZA: 'İnfrastruktur',
+  TEBIET_HADISESI: 'Fövqəladə',
+  TEHLUKESIZLIK: 'Parklar',
 };
 
 function toProblem(item: BackendProblem): Problem {
@@ -54,6 +65,8 @@ function toProblem(item: BackendProblem): Problem {
     title: item.title,
     description: item.description,
     address: item.address,
+    lat: item.lat,
+    lng: item.lng,
     imageUrl: item.imageUrl || undefined,
     mediaUrl: item.mediaUrl || item.imageUrl || undefined,
     mediaType: item.mediaType || (item.imageUrl ? 'image' : undefined),
@@ -126,19 +139,26 @@ export async function createProblem(input: {
   priority: ProblemPriority;
   description: string;
   address: string;
+  lat?: number;
+  lng?: number;
   imageUrl?: string;
   mediaUrl?: string;
   mediaType?: 'image' | 'video';
+  mediaAsset?: {
+    uri: string;
+    fileName?: string | null;
+    mimeType?: string | null;
+  };
 }): Promise<Problem> {
   const categoryCode: Record<ProblemCategory, string> = {
-    Su: 'SU',
-    Qaz: 'QAZ',
-    İşıq: 'ISIQ',
-    Yol: 'YOL',
-    Zibil: 'ZIBIL',
-    Qəza: 'QEZA',
-    'Təbiət hadisəsi': 'TEBIET_HADISESI',
-    Təhlükəsizlik: 'TEHLUKESIZLIK',
+    İnfrastruktur: 'INFRASTRUCTURE',
+    Kommunal: 'UTILITIES',
+    Yaşıllıq: 'GREENERY',
+    Fövqəladə: 'WEATHER_EMERGENCY',
+    Sanitariya: 'SANITATION',
+    İşıqlandırma: 'LIGHTING',
+    Parklar: 'PARKS',
+    Reklam: 'ADVERTISING',
   };
 
   const priorityCode: Record<ProblemPriority, string> = {
@@ -148,15 +168,90 @@ export async function createProblem(input: {
     Təcili: 'TECILI',
   };
 
+  const normalizeMediaType = (type?: 'image' | 'video', mimeType?: string | null) => {
+    if (type) return type;
+    if (!mimeType) return undefined;
+    if (mimeType.startsWith('video/')) return 'video';
+    if (mimeType.startsWith('image/')) return 'image';
+    return undefined;
+  };
+
+  const uploadLocalMediaIfNeeded = async () => {
+    const uri = input.mediaAsset?.uri ?? input.mediaUrl;
+    if (!uri) {
+      return {
+        mediaUrl: undefined as string | undefined,
+        mediaType: input.mediaType,
+      };
+    }
+
+    const mediaType = normalizeMediaType(input.mediaType, input.mediaAsset?.mimeType);
+    if (!uri.startsWith('file://') && !uri.startsWith('content://')) {
+      return { mediaUrl: uri, mediaType };
+    }
+
+    const extFromName = input.mediaAsset?.fileName?.match(/\.[a-zA-Z0-9]+$/)?.[0];
+    const ext =
+      extFromName ??
+      (mediaType === 'video'
+        ? '.mp4'
+        : input.mediaAsset?.mimeType?.includes('png')
+          ? '.png'
+          : '.jpg');
+    const mimeType =
+      input.mediaAsset?.mimeType ??
+      (mediaType === 'video' ? 'video/mp4' : ext === '.png' ? 'image/png' : 'image/jpeg');
+    const fileName =
+      input.mediaAsset?.fileName ?? `mobile-upload-${Date.now()}${ext}`;
+
+    const formData = new FormData();
+    formData.append('mediaType', mediaType ?? 'image');
+    formData.append('file', {
+      uri,
+      name: fileName,
+      type: mimeType,
+    } as unknown as Blob);
+
+    const response = await fetch(`${API_BASE_URL}/api/uploads/mobile-media`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!response.ok) {
+      let message = `HTTP ${response.status}`;
+      try {
+        const json = await response.json();
+        if (json?.message) message = json.message;
+      } catch {
+        // ignore
+      }
+      throw new Error(`Media upload failed: ${message}`);
+    }
+    const json = (await response.json()) as {
+      url: string;
+      mediaType?: 'image' | 'video';
+    };
+    return {
+      mediaUrl: json.url,
+      mediaType: json.mediaType ?? mediaType,
+    };
+  };
+
+  const uploadedMedia = await uploadLocalMediaIfNeeded();
+
   const created = await apiFetch<BackendProblem>('/api/problems', {
     method: 'POST',
     body: JSON.stringify({
       title: input.title.trim(),
       description: input.description.trim(),
       address: input.address.trim(),
-      imageUrl: input.imageUrl,
-      mediaUrl: input.mediaUrl,
-      mediaType: input.mediaType,
+      lat: input.lat,
+      lng: input.lng,
+      imageUrl:
+        uploadedMedia.mediaType === 'image'
+          ? uploadedMedia.mediaUrl ?? input.imageUrl
+          : undefined,
+      mediaUrl: uploadedMedia.mediaUrl,
+      mediaType: uploadedMedia.mediaType,
       category: categoryCode[input.category],
       priority: priorityCode[input.priority],
     }),

@@ -2,7 +2,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { ResizeMode, Video } from 'expo-av';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BorderRadius, Color, Shadow, Spacing, Typography } from '@/GlobalStyles';
 import { ProblemsStackParamList } from '@/navigation/AppNavigator';
@@ -26,10 +27,33 @@ function getUpvoteColor(votes: number) {
 export default function ProblemDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute<ProblemRoute>();
-  const { problems, toggleProblemUpvote } = useAppData();
+  const { problems, toggleProblemUpvote, currentUser, resolveProblemAsExecutor } = useAppData();
   const routeProblem = route.params.problem;
   const problem = problems.find((item) => item.id === routeProblem.id) ?? routeProblem;
   const voteColor = getUpvoteColor(problem.upvotes);
+  const isExecutor = currentUser?.role === 'executor';
+  const canResolveAsExecutor =
+    isExecutor &&
+    problem.assignedToRole === 'executor' &&
+    problem.status !== 'Həll edildi';
+
+  const handleResolveWithPhoto = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('İcazə tələb olunur', 'Həll sübutu üçün kamera icazəsi verin.');
+      return;
+    }
+
+    const photo = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 0.8,
+      mediaTypes: ['images'],
+    });
+    if (photo.canceled || photo.assets.length === 0) return;
+
+    resolveProblemAsExecutor(problem.id, photo.assets[0].uri);
+    Alert.alert('Tamamlandı', 'Problem həll olundu və foto əlavə edildi.');
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -99,6 +123,33 @@ export default function ProblemDetailScreen() {
 
             <Text style={styles.sectionTitle}>Ünvan</Text>
             <Text style={styles.sectionText}>{problem.address}</Text>
+
+            {problem.assignedByOperator && (
+              <View style={styles.assignmentBadge}>
+                <Ionicons name="send-outline" size={14} color={Color.primary600} />
+                <Text style={styles.assignmentText}>
+                  Operator tərəfindən icraçıya yönləndirilib
+                </Text>
+              </View>
+            )}
+
+            {canResolveAsExecutor && (
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleResolveWithPhoto}
+                style={({ pressed }) => [styles.resolveButton, pressed && styles.pressed]}
+              >
+                <Ionicons name="camera-outline" size={16} color={Color.white500} />
+                <Text style={styles.resolveButtonText}>Həll et və şəkil əlavə et</Text>
+              </Pressable>
+            )}
+
+            {problem.status === 'Həll edildi' && problem.resolvedPhotoUrl && (
+              <>
+                <Text style={styles.sectionTitle}>Həll sübutu</Text>
+                <Image source={{ uri: problem.resolvedPhotoUrl }} style={styles.resolvedImage} />
+              </>
+            )}
 
             <Text style={styles.date}>
               Tarix:{' '}
@@ -184,6 +235,36 @@ const styles = StyleSheet.create({
   upvoteText: { fontSize: 12, fontWeight: '900' },
   sectionTitle: { color: Color.neutral900, fontSize: Typography.caption, fontWeight: '900', marginTop: Spacing.lg },
   sectionText: { color: Color.neutral800, fontSize: Typography.body, fontWeight: '600', lineHeight: 22, marginTop: 6 },
+  assignmentBadge: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: Color.accent100,
+    borderRadius: 999,
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: Spacing.md,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  assignmentText: { color: Color.primary600, fontSize: 11, fontWeight: '800' },
+  resolveButton: {
+    alignItems: 'center',
+    backgroundColor: Color.success500,
+    borderRadius: 999,
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: Spacing.md,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    alignSelf: 'flex-start',
+  },
+  resolveButtonText: { color: Color.white500, fontSize: 12, fontWeight: '900' },
+  resolvedImage: {
+    borderRadius: BorderRadius.md,
+    height: 180,
+    marginTop: Spacing.sm,
+    width: '100%',
+  },
   date: { color: Color.primary600, fontSize: Typography.caption, fontWeight: '800', marginTop: Spacing.xl },
   pressed: { opacity: 0.88 },
 });

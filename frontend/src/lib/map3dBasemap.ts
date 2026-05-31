@@ -1,5 +1,13 @@
+import type { StyleSpecification } from 'maplibre-gl';
+import type { MapBaseMap } from '@/stores/mapStore';
+
 /** OpenFreeMap basemap — light style matches SmartRayon UI */
 export const MAPLIBRE_STYLE_URL =
   'https://tiles.openfreemap.org/styles/liberty';
+
+export function getMaplibreBasemapStyle(baseMap: MapBaseMap): string | StyleSpecification {
+  if (baseMap === 'osm') return MAPLIBRE_STYLE_URL;
+  return MAPLIBRE_STYLE_URL;
+}
 
 export { MAP_CLUSTER_MAX_ZOOM as MAP_3D_CLUSTER_MAX_ZOOM } from '@/lib/mapClusterConfig';

@@ -1,23 +1,23 @@
 export const mobileCategoryMap = {
-  SU: 'water',
-  QAZ: 'gas',
-  ISIQ: 'electricity',
-  YOL: 'road_surface',
-  ZIBIL: 'street_dirt',
-  QEZA: 'road_surface',
-  TEBIET_HADISESI: 'storm_damage',
-  TEHLUKESIZLIK: 'playgrounds',
+  INFRASTRUCTURE: 'infrastructure',
+  UTILITIES: 'utilities',
+  GREENERY: 'greenery',
+  WEATHER_EMERGENCY: 'weather_emergency',
+  SANITATION: 'sanitation',
+  LIGHTING: 'lighting',
+  PARKS: 'parks',
+  ADVERTISING: 'advertising',
 } as const;
 
 export const mobileCategoryLabels: Record<keyof typeof mobileCategoryMap, string> = {
-  SU: 'Su',
-  QAZ: 'Qaz',
-  ISIQ: 'İşıq',
-  YOL: 'Yol',
-  ZIBIL: 'Zibil',
-  QEZA: 'Qəza',
-  TEBIET_HADISESI: 'Təbiət hadisəsi',
-  TEHLUKESIZLIK: 'Təhlükəsizlik',
+  INFRASTRUCTURE: 'İnfrastruktur',
+  UTILITIES: 'Kommunal',
+  GREENERY: 'Yaşıllıq',
+  WEATHER_EMERGENCY: 'Fövqəladə',
+  SANITATION: 'Sanitariya',
+  LIGHTING: 'İşıqlandırma',
+  PARKS: 'Parklar',
+  ADVERTISING: 'Reklam',
 };
 
 export const mobilePriorityMap = {

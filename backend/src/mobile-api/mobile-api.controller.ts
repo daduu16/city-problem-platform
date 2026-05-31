@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateMobileProblemDto } from './dto/create-mobile-problem.dto';
 import {
@@ -58,5 +67,21 @@ export class MobileApiController {
   @Post('problems')
   createProblem(@Body() dto: CreateMobileProblemDto) {
     return this.mobileApi.createProblem(dto);
+  }
+
+  @Post('uploads/mobile-media')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 25 * 1024 * 1024 },
+    }),
+  )
+  uploadMobileMedia(
+    @UploadedFile() file?: Express.Multer.File,
+    @Body('mediaType') mediaType?: 'image' | 'video',
+  ) {
+    if (!file) {
+      throw new BadRequestException('File is required');
+    }
+    return this.mobileApi.uploadMobileMedia(file, mediaType);
   }
 }

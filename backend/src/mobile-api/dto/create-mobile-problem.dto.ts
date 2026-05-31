@@ -1,12 +1,24 @@
 import {
   IsIn,
+  IsNumber,
   IsOptional,
   IsString,
+  Max,
   MinLength,
+  Min,
   ValidateIf,
 } from 'class-validator';
 
 const categories = [
+  'INFRASTRUCTURE',
+  'UTILITIES',
+  'GREENERY',
+  'WEATHER_EMERGENCY',
+  'SANITATION',
+  'LIGHTING',
+  'PARKS',
+  'ADVERTISING',
+  // Legacy mobile clients
   'SU',
   'QAZ',
   'ISIQ',
@@ -31,6 +43,18 @@ export class CreateMobileProblemDto {
   @IsString()
   @MinLength(5)
   address!: string;
+
+  @ValidateIf((dto: CreateMobileProblemDto) => dto.lat !== undefined || dto.lng !== undefined)
+  @IsNumber()
+  @Min(-90)
+  @Max(90)
+  lat?: number;
+
+  @ValidateIf((dto: CreateMobileProblemDto) => dto.lat !== undefined || dto.lng !== undefined)
+  @IsNumber()
+  @Min(-180)
+  @Max(180)
+  lng?: number;
 
   @IsOptional()
   @IsString()

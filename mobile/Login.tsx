@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AuthActionButton } from '@/components/auth/AuthActionButton';
-import { AuthLogo } from '@/components/auth/AuthLogo';
 import { AuthTextInput } from '@/components/auth/AuthTextInput';
 import { Color, Spacing, Typography } from '@/GlobalStyles';
 import { RootStackParamList } from '@/navigation/types';
@@ -19,7 +18,11 @@ export default function LoginScreen({ navigation, route }: Props) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [roleMode, setRoleMode] = useState<'citizen' | 'executor'>('citizen');
   const [logoError, setLogoError] = useState({ innovasiya: false, nerimanov: false });
+
+  const EXECUTOR_EMAIL = 'aqil@gmail.com';
+  const EXECUTOR_PASSWORD = '1999Aqil!';
 
   useEffect(() => {
     if (route.params?.verifiedEmail) setIdentifier(route.params.verifiedEmail);
@@ -28,6 +31,25 @@ export default function LoginScreen({ navigation, route }: Props) {
   const handleLogin = async () => {
     try {
       setErrorMessage('');
+
+      if (roleMode === 'executor') {
+        if (identifier.trim().toLowerCase() !== EXECUTOR_EMAIL || password !== EXECUTOR_PASSWORD) {
+          setErrorMessage('İcraçı üçün giriş məlumatları yanlışdır');
+          return;
+        }
+
+        setCurrentUser({
+          id: 'executor-demo-1',
+          fullName: 'Aqil İcraçı',
+          email: EXECUTOR_EMAIL,
+          phone: '0500000001',
+          finCode: 'EXE1999',
+          role: 'executor',
+        });
+        navigation.navigate('Home');
+        return;
+      }
+
       const auth = await login(identifier, password);
       setCurrentUser({
         id: auth.user.id,
@@ -35,6 +57,7 @@ export default function LoginScreen({ navigation, route }: Props) {
         email: auth.user.email,
         phone: auth.user.phone,
         finCode: auth.user.finCode,
+        role: roleMode,
       });
       navigation.navigate('Home');
     } catch (error: any) {
@@ -52,12 +75,34 @@ export default function LoginScreen({ navigation, route }: Props) {
 
           <View style={styles.content}>
             <View style={styles.header}>
-              <AuthLogo />
               <Text style={styles.title}>Xoş gəlmisiniz</Text>
               <Text style={styles.subtitle}>E-poçt və ya telefon ilə daxil olun.</Text>
             </View>
 
             <View style={styles.form}>
+              <View style={styles.roleSwitch}>
+                <Pressable
+                  onPress={() => setRoleMode('citizen')}
+                  style={[styles.roleChip, roleMode === 'citizen' && styles.roleChipActive]}
+                >
+                  <Text style={[styles.roleChipText, roleMode === 'citizen' && styles.roleChipTextActive]}>
+                    İstifadəçi
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setRoleMode('executor')}
+                  style={[styles.roleChip, roleMode === 'executor' && styles.roleChipActive]}
+                >
+                  <Text style={[styles.roleChipText, roleMode === 'executor' && styles.roleChipTextActive]}>
+                    İcraçı
+                  </Text>
+                </Pressable>
+              </View>
+              <Text style={styles.roleHint}>
+                {roleMode === 'executor'
+                  ? 'İcraçı girişində operatorun yönləndirdiyi problemləri qəbul edib həll edə bilərsiniz.'
+                  : 'İstifadəçi girişində yeni problem yarada və statusu izləyə bilərsiniz.'}
+              </Text>
               <AuthTextInput icon="person-outline" placeholder="E-poçt və ya telefon" value={identifier} onChangeText={setIdentifier} />
               <AuthTextInput icon="lock-closed-outline" placeholder="Şifrə" value={password} onChangeText={setPassword} secureTextEntry />
             </View>
@@ -112,6 +157,23 @@ const styles = StyleSheet.create({
   header: { alignItems: 'center', marginBottom: Spacing.xl },
   title: { color: Color.neutral900, fontSize: Typography.title, fontWeight: '800', marginBottom: Spacing.sm, marginTop: Spacing.md, textAlign: 'center' },
   subtitle: { color: Color.neutral500, fontSize: Typography.body, fontWeight: '500', lineHeight: 21, textAlign: 'center' },
+  roleSwitch: {
+    backgroundColor: Color.neutral100,
+    borderRadius: 10,
+    flexDirection: 'row',
+    gap: 8,
+    padding: 4,
+  },
+  roleChip: {
+    alignItems: 'center',
+    borderRadius: 8,
+    flex: 1,
+    paddingVertical: 8,
+  },
+  roleChipActive: { backgroundColor: Color.primary600 },
+  roleChipText: { color: Color.neutral500, fontSize: 12, fontWeight: '800' },
+  roleChipTextActive: { color: Color.white500 },
+  roleHint: { color: Color.neutral500, fontSize: 12, fontWeight: '600', lineHeight: 18, marginTop: 2 },
   form: { gap: Spacing.lg },
   forgotPasswordButton: { alignSelf: 'flex-end', marginTop: Spacing.md, paddingVertical: Spacing.xs },
   forgotPasswordText: { color: Color.primary600, fontSize: Typography.caption, fontWeight: '700' },
@@ -126,4 +188,3 @@ const styles = StyleSheet.create({
   partnerLogo: { height: 56, width: '82%' },
   logoFallback: { color: Color.primary600, fontSize: 11, fontWeight: '700' },
 });
-

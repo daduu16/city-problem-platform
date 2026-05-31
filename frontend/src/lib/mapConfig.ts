@@ -18,6 +18,26 @@ export const BASE_MAP_ATTRIBUTION =
 export const BASE_MAP_2D_INVERT = false;
 export const BASE_MAP_2D_TILE_CLASS = BASE_MAP_2D_INVERT ? 'map-basemap-invert' : '';
 
+export type BaseMapKey = 'osm';
+
+type LeafletBasemapConfig = {
+  url: string;
+  attribution: string;
+  subdomains?: string[] | string;
+};
+
+const LEAFLET_BASEMAPS: Record<BaseMapKey, LeafletBasemapConfig> = {
+  osm: {
+    url: BASE_MAP_TILE_URL,
+    attribution: BASE_MAP_ATTRIBUTION,
+    subdomains: 'abcd',
+  },
+};
+
+export function getLeafletBasemapConfig(baseMap: BaseMapKey): LeafletBasemapConfig {
+  return LEAFLET_BASEMAPS[baseMap] ?? LEAFLET_BASEMAPS.osm;
+}
+
 export const MAP_3D_VIEW = {
   pitch: 60,
   bearing: -28,

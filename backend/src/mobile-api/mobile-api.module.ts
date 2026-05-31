@@ -3,9 +3,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { MobileApiController } from './mobile-api.controller';
 import { MobileApiService } from './mobile-api.service';
+import { GeozonesModule } from '../geozones/geozones.module';
 
 @Module({
   imports: [
+    GeozonesModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({

@@ -43,7 +43,7 @@ import { PlacesLayer3D, PLACES_LAYER_ID } from '@/components/map/PlacesLayer3D';
 import { useOsmBuildingsGeoJson } from '@/hooks/useOsmBuildingsGeoJson';
 import { useInstitutionBuildingsGeoJson } from '@/hooks/useInstitutionBuildingsGeoJson';
 import { getPlaceTypeLabel } from '@/lib/placeTypeStyles';
-import { MAPLIBRE_STYLE_URL } from '@/lib/map3dBasemap';
+import { getMaplibreBasemapStyle } from '@/lib/map3dBasemap';
 import { MAP_DISTRICT_COLOR } from '@/lib/mapPalette';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -131,6 +131,7 @@ export function IncidentMap3D({
     showHeatmap,
     showClusters,
     showPlaces,
+    baseMap,
     visiblePlaceTypes,
     openIncident,
     map3dFlatView,
@@ -280,7 +281,7 @@ export function IncidentMap3D({
     >
       <Map
         ref={mapRef}
-        mapStyle={MAPLIBRE_STYLE_URL}
+        mapStyle={getMaplibreBasemapStyle(baseMap)}
         initialViewState={{
           longitude: NARIMANOV_CENTER.lng,
           latitude: NARIMANOV_CENTER.lat,

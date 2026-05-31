@@ -13,17 +13,20 @@ export type NotificationItem = {
   message: string;
   createdAt: string;
   isRead: boolean;
+  type?: 'general' | 'executor_task';
+  problemId?: string;
+  targetRole?: 'citizen' | 'executor' | 'all';
 };
 
 export type ProblemCategory =
-  | 'Su'
-  | 'Qaz'
-  | 'İşıq'
-  | 'Yol'
-  | 'Zibil'
-  | 'Qəza'
-  | 'Təbiət hadisəsi'
-  | 'Təhlükəsizlik';
+  | 'İnfrastruktur'
+  | 'Kommunal'
+  | 'Yaşıllıq'
+  | 'Fövqəladə'
+  | 'Sanitariya'
+  | 'İşıqlandırma'
+  | 'Parklar'
+  | 'Reklam';
 
 export type ProblemPriority = 'Aşağı' | 'Orta' | 'Yüksək' | 'Təcili';
 
@@ -37,11 +40,16 @@ export type Problem = {
   status: ProblemStatus;
   description: string;
   address: string;
+  lat?: number;
+  lng?: number;
   createdAt: string;
   createdByMe: boolean;
   imageUrl?: string;
   mediaUrl?: string;
   mediaType?: 'image' | 'video';
+  assignedToRole?: 'executor' | 'citizen';
+  assignedByOperator?: boolean;
+  resolvedPhotoUrl?: string;
   upvotes: number;
   hasUpvoted: boolean;
 };

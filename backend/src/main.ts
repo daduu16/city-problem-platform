@@ -34,6 +34,9 @@ async function bootstrap() {
   app.useStaticAssets(join(process.cwd(), 'public', 'news'), {
     prefix: '/news',
   });
+  app.useStaticAssets(join(process.cwd(), 'public', 'uploads'), {
+    prefix: '/uploads',
+  });
 
   const config = new DocumentBuilder()
     .setTitle('Municipal Incident Platform API')

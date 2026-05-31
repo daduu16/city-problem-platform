@@ -49,10 +49,11 @@ export default function ProblemsScreen({ onlyMine }: Props) {
   }, [scopeData, statusFilter]);
 
   const title = onlyMine ? 'Mənim müraciətlərim' : 'Problemlər';
-  const subtitle =
+  const subtitle = (
     scopeFilter === 'mine'
       ? 'Sizin göndərdiyiniz problemlərin siyahısı'
-      : 'Bütün göndərilən müraciətlərin siyahısı';
+      : 'Bütün göndərilən müraciətlərin siyahısı'
+    );
 
   const allCount = problems.length;
   const mineCount = problems.filter((item) => item.createdByMe).length;

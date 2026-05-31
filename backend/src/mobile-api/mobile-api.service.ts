@@ -8,6 +8,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import {
   AttachmentType,
+  DistrictStatus,
   HistoryActionType,
   IncidentPriority,
   IncidentStatus,
@@ -15,6 +16,10 @@ import {
   Prisma,
 } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
+import { mkdir, writeFile } from 'fs/promises';
+import { extname, join } from 'path';
+import { DistrictService, NARIMANOV_GEOZONE_ID } from '../geozones/district.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMobileProblemDto } from './dto/create-mobile-problem.dto';
 import {
@@ -34,12 +39,24 @@ import {
 
 const DEFAULT_LAT = 40.4093;
 const DEFAULT_LNG = 49.8671;
+const MOBILE_UPLOADS_DIR = join(process.cwd(), 'public', 'uploads', 'mobile');
+const legacyMobileCategoryMap = {
+  SU: 'utilities',
+  QAZ: 'utilities',
+  ISIQ: 'lighting',
+  YOL: 'infrastructure',
+  ZIBIL: 'sanitation',
+  QEZA: 'infrastructure',
+  TEBIET_HADISESI: 'weather_emergency',
+  TEHLUKESIZLIK: 'parks',
+} as const;
 
 @Injectable()
 export class MobileApiService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    private districtService: DistrictService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -187,6 +204,13 @@ export class MobileApiService {
     const mediaUrl = dto.mediaUrl ?? dto.imageUrl;
     const attachmentType =
       dto.mediaType === 'video' ? AttachmentType.VIDEO : AttachmentType.PHOTO;
+    const lat = dto.lat ?? DEFAULT_LAT;
+    const lng = dto.lng ?? DEFAULT_LNG;
+    const districtStatus = await this.districtService.resolveDistrictStatus(lat, lng);
+    const geozoneId =
+      districtStatus === DistrictStatus.WITHIN_DISTRICT
+        ? NARIMANOV_GEOZONE_ID
+        : null;
 
     const incident = await this.prisma.incident.create({
       data: {
@@ -196,9 +220,11 @@ export class MobileApiService {
         priority,
         type: IncidentType.COMPLAINT,
         categoryId: category.id,
-        lat: DEFAULT_LAT,
-        lng: DEFAULT_LNG,
+        lat,
+        lng,
         address: dto.address.trim(),
+        districtStatus,
+        geozoneId,
         createdById: reporter.id,
         attachments: mediaUrl
           ? {
@@ -209,6 +235,24 @@ export class MobileApiService {
               },
             }
           : undefined,
+        reports: {
+          create: {
+            reporterId: reporter.id,
+            title: dto.title.trim(),
+            message: dto.description.trim(),
+            lat,
+            lng,
+            address: dto.address.trim(),
+            photoUrl:
+              mediaUrl && attachmentType === AttachmentType.PHOTO
+                ? mediaUrl
+                : undefined,
+            videoUrl:
+              mediaUrl && attachmentType === AttachmentType.VIDEO
+                ? mediaUrl
+                : undefined,
+          },
+        },
         history: {
           create: {
             actionType: HistoryActionType.CREATED,
@@ -225,6 +269,35 @@ export class MobileApiService {
     });
 
     return this.toMobileProblem(incident);
+  }
+
+  async uploadMobileMedia(
+    file: Express.Multer.File,
+    mediaType?: 'image' | 'video',
+  ) {
+    const detectedType = this.detectMediaType(file.mimetype);
+    const normalizedType = mediaType ?? detectedType;
+    if (!normalizedType) {
+      throw new BadRequestException('Unsupported media type');
+    }
+    if (detectedType && mediaType && detectedType !== mediaType) {
+      throw new BadRequestException('Uploaded file type does not match mediaType');
+    }
+
+    await mkdir(MOBILE_UPLOADS_DIR, { recursive: true });
+
+    const ext =
+      extname(file.originalname || '').toLowerCase() ||
+      (normalizedType === 'video' ? '.mp4' : '.jpg');
+    const fileName = `${Date.now()}-${randomUUID()}${ext}`;
+    const fullPath = join(MOBILE_UPLOADS_DIR, fileName);
+    await writeFile(fullPath, file.buffer);
+
+    const publicPath = `/uploads/mobile/${fileName}`;
+    return {
+      mediaType: normalizedType,
+      url: this.resolvePublicAssetUrl(publicPath),
+    };
   }
 
   private async ensureCitizenRoleId() {
@@ -252,12 +325,24 @@ export class MobileApiService {
     });
   }
 
-  private async ensureCategoryForMobileCode(code: keyof typeof mobileCategoryMap) {
-    const key = mobileCategoryMap[code];
+  private async ensureCategoryForMobileCode(
+    code: keyof typeof mobileCategoryMap | keyof typeof legacyMobileCategoryMap,
+  ) {
+    const key =
+      (mobileCategoryMap as Record<string, string>)[code] ??
+      legacyMobileCategoryMap[code as keyof typeof legacyMobileCategoryMap];
+    if (!key) {
+      throw new BadRequestException('Unknown mobile category code');
+    }
     return this.prisma.category.upsert({
       where: { key },
       update: {},
-      create: { key, name: mobileCategoryLabels[code] },
+      create: {
+        key,
+        name:
+          (mobileCategoryLabels as Record<string, string>)[code] ??
+          this.resolveCategoryNameByKey(key),
+      },
     });
   }
 
@@ -280,6 +365,8 @@ export class MobileApiService {
       title: incident.title,
       description: incident.description,
       address: incident.address ?? '',
+      lat: incident.lat,
+      lng: incident.lng,
       imageUrl: media?.type === AttachmentType.PHOTO ? media.fileUrl : undefined,
       mediaUrl: media?.fileUrl,
       mediaType: media?.type === AttachmentType.VIDEO ? 'video' : media ? 'image' : undefined,
@@ -322,13 +409,26 @@ export class MobileApiService {
     return url.replace(/:(4000)(?=\/|$)/, ':3001');
   }
 
+  private detectMediaType(mimeType?: string): 'image' | 'video' | null {
+    if (!mimeType) return null;
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType.startsWith('video/')) return 'video';
+    return null;
+  }
+
   private async sendVerificationEmail(email: string, code: string) {
     console.log(`[MAIL MOCK] ${email} üçün təsdiq kodu: ${code}`);
   }
 
   private toMobileCategoryCode(key: string): keyof typeof mobileCategoryMap {
     const entry = Object.entries(mobileCategoryMap).find(([, value]) => value === key);
-    return (entry?.[0] ?? 'TEHLUKESIZLIK') as keyof typeof mobileCategoryMap;
+    return (entry?.[0] ?? 'INFRASTRUCTURE') as keyof typeof mobileCategoryMap;
+  }
+
+  private resolveCategoryNameByKey(key: string): string {
+    const entry = Object.entries(mobileCategoryMap).find(([, value]) => value === key);
+    if (!entry) return key;
+    return mobileCategoryLabels[entry[0] as keyof typeof mobileCategoryMap];
   }
 
   private toMobilePriorityCode(priority: IncidentPriority): keyof typeof mobilePriorityMap {

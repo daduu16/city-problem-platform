@@ -46,6 +46,8 @@ export function MapViewPage({ variant }: Props) {
 	const cancelIncidentCreate = useMapStore((s) => s.cancelIncidentCreate);
 	const viewMode = useMapStore((s) => s.viewMode);
 	const access = useAuthStore((s) => s.access);
+	const mapEngineLabel =
+		viewMode === "3d" ? "3D xəritə (MapLibre)" : "Leaflet (OpenStreetMap)";
 
 	useEffect(() => {
 		if (access?.mapLayers) {
@@ -67,6 +69,8 @@ export function MapViewPage({ variant }: Props) {
 			const res = await api.get<MapIncident[]>(path);
 			return res.data;
 		},
+		refetchInterval: isArchived ? false : 1000,
+		refetchIntervalInBackground: true,
 	});
 
 	const narimanovQuery = useNarimanovRayon();
@@ -127,11 +131,16 @@ export function MapViewPage({ variant }: Props) {
 							{isLoading
 								? az.incidents.subtitleLoading
 								: isArchived
-									? az.map.archivedSubtitle(visibleIncidents.length, viewMode)
+									? az.map.archivedSubtitle(
+											visibleIncidents.length,
+											viewMode,
+											mapEngineLabel,
+										)
 									: az.map.subtitle(
 											visibleIncidents.length,
 											narimanovRayon?.properties.Area,
 											viewMode,
+											mapEngineLabel,
 										)}
 						</p>
 					</div>

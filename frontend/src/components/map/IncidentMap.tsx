@@ -11,9 +11,8 @@ import { incidentMarkerHtml } from "@/lib/incidentMarkerHtml";
 import {
 	NARIMANOV_CENTER,
 	BASE_MAP_2D_TILE_CLASS,
-	BASE_MAP_ATTRIBUTION,
-	BASE_MAP_TILE_URL,
 	getActiveMapRegion,
+	getLeafletBasemapConfig,
 } from "@/lib/mapConfig";
 import { MAP_DISTRICT_COLOR } from "@/lib/mapPalette";
 import {
@@ -134,6 +133,7 @@ export function IncidentMap({
 		showHeatmap,
 		showClusters,
 		showPlaces,
+		baseMap,
 		visiblePlaceTypes,
 		openIncident,
 		incidentCreateMode,
@@ -155,6 +155,7 @@ export function IncidentMap({
 		showPlaces && !institutionQuery.isLoading && matchedBuildingCount === 0;
 
 	const mapRegion = getActiveMapRegion();
+	const baseMapConfig = getLeafletBasemapConfig(baseMap);
 
 	const heatPoints = useMemo(
 		() =>
@@ -204,10 +205,10 @@ export function IncidentMap({
 			maxBoundsViscosity={1}
 		>
 			<TileLayer
-				url={BASE_MAP_TILE_URL}
-				attribution={BASE_MAP_ATTRIBUTION}
+				url={baseMapConfig.url}
+				attribution={baseMapConfig.attribution}
 				className={BASE_MAP_2D_TILE_CLASS || undefined}
-				subdomains="abcd"
+				subdomains={baseMapConfig.subdomains}
 				maxZoom={20}
 			/>
 

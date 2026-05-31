@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -22,7 +22,16 @@ import { BorderRadius, Color, Shadow, Spacing, Typography } from '@/GlobalStyles
 import { useAppData } from '@/state/AppDataContext';
 import { ProblemCategory, ProblemPriority } from '@/types';
 
-const categories: ProblemCategory[] = ['Su', 'Qaz', 'İşıq', 'Yol', 'Zibil', 'Qəza', 'Təbiət hadisəsi', 'Təhlükəsizlik'];
+const categories: ProblemCategory[] = [
+  'İnfrastruktur',
+  'Kommunal',
+  'Yaşıllıq',
+  'Fövqəladə',
+  'Sanitariya',
+  'İşıqlandırma',
+  'Parklar',
+  'Reklam',
+];
 const priorities: ProblemPriority[] = ['Aşağı', 'Orta', 'Yüksək', 'Təcili'];
 
 const defaultRegion: Region = {
@@ -56,15 +65,20 @@ function SelectPill({
 export default function ReportProblemScreen() {
   const { addProblem } = useAppData();
   const autoPickerTriggeredRef = useRef(false);
+  const aiTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const aiTypingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const insets = useSafeAreaInsets();
 
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<ProblemCategory>('Su');
+  const [category, setCategory] = useState<ProblemCategory>('İnfrastruktur');
   const [priority, setPriority] = useState<ProblemPriority>('Orta');
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
   const [mediaUrl, setMediaUrl] = useState<string | undefined>(undefined);
   const [mediaType, setMediaType] = useState<'image' | 'video' | undefined>(undefined);
+  const [mediaAsset, setMediaAsset] = useState<
+    { uri: string; fileName?: string | null; mimeType?: string | null } | undefined
+  >(undefined);
   const [locationLoading, setLocationLoading] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
 
@@ -72,6 +86,8 @@ export default function ReportProblemScreen() {
   const [mapRegion, setMapRegion] = useState<Region>(defaultRegion);
   const [selectedPoint, setSelectedPoint] = useState<{ latitude: number; longitude: number } | null>(null);
   const [selectedAddress, setSelectedAddress] = useState('');
+  const [mapSearch, setMapSearch] = useState('');
+  const [mapSearchLoading, setMapSearchLoading] = useState(false);
 
   const canSubmit = useMemo(() => {
     return title.trim().length > 0 && description.trim().length > 0 && address.trim().length > 0;
@@ -103,6 +119,15 @@ export default function ReportProblemScreen() {
     setSelectedAddress(await reverseGeocode(point.latitude, point.longitude));
   }, [reverseGeocode]);
 
+  const selectMapPoint = useCallback(
+    async (point: { latitude: number; longitude: number }, label?: string) => {
+      setSelectedPoint(point);
+      setMapRegion({ ...point, latitudeDelta: 0.01, longitudeDelta: 0.01 });
+      setSelectedAddress(label || (await reverseGeocode(point.latitude, point.longitude)));
+    },
+    [reverseGeocode],
+  );
+
   const handlePickLocation = useCallback(async () => {
     try {
       setLocationLoading(true);
@@ -122,12 +147,36 @@ export default function ReportProblemScreen() {
 
   const onMapPress = useCallback(
     async (event: MapPressEvent) => {
-      const point = event.nativeEvent.coordinate;
-      setSelectedPoint(point);
-      setSelectedAddress(await reverseGeocode(point.latitude, point.longitude));
+      await selectMapPoint(event.nativeEvent.coordinate);
     },
-    [reverseGeocode],
+    [selectMapPoint],
   );
+
+  const searchMapLocation = useCallback(async () => {
+    const query = mapSearch.trim();
+    if (query.length < 3) {
+      Alert.alert('Axtarış', 'Axtarmaq üçün ən azı 3 simvol yazın.');
+      return;
+    }
+
+    try {
+      setMapSearchLoading(true);
+      const normalizedQuery = /baku|bakı|azerbaijan|azərbaycan/i.test(query)
+        ? query
+        : `${query}, Bakı, Azərbaycan`;
+      const results = await Location.geocodeAsync(normalizedQuery);
+      const first = results[0];
+      if (!first) {
+        Alert.alert('Tapılmadı', 'Bu ünvan üzrə nəticə tapılmadı.');
+        return;
+      }
+      await selectMapPoint({ latitude: first.latitude, longitude: first.longitude }, query);
+    } catch {
+      Alert.alert('Xəta', 'Ünvan axtarışı alınmadı. Yenidən cəhd edin.');
+    } finally {
+      setMapSearchLoading(false);
+    }
+  }, [mapSearch, selectMapPoint]);
 
   const applyLocation = () => {
     if (!selectedPoint) return;
@@ -150,8 +199,14 @@ export default function ReportProblemScreen() {
       });
 
       if (!result.canceled && result.assets.length > 0) {
-        setMediaUrl(result.assets[0].uri);
+        const asset = result.assets[0];
+        setMediaUrl(asset.uri);
         setMediaType(type);
+        setMediaAsset({
+          uri: asset.uri,
+          fileName: asset.fileName ?? null,
+          mimeType: asset.mimeType ?? null,
+        });
         Alert.alert('Hazırdır', type === 'image' ? 'Şəkil əlavə olundu.' : 'Video əlavə olundu.');
       }
     } catch {
@@ -174,8 +229,14 @@ export default function ReportProblemScreen() {
       });
 
       if (!result.canceled && result.assets.length > 0) {
-        setMediaUrl(result.assets[0].uri);
+        const asset = result.assets[0];
+        setMediaUrl(asset.uri);
         setMediaType(type);
+        setMediaAsset({
+          uri: asset.uri,
+          fileName: asset.fileName ?? null,
+          mimeType: asset.mimeType ?? null,
+        });
         Alert.alert('Hazırdır', type === 'image' ? 'Şəkil əlavə olundu.' : 'Video əlavə olundu.');
       }
     } catch {
@@ -193,25 +254,53 @@ export default function ReportProblemScreen() {
     ]);
   }, [openCamera, pickFromLibrary]);
 
+  const clearAiTyping = useCallback(() => {
+    if (aiTypingTimeoutRef.current) {
+      clearTimeout(aiTypingTimeoutRef.current);
+      aiTypingTimeoutRef.current = null;
+    }
+    if (aiTypingIntervalRef.current) {
+      clearInterval(aiTypingIntervalRef.current);
+      aiTypingIntervalRef.current = null;
+    }
+  }, []);
+
   const generateAiDescription = useCallback(() => {
     if (!mediaUrl) {
       Alert.alert('Media tələb olunur', 'AI təsvir üçün əvvəlcə şəkil və ya video əlavə edin.');
       return;
     }
 
+    clearAiTyping();
     setAiGenerating(true);
-    setTimeout(() => {
-      const template = [
-        `Müraciət ${category.toLowerCase()} kateqoriyasına aiddir və prioritet səviyyəsi "${priority}" olaraq qiymətləndirilir.`,
-        address ? `Hadisə ünvanı: ${address}.` : 'Hadisə ünvanı xəritə üzərindən dəqiqləşdirilib.',
-        mediaType === 'video'
-          ? 'Videoda problemin mövcud vəziyyəti görünür və operativ baxış üçün aidiyyəti quruma yönləndirilməsi xahiş olunur.'
-          : 'Şəkildə problemin mövcud vəziyyəti görünür və operativ baxış üçün aidiyyəti quruma yönləndirilməsi xahiş olunur.',
-      ].join(' ');
-      setDescription(template);
-      setAiGenerating(false);
-    }, 700);
-  }, [address, category, mediaType, mediaUrl, priority]);
+    setDescription('');
+
+    const template = [
+      `Müraciət ${category.toLowerCase()} kateqoriyasına aiddir və prioritet səviyyəsi "${priority}" olaraq qiymətləndirilir.`,
+      address ? `Hadisə ünvanı: ${address}.` : 'Hadisə ünvanı xəritə üzərindən dəqiqləşdirilib.',
+      mediaType === 'video'
+        ? 'Videoda problemin mövcud vəziyyəti görünür və operativ baxış üçün aidiyyəti quruma yönləndirilməsi xahiş olunur.'
+        : 'Şəkildə problemin mövcud vəziyyəti görünür və operativ baxış üçün aidiyyəti quruma yönləndirilməsi xahiş olunur.',
+    ].join(' ');
+
+    let cursor = 0;
+    aiTypingTimeoutRef.current = setTimeout(() => {
+      aiTypingIntervalRef.current = setInterval(() => {
+        cursor += 1;
+        setDescription(template.slice(0, cursor));
+        if (cursor >= template.length) {
+          clearAiTyping();
+          setAiGenerating(false);
+        }
+      }, 18);
+    }, 180);
+  }, [address, category, clearAiTyping, mediaType, mediaUrl, priority]);
+
+  useEffect(() => {
+    return () => {
+      clearAiTyping();
+    };
+  }, [clearAiTyping]);
 
   const handleSubmit = async () => {
     if (!canSubmit) {
@@ -230,9 +319,12 @@ export default function ReportProblemScreen() {
         priority,
         description,
         address,
+        lat: selectedPoint?.latitude,
+        lng: selectedPoint?.longitude,
         imageUrl: mediaType === 'image' ? mediaUrl : undefined,
         mediaUrl,
         mediaType,
+        mediaAsset,
       });
       Alert.alert('Uğurlu', 'Problem göndərildi və bazaya yazıldı.');
       setTitle('');
@@ -240,9 +332,12 @@ export default function ReportProblemScreen() {
       setAddress('');
       setMediaUrl(undefined);
       setMediaType(undefined);
-      setCategory('Su');
+      setMediaAsset(undefined);
+      setCategory('İnfrastruktur');
       setPriority('Orta');
       autoPickerTriggeredRef.current = false;
+      clearAiTyping();
+      setAiGenerating(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Serverə göndərmək alınmadı.';
       Alert.alert('Xəta', message);
@@ -345,7 +440,13 @@ export default function ReportProblemScreen() {
             <FieldLabel>Təsvir</FieldLabel>
             <TextInput
               value={description}
-              onChangeText={setDescription}
+              onChangeText={(text) => {
+                if (aiGenerating) {
+                  clearAiTyping();
+                  setAiGenerating(false);
+                }
+                setDescription(text);
+              }}
               placeholder="Problemi ətraflı yazın..."
               placeholderTextColor={Color.neutral500}
               multiline
@@ -385,6 +486,30 @@ export default function ReportProblemScreen() {
             </Pressable>
           </View>
 
+          <View style={styles.mapSearchBar}>
+            <View style={styles.mapSearchInputWrap}>
+              <Ionicons name="search-outline" size={17} color={Color.neutral500} />
+              <TextInput
+                value={mapSearch}
+                onChangeText={setMapSearch}
+                placeholder="Ünvan və ya obyekt axtar"
+                placeholderTextColor={Color.neutral500}
+                returnKeyType="search"
+                onSubmitEditing={searchMapLocation}
+                style={styles.mapSearchInput}
+              />
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              onPress={searchMapLocation}
+              style={({ pressed }) => [styles.mapSearchButton, pressed && styles.pressed]}
+            >
+              <Text style={styles.mapSearchButtonText}>
+                {mapSearchLoading ? 'Axtarılır' : 'Axtar'}
+              </Text>
+            </Pressable>
+          </View>
+
           <MapView
             style={styles.map}
             initialRegion={mapRegion}
@@ -393,7 +518,13 @@ export default function ReportProblemScreen() {
             onPress={onMapPress}
           >
             {selectedPoint ? (
-              <Marker coordinate={selectedPoint} draggable onDragEnd={(e) => onMapPress(e as unknown as MapPressEvent)} />
+              <Marker
+                coordinate={selectedPoint}
+                draggable
+                onDragEnd={(event) => {
+                  void selectMapPoint(event.nativeEvent.coordinate);
+                }}
+              />
             ) : null}
           </MapView>
 
@@ -530,6 +661,44 @@ const styles = StyleSheet.create({
   modalBtn: { paddingVertical: 4, paddingHorizontal: 2 },
   modalBtnText: { color: Color.primary600, fontSize: Typography.caption, fontWeight: '800' },
   modalTitle: { color: Color.neutral900, fontSize: Typography.body, fontWeight: '900' },
+  mapSearchBar: {
+    alignItems: 'center',
+    backgroundColor: Color.white500,
+    borderBottomColor: Color.neutral200,
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+  mapSearchInputWrap: {
+    alignItems: 'center',
+    backgroundColor: Color.neutral50,
+    borderColor: Color.neutral200,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    flex: 1,
+    flexDirection: 'row',
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: Spacing.md,
+  },
+  mapSearchInput: {
+    color: Color.neutral900,
+    flex: 1,
+    fontSize: Typography.caption,
+    fontWeight: '700',
+    paddingVertical: 10,
+  },
+  mapSearchButton: {
+    alignItems: 'center',
+    backgroundColor: Color.primary500,
+    borderRadius: BorderRadius.md,
+    justifyContent: 'center',
+    minHeight: 44,
+    paddingHorizontal: Spacing.md,
+  },
+  mapSearchButtonText: { color: Color.white500, fontSize: Typography.caption, fontWeight: '900' },
   map: { flex: 1 },
   mapInfo: { borderTopColor: 'transparent', borderTopWidth: 0, padding: Spacing.lg, gap: Spacing.md },
   mapAddress: { color: Color.neutral800, fontSize: Typography.caption, fontWeight: '700' },

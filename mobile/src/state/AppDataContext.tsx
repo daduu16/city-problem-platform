@@ -1,6 +1,14 @@
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { mockNews, mockNotifications, mockProblems } from '@/data/mockData';
+import {
+  mockGamificationSummary,
+  mockMonthlyLeaderboard,
+  mockNews,
+  mockNotifications,
+  mockPointActivities,
+  mockProblems,
+  mockWeeklyLeaderboard,
+} from '@/data/mockData';
 import { createProblem, fetchNews, fetchNotifications, fetchProblems } from '@/services/api';
 import { News, NotificationItem, Problem, ProblemCategory, ProblemPriority } from '@/types';
 
@@ -10,9 +18,16 @@ type CreateProblemInput = {
   priority: ProblemPriority;
   description: string;
   address: string;
+  lat?: number;
+  lng?: number;
   imageUrl?: string;
   mediaUrl?: string;
   mediaType?: 'image' | 'video';
+  mediaAsset?: {
+    uri: string;
+    fileName?: string | null;
+    mimeType?: string | null;
+  };
 };
 
 type AppDataContextValue = {
@@ -22,13 +37,47 @@ type AppDataContextValue = {
     email: string;
     phone: string;
     finCode?: string;
+    role: 'citizen' | 'executor';
   } | null;
   news: News[];
   notifications: NotificationItem[];
   problems: Problem[];
+  gamification: {
+    points: number;
+    createdProblems: number;
+    resolvedProblems: number;
+    basePoints: number;
+    resolvedBonusPoints: number;
+    level: number;
+    nextLevelAt: number;
+    progressPct: number;
+    recentActivities: Array<{
+      id: string;
+      title: string;
+      points: number;
+      createdAt: string;
+    }>;
+    leaderboard: {
+      weekly: Array<{
+        id: string;
+        fullName: string;
+        points: number;
+        createdProblems: number;
+        resolvedProblems: number;
+      }>;
+      monthly: Array<{
+        id: string;
+        fullName: string;
+        points: number;
+        createdProblems: number;
+        resolvedProblems: number;
+      }>;
+    };
+  };
   loading: boolean;
   unreadNotificationsCount: number;
   addProblem: (input: CreateProblemInput) => Promise<void>;
+  resolveProblemAsExecutor: (problemId: string, photoUrl: string) => void;
   setCurrentUser: (user: AppDataContextValue['currentUser']) => void;
   markNotificationAsRead: (notificationId: string) => void;
   toggleProblemUpvote: (problemId: string) => void;
@@ -36,6 +85,17 @@ type AppDataContextValue = {
 };
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
+
+function normalizeStatus(value: string) {
+  return value
+    .toLocaleLowerCase('az')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function isResolvedStatus(status: string) {
+  return normalizeStatus(status).includes('hell edildi');
+}
 
 export function AppDataProvider({ children }: PropsWithChildren) {
   const [currentUser, setCurrentUser] = useState<AppDataContextValue['currentUser']>(null);
@@ -107,6 +167,21 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     setProblems((current) => [{ ...withVoteDefaults(created), createdByMe: true }, ...current]);
   }, [withVoteDefaults]);
 
+  const resolveProblemAsExecutor = useCallback((problemId: string, photoUrl: string) => {
+    setProblems((current) =>
+      current.map((problem) => {
+        if (problem.id !== problemId) return problem;
+        return {
+          ...problem,
+          status: 'Həll edildi',
+          resolvedPhotoUrl: photoUrl,
+          mediaUrl: photoUrl,
+          mediaType: 'image',
+        };
+      }),
+    );
+  }, []);
+
   const toggleProblemUpvote = useCallback((problemId: string) => {
     setProblems((current) =>
       current.map((problem) => {
@@ -131,19 +206,90 @@ export function AppDataProvider({ children }: PropsWithChildren) {
   }, []);
 
   const unreadNotificationsCount = useMemo(
-    () => notifications.filter((notification) => !notification.isRead).length,
-    [notifications],
+    () => {
+      const role = currentUser?.role ?? 'citizen';
+      return notifications.filter((notification) => {
+        if (notification.isRead) return false;
+        if (!notification.targetRole || notification.targetRole === 'all') return true;
+        return notification.targetRole === role;
+      }).length;
+    },
+    [currentUser?.role, notifications],
   );
+
+  const gamification = useMemo(() => {
+    const myProblems = problems.filter((problem) => problem.createdByMe);
+    const hasRealPersonalData = myProblems.length > 0;
+    const createdProblems = hasRealPersonalData
+      ? myProblems.length
+      : mockGamificationSummary.createdProblems;
+    const resolvedProblems = hasRealPersonalData
+      ? myProblems.filter((problem) => isResolvedStatus(problem.status)).length
+      : mockGamificationSummary.resolvedProblems;
+
+    const basePoints = createdProblems * 5;
+    const resolvedBonusPoints = resolvedProblems * 10;
+    const points = hasRealPersonalData
+      ? basePoints + resolvedBonusPoints
+      : mockGamificationSummary.points;
+
+    const level = Math.floor(points / 100) + 1;
+    const levelStart = (level - 1) * 100;
+    const nextLevelAt = level * 100;
+    const levelDelta = nextLevelAt - levelStart;
+    const progressPct = levelDelta > 0 ? Math.min(100, ((points - levelStart) / levelDelta) * 100) : 0;
+
+    const realActivities = myProblems
+      .map((problem) => {
+        const resolved = isResolvedStatus(problem.status);
+        return {
+          id: `activity_${problem.id}`,
+          title: resolved
+            ? `Problem həll edildi: ${problem.title}`
+            : `Problem yaradıldı: ${problem.title}`,
+          points: resolved ? 15 : 5,
+          createdAt: problem.createdAt,
+        };
+      })
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+    const recentActivities =
+      realActivities.length > 0
+        ? realActivities.slice(0, 5)
+        : mockPointActivities.slice(0, 5);
+
+    return {
+      points,
+      createdProblems,
+      resolvedProblems,
+      basePoints,
+      resolvedBonusPoints,
+      level,
+      nextLevelAt,
+      progressPct,
+      recentActivities,
+      leaderboard: {
+        weekly: mockWeeklyLeaderboard,
+        monthly: mockMonthlyLeaderboard,
+      },
+    };
+  }, [problems]);
 
   const value = useMemo<AppDataContextValue>(
     () => ({
       currentUser,
       news,
-      notifications,
+      notifications: notifications.filter((notification) => {
+        const role = currentUser?.role ?? 'citizen';
+        if (!notification.targetRole || notification.targetRole === 'all') return true;
+        return notification.targetRole === role;
+      }),
       problems,
+      gamification,
       loading,
       unreadNotificationsCount,
       addProblem,
+      resolveProblemAsExecutor,
       setCurrentUser,
       markNotificationAsRead,
       toggleProblemUpvote,
@@ -154,9 +300,11 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       news,
       notifications,
       problems,
+      gamification,
       loading,
       unreadNotificationsCount,
       addProblem,
+      resolveProblemAsExecutor,
       setCurrentUser,
       markNotificationAsRead,
       toggleProblemUpvote,
