@@ -15,6 +15,18 @@ Enterprise-grade municipal incident dispatch and analytics platform (GIS + dispa
 
 ## Quick start
 
+### Run everything (web + mobile + infra)
+
+From the repo root (after `cp .env.example .env` and first-time Prisma setup below):
+
+```bash
+npm install
+npm run start:all
+```
+
+This starts Postgres/Redis, then backend (`:3001`), frontend (`:5173`), and Expo (`:8081`).  
+Web-only (no mobile): `npm run dev`.
+
 ### 1. Infrastructure
 
 ```bash

@@ -1,7 +1,9 @@
 const { spawn } = require('child_process');
+const net = require('net');
 
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const dockerCmd = process.platform === 'win32' ? 'docker.exe' : 'docker';
+const BACKEND_PORT = Number(process.env.PORT || 3001);
 
 const apps = [
   {
@@ -86,11 +88,38 @@ function shutdown(code = 0) {
   setTimeout(() => process.exit(code), 300);
 }
 
+function assertPortFree(port, label) {
+  return new Promise((resolve, reject) => {
+    const probe = net.createServer();
+    probe.once('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        reject(
+          new Error(
+            `${label}: port ${port} is already in use. Stop the other process (e.g. an old backend) and run again.`,
+          ),
+        );
+        return;
+      }
+      reject(err);
+    });
+    probe.once('listening', () => {
+      probe.close(() => resolve());
+    });
+    probe.listen(port);
+  });
+}
+
 async function main() {
-  console.log('[infra] starting postgres and redis');
-  await run(dockerCmd, ['compose', 'up', '-d', 'postgres', 'redis']);
+  console.log('[infra] starting postgres and redis (waiting until healthy)');
+  await run(dockerCmd, ['compose', 'up', '-d', '--wait', 'postgres', 'redis']);
+
+  await assertPortFree(BACKEND_PORT, 'backend');
 
   console.log('[apps] starting backend, frontend, and mobile');
+  console.log(
+    `[info] backend http://localhost:${BACKEND_PORT} · frontend http://localhost:5173 · mobile Expo http://localhost:8081`,
+  );
+  console.log('[info] first-time setup: cd backend && npx prisma migrate dev && npm run prisma:seed');
   for (const app of apps) startApp(app);
 }
 
