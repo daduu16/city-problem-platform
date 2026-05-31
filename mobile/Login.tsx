@@ -108,7 +108,7 @@ export default function LoginScreen({ navigation, route }: Props) {
               </View>
               <Text style={styles.roleHint}>
                 {roleMode === 'executor'
-                  ? `Demo icraçı: ${EXECUTOR_DEMO_EMAIL} / ${EXECUTOR_DEMO_PASSWORD}`
+                  ? `Demo: ${EXECUTOR_DEMO_EMAIL} / ${EXECUTOR_DEMO_PASSWORD}`
                   : 'İstifadəçi girişində yeni problem yarada və statusu izləyə bilərsiniz.'}
               </Text>
               <AuthTextInput icon="person-outline" placeholder="E-poçt və ya telefon" value={identifier} onChangeText={setIdentifier} />

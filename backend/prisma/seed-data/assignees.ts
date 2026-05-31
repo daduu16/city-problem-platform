@@ -17,8 +17,8 @@ export const SEED_ASSIGNEES: SeedAssigneeDef[] = [
   {
     id: '00000000-0000-4000-8000-000000000201',
     kind: CategoryAssigneeKind.PERSON,
-    name: 'Kamran Mammadli',
-    description: 'Kommunal və yol təmiri üzrə icraçı',
+    name: 'Kamran Mammadli — kommunal icraçı',
+    description: 'Kommunal və yol təmiri (demo mobil giriş: kamran.mammadli@municipal.local)',
     contactEmail: 'kamran.mammadli@municipal.local',
     contactPhone: '+994501234501',
     organizationId: '00000000-0000-4000-8000-000000000010',

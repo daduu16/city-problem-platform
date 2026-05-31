@@ -392,7 +392,7 @@ async function main() {
     prisma.user.upsert({
       where: { email: 'kamran.mammadli@municipal.local' },
       update: {
-        name: 'Kamran Mammadli',
+        name: 'Demo mobil giriş (Kamran)',
         department: 'Kommunal xidmət',
         roleId: roleMap.field_worker,
         organizationId: MUNICIPALITY_ORG_ID,
@@ -402,7 +402,7 @@ async function main() {
       create: {
         email: 'kamran.mammadli@municipal.local',
         passwordHash,
-        name: 'Kamran Mammadli',
+        name: 'Demo mobil giriş (Kamran)',
         roleId: roleMap.field_worker,
         department: 'Kommunal xidmət',
         organizationId: MUNICIPALITY_ORG_ID,

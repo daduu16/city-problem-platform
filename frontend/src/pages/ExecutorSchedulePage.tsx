@@ -29,6 +29,7 @@ import {
   dateRangeToStore,
 } from '@/components/ui/date-range-picker';
 import { ApiConnectionAlert } from '@/components/ApiConnectionAlert';
+import { formatAssigneeLabel } from '@/lib/assigneeLabel';
 import { isApiUnreachable } from '@/lib/apiError';
 
 export function ExecutorSchedulePage() {
@@ -151,7 +152,7 @@ export function ExecutorSchedulePage() {
                 <option value="">{az.schedule.selectAssignee}</option>
                 {(assigneesQuery.data ?? []).map((a) => (
                   <option key={a.id} value={a.id}>
-                    {a.name}
+                    {formatAssigneeLabel(a)}
                   </option>
                 ))}
               </select>

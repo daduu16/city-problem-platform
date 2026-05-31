@@ -22,6 +22,7 @@ import {
 	formatAssigneeApiError,
 	resolveLeafCategoryIds,
 } from "@/lib/assigneeForm";
+import { formatAssigneeLabel } from "@/lib/assigneeLabel";
 import { cn } from "@/lib/utils";
 import { ExecutorAvailabilityTab } from "@/components/executors/ExecutorAvailabilityTab";
 
@@ -239,7 +240,7 @@ export function AssigneesPage() {
 							>
 								<div className="flex items-center gap-2">
 									<Users className="h-4 w-4 shrink-0 text-muted-foreground" />
-									<span className="font-medium">{a.name}</span>
+									<span className="font-medium">{formatAssigneeLabel(a)}</span>
 								</div>
 								<p className="mt-0.5 text-xs text-muted-foreground">
 									{a.kind === "TEAM"
