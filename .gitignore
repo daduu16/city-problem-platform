@@ -4,8 +4,8 @@ node_modules/
 .expo-shared/
 dist/
 build/
-.env
 .env.local
+.env.*.local
 *.log
 .DS_Store
 coverage/

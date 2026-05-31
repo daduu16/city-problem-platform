@@ -1,6 +1,7 @@
 import { getApiBaseUrl } from '@/config/api';
 import { News, NotificationItem, Problem, ProblemCategory, ProblemPriority, ProblemStatus } from '@/types';
 
+/** @deprecated Prefer getApiBaseUrl() — URL may depend on Expo dev host at runtime. */
 export const API_BASE_URL = getApiBaseUrl();
 
 type BackendProblem = {
@@ -82,18 +83,19 @@ function toProblem(item: BackendProblem): Problem {
 
 function normalizeAssetUrl(url?: string | null): string | undefined {
   if (!url) return undefined;
+  const base = getApiBaseUrl();
   if (url.startsWith('/')) {
-    return `${API_BASE_URL}${url}`;
+    return `${base}${url}`;
   }
   const legacy = url.match(/^https?:\/\/(localhost|127\.0\.0\.1):(4000|3001)(\/.*)?$/);
   if (legacy) {
-    return `${API_BASE_URL}${legacy[3] ?? ''}`;
+    return `${base}${legacy[3] ?? ''}`;
   }
   return url;
 }
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
     headers: {
       'Content-Type': 'application/json',
       ...(options?.headers || {}),

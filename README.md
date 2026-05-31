@@ -13,98 +13,114 @@ Enterprise-grade municipal incident dispatch and analytics platform (GIS + dispa
 | Mobile | Expo, React Native, TypeScript, React Navigation |
 | DevOps | Docker Compose, NGINX (production) |
 
-## Quick start
+## Prerequisites
 
-### Run everything (web + mobile + infra)
+- **Node.js** 20+ and **npm**
+- **Docker Desktop** (Postgres + Redis via Compose)
+- Ports free: **5434** (Postgres), **6380** (Redis), **3001** (API), **5173** (web), **8081** (Expo)
 
-From the repo root (after `cp .env.example .env` and [first-time database setup](#first-time-database-setup)):
+Optional: `GROQ_API_KEY` in `.env` / `backend/.env` for AI endpoints; `VITE_MAPBOX_TOKEN` in `frontend/.env` for full map tiles.
+
+---
+
+## Запуск с нуля после `git pull`
+
+Все переменные окружения уже в репозитории (`.env`, `backend/.env`, `frontend/.env`, `mobile/.env`) — копировать `.env.example` не нужно.
 
 ```bash
+git pull
+cd municipal-incident-platform
+
+# 1) Зависимости (root + backend + frontend + mobile)
 npm install
-npm run start:all
-```
+npm run install:all
 
-This starts Postgres/Redis, then backend (`:3001`), frontend (`:5173`), and Expo (`:8081`).  
-Web-only (no mobile): `npm run dev`.
+# 2) База: Docker Postgres/Redis, миграции, демо-данные
+npm run db:init
 
-### First-time database setup
-
-Required **once** on a fresh clone (or after pulling new Prisma migrations). Postgres must be running (`docker compose up -d postgres redis`).
-
-From the **repo root**:
-
-```bash
-cd backend && npx prisma migrate dev && npm run prisma:seed
-```
-
-This applies all migrations to the local database and loads demo users, categories, geozones, and sample incidents (see [Demo accounts](#demo-accounts)).
-
-Run the same command again after `git pull` if `backend/prisma/migrations/` changed. For production-like deploys use `npx prisma migrate deploy` instead of `migrate dev`.
-
-### 1. Infrastructure
-
-```bash
-cp .env.example .env
-docker compose up -d postgres redis
-```
-
-### 2. Backend
-
-```bash
-cd backend
-npm install
-npx prisma migrate dev
-npm run prisma:seed
-npm run dev
-```
-
-(Single command from repo root: see [First-time database setup](#first-time-database-setup).)
-
-API: `http://localhost:3001`  
-Swagger: `http://localhost:3001/api/docs`
-
-Groq prompt endpoint:
-
-- Set `GROQ_API_KEY` in `backend/.env` or the root `.env` used by Docker Compose.
-- Optional: set `GROQ_MODEL`; default is `openai/gpt-oss-120b`.
-- Optional: set `GROQ_VISION_MODEL`; default is `meta-llama/llama-4-scout-17b-16e-instruct`.
-- In Swagger, call public `POST /ai/prompt` with `systemPrompt`, `userPrompt`, and optionally an `image` file. Image requests use `GROQ_VISION_MODEL`.
-- AI answers are instructed by the backend to respond in Azerbaijani by default.
-
-### 3. Frontend
-
-```bash
-cd frontend
-cp .env.example .env
-# Set VITE_MAPBOX_TOKEN for full map features
-npm install
-npm run dev
-```
-
-UI: `http://localhost:5173`
-
-### 4. Mobile
-
-Start the backend first (`npm run dev:backend`), then:
-
-```bash
-cd mobile
-npm install
+# 3) Весь стек (API + веб + Expo)
 npm start
 ```
 
-The app talks to **http://localhost:3001** (or your machine LAN IP on a physical device via `EXPO_PUBLIC_API_URL` in `mobile/.env`).
+**Только веб** (без мобильного): после шагов 1–2 выполните `npm run dev`.
 
-Mobile app uses the NestJS backend compatibility endpoints under `/api/*`:
+| Сервис | URL |
+|--------|-----|
+| Web UI | http://localhost:5173 |
+| API / Swagger | http://localhost:3001 · http://localhost:3001/api/docs |
+| Expo | http://localhost:8081 (QR в терминале) |
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/news`
-- `GET /api/notifications`
-- `GET /api/problems`
-- `POST /api/problems`
+**Демо-вход:** `user@municipal.local` / `123456` (остальные аккаунты — [ниже](#demo-accounts)).
 
-### Demo accounts
+### Телефон (Expo Go, не симулятор)
+
+`localhost` на телефоне — это сам телефон. После pull один раз с ноутбука в корне репо:
+
+```bash
+npm run setup:env
+```
+
+Перезапустите Expo (`npm start` в `mobile` или общий `npm start`). Телефон и ноутбук — одна Wi‑Fi; файрвол должен пускать **3001**.
+
+---
+
+## Start from scratch (after `git pull`)
+
+Environment files are **committed** in the repo — no `cp .env.example` step.
+
+```bash
+git pull
+cd municipal-incident-platform
+npm install
+npm run install:all
+npm run db:init
+npm start
+```
+
+| Command | Purpose |
+|---------|---------|
+| **`npm start`** | Full stack: deps → Docker → migrations → seed (if empty) → backend + frontend + mobile |
+| **`npm run db:init`** | Database only: Docker Postgres/Redis → Prisma migrate → demo seed |
+| **`npm run dev`** | Web only (backend + frontend) |
+| **`npm run setup:env`** | Refresh `mobile/.env` with your machine LAN IP (physical device) |
+
+### Database maintenance
+
+```bash
+npm run db:init                 # migrate + seed if DB empty
+npm run db:init -- --force-seed # re-load demo data
+npm run db:reset                # docker compose down -v + migrate + seed
+```
+
+Aliases: `npm run init`, `npm run setup` (= `db:init`).
+
+### Troubleshooting
+
+| Symptom | Fix |
+|--------|-----|
+| `Can't reach database server` | `docker compose up -d --wait postgres redis` — use port **5434** in `DATABASE_URL` |
+| Auth failed for Postgres | `npm run db:reset` (wipes local Docker DB volume) |
+| API errors with backend “up” | `npm run db:init` |
+| Mobile mock data / unreachable | `npm run setup:env`, same Wi‑Fi, allow TCP **3001** |
+
+---
+
+## Environment files (in repo)
+
+| File | Used by |
+|------|---------|
+| `.env` | Docker Compose, shared defaults |
+| `backend/.env` | NestJS, Prisma |
+| `frontend/.env` | Vite (`VITE_*`) |
+| `mobile/.env` | Expo (`EXPO_PUBLIC_API_URL`) |
+
+Local overrides (not committed): `.env.local`, `backend/.env.local`, etc.
+
+**Production:** change `JWT_SECRET`, `POSTGRES_PASSWORD`, and do not use committed dev secrets.
+
+---
+
+## Demo accounts
 
 | Email | Password | Role |
 |-------|----------|------|
@@ -116,7 +132,9 @@ Mobile app uses the NestJS backend compatibility endpoints under `/api/*`:
 | azeriqaz@municipal.local | 123456 | Utility Operator (gas only) |
 | viewer@municipal.local | 123456 | Viewer |
 
-All seed users share the password **123456** (reset on every `npm run seed` in `backend`).
+Seed password is reset on `npm run db:init -- --force-seed`.
+
+---
 
 ## Architecture
 
@@ -137,52 +155,30 @@ nginx/             Reverse proxy (production)
 - **Realtime** — Socket.IO (`incident:*` events)
 - **RBAC** — ADMIN, DISPATCHER, EXECUTOR, ANALYST, MOBILE_INSPECTOR
 
-### Narimanov district boundary (area + polygon)
+### Mobile API (`/api/*`)
 
-Extracted from `frontend/azrbaycan_rayonlar.geojson` into `backend/data/narimanov-district/` (`boundary.geojson`, `manifest.json` with area km², perimeter, vertex count).
+- `POST /api/auth/register` · `POST /api/auth/login`
+- `GET /api/news` · `GET /api/notifications` · `GET /api/problems` · `POST /api/problems`
+
+### Groq AI
+
+Set `GROQ_API_KEY` in `backend/.env`. Swagger: `POST /ai/prompt`.
+
+### Narimanov data
 
 ```bash
 cd backend
 npm run district:extract
-```
-
-API (JWT + `view_map`):
-
-- `GET /districts/narimanov` — polygon + `positions` + area metadata
-- `GET /districts/narimanov/manifest` — summary only
-
-### Narimanov places (GeoJSON by TYPE)
-
-Objects for **Nərimanov** district are extracted from `frontend/azrbaycanda_obyektlr_v_mkanlar.geojson` into `backend/data/narimanov-places/` (one file per `TYPE` + `all.geojson` + `manifest.json`).
-
-```bash
-cd backend
 npm run places:extract
-```
-
-API (JWT + `view_map`):
-
-- `GET /places/narimanov` — all points
-- `GET /places/narimanov/manifest` — types and counts
-- `GET /places/narimanov/types/:type` — e.g. `HOSPITAL`, `SCHOOL`
-
-Annual refresh: cron **1 January 03:00 UTC** (`OpenDataRefreshScheduler`) for district + places. Set `DISTRICT_SOURCE_URL` / `PLACES_SOURCE_URL` in `.env` to download new datasets before re-extracting.
-
-```bash
-cd backend
-npm run opendata:extract   # district + places
+npm run opendata:extract   # both
 ```
 
 ### PostGIS
 
-Migration `0002_postgis` enables spatial queries (radius search, intersections). Prisma stores `lat`/`lng`; raw SQL uses `location` geometry column.
+Migration `0002_postgis` enables spatial queries. Prisma stores `lat`/`lng`; raw SQL uses `location` geometry.
 
 ## Production
 
 ```bash
 docker compose --profile production up -d
 ```
-
-## Environment
-
-See `.env.example` for all variables.

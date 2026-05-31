@@ -1,5 +1,9 @@
 const { spawn } = require('child_process');
 const net = require('net');
+const path = require('path');
+const { ensureProjectEnv } = require('./lib/env');
+const { main: installAll } = require('./install-all');
+const { main: setupDatabase } = require('./setup-db');
 
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const dockerCmd = process.platform === 'win32' ? 'docker.exe' : 'docker';
@@ -60,10 +64,11 @@ function pipeWithPrefix(stream, prefix, target) {
   });
 }
 
-function startApp(app) {
+function startApp(app, env) {
   const child = spawn(app.command, app.args, {
     stdio: ['inherit', 'pipe', 'pipe'],
     shell: false,
+    env,
   });
 
   children.add(child);
@@ -110,8 +115,23 @@ function assertPortFree(port, label) {
 }
 
 async function main() {
+  console.log('');
+  console.log('=== Municipal platform (full stack) ===');
+  console.log('');
+
+  await installAll();
+
+  const projectEnv = ensureProjectEnv();
+  const childEnv = { ...process.env, ...projectEnv };
+
   console.log('[infra] starting postgres and redis (waiting until healthy)');
-  await run(dockerCmd, ['compose', 'up', '-d', '--wait', 'postgres', 'redis']);
+  await run(dockerCmd, ['compose', 'up', '-d', '--wait', 'postgres', 'redis'], {
+    env: childEnv,
+    cwd: path.resolve(__dirname, '..'),
+  });
+
+  Object.assign(process.env, childEnv);
+  await setupDatabase();
 
   await assertPortFree(BACKEND_PORT, 'backend');
 
@@ -119,14 +139,20 @@ async function main() {
   console.log(
     `[info] backend http://localhost:${BACKEND_PORT} · frontend http://localhost:5173 · mobile Expo http://localhost:8081`,
   );
-  console.log('[info] first-time setup: cd backend && npx prisma migrate dev && npm run prisma:seed');
-  for (const app of apps) startApp(app);
+  if (projectEnv.EXPO_PUBLIC_API_URL) {
+    console.log(
+      `[info] mobile API (physical device / same Wi‑Fi): ${projectEnv.EXPO_PUBLIC_API_URL}`,
+    );
+  }
+  for (const app of apps) startApp(app, childEnv);
 }
 
 process.on('SIGINT', () => shutdown(0));
 process.on('SIGTERM', () => shutdown(0));
 
-main().catch((error) => {
-  console.error(error.message);
-  shutdown(1);
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error.message);
+    shutdown(1);
+  });
+}

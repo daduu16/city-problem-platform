@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { join } from 'path';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
@@ -25,7 +26,11 @@ import { AssigneeAvailabilityModule } from './assignee-availability/assignee-ava
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      // backend/.env is synced from repo root .env by scripts/lib/env.js
+      envFilePath: [join(process.cwd(), '.env'), join(process.cwd(), '../.env')],
+    }),
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
