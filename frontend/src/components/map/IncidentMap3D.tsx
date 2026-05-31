@@ -34,13 +34,11 @@ import { IncidentMapMarkers3D } from '@/components/map/IncidentMapMarkers3D';
 import { DistrictHighlight3D } from '@/components/map/DistrictHighlight3D';
 import { DistrictZones3D } from '@/components/map/DistrictZones3D';
 import { MapRegionLimits3D } from '@/components/map/MapRegionLimits3D';
-import { TypedBuildings3D } from '@/components/map/TypedBuildings3D';
 import {
   InstitutionBuildings3D,
   INSTITUTION_BUILDINGS_LAYER_ID,
 } from '@/components/map/InstitutionBuildings3D';
 import { PlacesLayer3D, PLACES_LAYER_ID } from '@/components/map/PlacesLayer3D';
-import { useOsmBuildingsGeoJson } from '@/hooks/useOsmBuildingsGeoJson';
 import { useInstitutionBuildingsGeoJson } from '@/hooks/useInstitutionBuildingsGeoJson';
 import { getPlaceTypeLabel } from '@/lib/placeTypeStyles';
 import { getMaplibreBasemapStyle } from '@/lib/map3dBasemap';
@@ -161,7 +159,6 @@ export function IncidentMap3D({
     [narimanovRayon.positions],
   );
 
-  const osmBuildingsQuery = useOsmBuildingsGeoJson(narimanovRayon.positions);
   const institutionQuery = useInstitutionBuildingsGeoJson(
     showPlaces ? places : undefined,
     narimanovRayon.positions,
@@ -169,13 +166,10 @@ export function IncidentMap3D({
 
   const institutionBuildings = showPlaces ? institutionQuery.data : undefined;
 
-  const typedBuildings = osmBuildingsQuery.data;
   const matchedBuildingCount = institutionBuildings?.features.length ?? 0;
   const hasInstitutionBuildings = showPlaces && matchedBuildingCount > 0;
   const usePlacePointsFallback =
     showPlaces && !institutionQuery.isLoading && matchedBuildingCount === 0;
-  const hasTypedBuildings =
-    !showPlaces && (typedBuildings?.features.length ?? 0) > 0;
 
   const regionBounds = useMemo(() => getActiveMapRegionBoundsLngLat(), []);
   const mapRegion = getActiveMapRegion();
@@ -340,24 +334,18 @@ export function IncidentMap3D({
         <DistrictZones3D rayon={narimanovRayon} />
         <DistrictHighlight3D rayon={narimanovRayon} />
 
-        {showPlaces ? (
-          <>
-            {hasInstitutionBuildings && (
-              <InstitutionBuildings3D
-                data={institutionBuildings}
-                visibleTypes={visiblePlaceTypes}
-              />
-            )}
-            {usePlacePointsFallback && (
-              <PlacesLayer3D
-                data={places}
-                visible
-                visibleTypes={visiblePlaceTypes}
-              />
-            )}
-          </>
-        ) : (
-          <TypedBuildings3D data={typedBuildings} />
+        {showPlaces && hasInstitutionBuildings && (
+          <InstitutionBuildings3D
+            data={institutionBuildings}
+            visibleTypes={visiblePlaceTypes}
+          />
+        )}
+        {usePlacePointsFallback && (
+          <PlacesLayer3D
+            data={places}
+            visible
+            visibleTypes={visiblePlaceTypes}
+          />
         )}
 
         <IncidentMapMarkers3D
@@ -368,9 +356,7 @@ export function IncidentMap3D({
 
         <CreateIncidentDraftMarker3D />
 
-        <Map3DStyleEnhancer
-          hideBaseBuildings={hasInstitutionBuildings || hasTypedBuildings}
-        />
+        <Map3DStyleEnhancer hideBaseBuildings={hasInstitutionBuildings} />
 
         {placePopup && (
           <Popup

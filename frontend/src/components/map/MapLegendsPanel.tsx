@@ -3,7 +3,6 @@ import { useMapStore } from '@/stores/mapStore';
 import type { MapIncident } from '@/types';
 import { StatusLegend } from '@/components/map/StatusLegend';
 import { TypeLegend } from '@/components/map/TypeLegend';
-import { BuildingTypeLegend } from '@/components/map/BuildingTypeLegend';
 import { DistrictZonesLegend } from '@/components/map/DistrictZonesLegend';
 import { PlaceTypeLegend } from '@/components/map/PlaceTypeLegend';
 import { useFilteredMapIncidents } from '@/hooks/useFilteredMapIncidents';
@@ -25,7 +24,6 @@ export function MapLegendsPanel({
   showPlacesLayer = true,
   variant = 'active',
 }: Props) {
-  const viewMode = useMapStore((s) => s.viewMode);
   const showPlaces = useMapStore((s) => s.showPlaces);
   const mapDateFrom = useMapStore((s) => s.mapDateFrom);
   const mapDateTo = useMapStore((s) => s.mapDateTo);
@@ -47,7 +45,6 @@ export function MapLegendsPanel({
         <StatusLegend incidents={incidentsForStatusCounts} />
         {variant === 'archived' && <TypeLegend incidents={visibleIncidents} />}
         {showPlacesLayer && showPlaces && <PlaceTypeLegend />}
-        {showPlacesLayer && viewMode === '3d' && <BuildingTypeLegend />}
       </div>
     </div>
   );

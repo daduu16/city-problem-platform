@@ -1,8 +1,7 @@
 import { IncidentPriority, IncidentStatus, IncidentType } from '@prisma/client';
 import type { ReportGroupOps } from './demo-report-groups';
+import { DEMO_REPORT_PHOTOS } from './demo-report-assets';
 import {
-  DEMO_REPORT_PHOTO_URL,
-  DEMO_REPORT_PHOTO_URL_2,
   DEMO_REPORT_VIDEO_URL,
   type CitizenReporterKey,
   type DemoReportSeed,
@@ -58,15 +57,31 @@ export const DEMO_CITIZEN_INCIDENT_BUNDLES: DemoIncidentBundle[] = [
     locIndex: 0,
     ops: { status: 'IN_PROGRESS' as const, priority: 'CRITICAL' as const, assign: true },
     reports: [
-      { spreadKey: 'w0a', reporterKey: 'citizen1', daysAgo: 0, message: 'Səhər 7-də partlayış səsi, su axını güclüdür.', videoUrl: DEMO_REPORT_VIDEO_URL },
+      {
+        spreadKey: 'w0a',
+        reporterKey: 'citizen1',
+        daysAgo: 0,
+        message:
+          'Səhər 7-də partlayış səsi — küçədə güclü su axını, foto əlavə etdim.',
+        photoUrl: DEMO_REPORT_PHOTOS.burst,
+        videoUrl: DEMO_REPORT_VIDEO_URL,
+      },
       {
         spreadKey: 'w0b',
         reporterKey: 'citizen2',
         daysAgo: 0,
-        message: 'Giriş qapısı yanı tam su altındadır, lift işləmir.',
-        photoUrl: DEMO_REPORT_PHOTO_URL_2,
+        message:
+          'Giriş qapısı və pilləkən tam su altındadır, lift işləmir (foto).',
+        photoUrl: DEMO_REPORT_PHOTOS.entrance,
       },
-      { spreadKey: 'w0c', reporterKey: 'citizen3', daysAgo: 1, message: 'Dünən də sızıntı olmuşdu, bu gün yenidən partladı.', photoUrl: DEMO_REPORT_PHOTO_URL },
+      {
+        spreadKey: 'w0c',
+        reporterKey: 'citizen3',
+        daysAgo: 1,
+        message:
+          'Mərtəbələrarası pilləkəndə su birikintisi — dünən də sızıntı var idi.',
+        photoUrl: DEMO_REPORT_PHOTOS.corridor,
+      },
     ],
   },
   {
@@ -75,7 +90,7 @@ export const DEMO_CITIZEN_INCIDENT_BUNDLES: DemoIncidentBundle[] = [
     locIndex: 3,
     ops: { status: 'NEW', priority: 'MEDIUM' },
     reports: [
-      { spreadKey: 'l3a', reporterKey: 'citizen2', daysAgo: 0, message: '5 dirək 3 gecə yanmır, təhlükəlidir.', photoUrl: DEMO_REPORT_PHOTO_URL },
+      { spreadKey: 'l3a', reporterKey: 'citizen2', daysAgo: 0, message: '5 dirək 3 gecə yanmır, təhlükəlidir.' },
       { spreadKey: 'l3b', reporterKey: 'citizen1', daysAgo: 1, message: 'Uşaqlar həyətdə oynaya bilmir, qaranlıqdır.' },
     ],
   },
@@ -105,7 +120,7 @@ export const DEMO_CITIZEN_INCIDENT_BUNDLES: DemoIncidentBundle[] = [
     categoryKey: 'overflow_bins',
     locIndex: 4,
     reports: [
-      { spreadKey: 't4a', reporterKey: 'citizen3', daysAgo: 2, message: '3 gündür boşaldılmır, kəskin qoxu.', photoUrl: DEMO_REPORT_PHOTO_URL },
+      { spreadKey: 't4a', reporterKey: 'citizen3', daysAgo: 2, message: '3 gündür boşaldılmır, kəskin qoxu.' },
       { spreadKey: 't4b', reporterKey: 'citizen1', daysAgo: 1, message: 'Pişiklər və quşlar ətrafda dolanır.' },
     ],
   },
@@ -125,7 +140,13 @@ export const DEMO_CITIZEN_INCIDENT_BUNDLES: DemoIncidentBundle[] = [
     locIndex: 7,
     ops: { status: 'IN_PROGRESS', priority: 'HIGH', assign: true },
     reports: [
-      { spreadKey: 'f7a', reporterKey: 'citizen2', daysAgo: 1, message: 'Drenaj tıxılıb, küçə su altındadır.' },
+      {
+        spreadKey: 'f7a',
+        reporterKey: 'citizen2',
+        daysAgo: 1,
+        message: 'Drenaj tıxılıb, küçə su altındadır — axın güclüdür (foto).',
+        photoUrl: DEMO_REPORT_PHOTOS.burst,
+      },
       { spreadKey: 'f7b', reporterKey: 'citizen3', daysAgo: 0, message: 'Yaşlı insanlar keçə bilmir.' },
     ],
   },
@@ -144,7 +165,7 @@ export const DEMO_CITIZEN_INCIDENT_BUNDLES: DemoIncidentBundle[] = [
     categoryKey: 'sidewalks',
     locIndex: 9,
     reports: [
-      { spreadKey: 'sw9', reporterKey: 'citizen3', daysAgo: 3, message: 'Stroller keçmir, yaşlı nənə yıxıldı.', photoUrl: DEMO_REPORT_PHOTO_URL },
+      { spreadKey: 'sw9', reporterKey: 'citizen3', daysAgo: 3, message: 'Stroller keçmir, yaşlı nənə yıxıldı.' },
     ],
   },
   {
@@ -153,7 +174,13 @@ export const DEMO_CITIZEN_INCIDENT_BUNDLES: DemoIncidentBundle[] = [
     locIndex: 10,
     ops: { status: 'PENDING', priority: 'MEDIUM' },
     reports: [
-      { spreadKey: 'fc10a', reporterKey: 'citizen1', daysAgo: 5, message: 'Çatdan su sızır, divar nəm.' },
+      {
+        spreadKey: 'fc10a',
+        reporterKey: 'citizen1',
+        daysAgo: 5,
+        message: 'Çatdan və borudan su sızır, divar islanıb (foto sübut).',
+        photoUrl: DEMO_REPORT_PHOTOS.leakWall,
+      },
       { spreadKey: 'fc10b', reporterKey: 'citizen2', daysAgo: 4, message: 'Boya tökülür, piyadalar üçün təhlükə.' },
     ],
   },
@@ -163,7 +190,7 @@ export const DEMO_CITIZEN_INCIDENT_BUNDLES: DemoIncidentBundle[] = [
     locIndex: 11,
     reports: [
       { spreadKey: 'pg11a', reporterKey: 'citizen2', daysAgo: 2, message: '1 salıncaq sökülüb, uşaqlar yaralanma riski.' },
-      { spreadKey: 'pg11b', reporterKey: 'citizen3', daysAgo: 2, message: 'Dünən axşam da eyni vəziyyət idi.', photoUrl: DEMO_REPORT_PHOTO_URL },
+      { spreadKey: 'pg11b', reporterKey: 'citizen3', daysAgo: 2, message: 'Dünən axşam da eyni vəziyyət idi.' },
     ],
   },
   {
@@ -251,7 +278,7 @@ export const DEMO_CITIZEN_INCIDENT_BUNDLES: DemoIncidentBundle[] = [
     locIndex: 6,
     reports: [
       { spreadKey: 'fe6a', reporterKey: 'citizen1', daysAgo: 2, message: 'Hasar paneli yerə düşüb.' },
-      { spreadKey: 'fe6b', reporterKey: 'citizen2', daysAgo: 1, message: 'Uşaq meydançası yanında, təcili təmizlənməlidir.', photoUrl: DEMO_REPORT_PHOTO_URL },
+      { spreadKey: 'fe6b', reporterKey: 'citizen2', daysAgo: 1, message: 'Uşaq meydançası yanında, təcili təmizlənməlidir.' },
     ],
   },
   {

@@ -1,8 +1,8 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Color, Spacing, Typography } from '@/GlobalStyles';
 import ProblemCard from '@/components/ProblemCard';
@@ -31,11 +31,22 @@ function isResolvedStatus(status: string) {
 
 export default function ProblemsScreen({ onlyMine }: Props) {
   const navigation = useNavigation<NativeStackNavigationProp<ProblemsStackParamList, 'ProblemDetail'>>();
-  const { problems, toggleProblemUpvote } = useAppData();
+  const { problems, toggleProblemUpvote, refresh } = useAppData();
 
   const [scopeFilter, setScopeFilter] = useState<ScopeFilterKey>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilterKey>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      await refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refresh, refreshing]);
 
   const scopeData = useMemo(() => {
     if (scopeFilter === 'mine') return problems.filter((item) => item.createdByMe);
@@ -71,8 +82,29 @@ export default function ProblemsScreen({ onlyMine }: Props) {
           ItemSeparatorComponent={() => <View style={{ height: Spacing.lg }} />}
           ListHeaderComponent={
             <View style={styles.header}>
-              <Text style={styles.title}>{title}</Text>
-              <Text style={styles.subtitle}>{subtitle}</Text>
+              <View style={styles.titleRow}>
+                <View style={styles.titleBlock}>
+                  <Text style={styles.title}>{title}</Text>
+                  <Text style={styles.subtitle}>{subtitle}</Text>
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Siyahını yenilə"
+                  onPress={handleRefresh}
+                  disabled={refreshing}
+                  style={({ pressed }) => [
+                    styles.refreshButton,
+                    (pressed || refreshing) && styles.pressed,
+                    refreshing && styles.refreshButtonDisabled,
+                  ]}
+                >
+                  {refreshing ? (
+                    <ActivityIndicator size="small" color={Color.primary600} />
+                  ) : (
+                    <Ionicons name="refresh-outline" size={22} color={Color.primary600} />
+                  )}
+                </Pressable>
+              </View>
 
               <Pressable
                 onPress={() => setShowFilters((prev) => !prev)}
@@ -205,8 +237,27 @@ const styles = StyleSheet.create({
   screen: { backgroundColor: Color.neutral50, flex: 1 },
   content: { padding: Spacing.lg, paddingBottom: 40 },
   header: { marginBottom: Spacing.lg },
+  titleRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: Spacing.md,
+    justifyContent: 'space-between',
+  },
+  titleBlock: { flex: 1, minWidth: 0 },
   title: { color: Color.neutral900, fontSize: 24, fontWeight: '900' },
   subtitle: { color: Color.neutral500, fontSize: Typography.body, fontWeight: '600', marginTop: 6 },
+  refreshButton: {
+    alignItems: 'center',
+    backgroundColor: Color.white500,
+    borderColor: Color.neutral200,
+    borderRadius: 14,
+    borderWidth: 1,
+    height: 44,
+    justifyContent: 'center',
+    marginTop: 2,
+    width: 44,
+  },
+  refreshButtonDisabled: { opacity: 0.7 },
   filterToggleButton: {
     alignItems: 'center',
     alignSelf: 'flex-start',

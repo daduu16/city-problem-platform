@@ -1,4 +1,13 @@
-import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   mockGamificationSummary,
@@ -104,6 +113,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
   const [problems, setProblems] = useState<Problem[]>(mockProblems);
   const [loading, setLoading] = useState(true);
   const [myCreatedIds, setMyCreatedIds] = useState<string[]>([]);
+  const loadedFromApiRef = useRef(false);
 
   const withVoteDefaults = useCallback(
     (problem: Problem): Problem => ({
@@ -145,13 +155,16 @@ export function AppDataProvider({ children }: PropsWithChildren) {
           createdByMe: myCreatedIds.includes(problem.id),
         })),
       );
+      loadedFromApiRef.current = true;
     } catch (error) {
       if (__DEV__) {
-        console.warn('[AppData] Backend unreachable, showing mock data:', error);
+        console.warn('[AppData] Backend unreachable:', error);
       }
-      setNews(mockNews);
-      setNotifications(mockNotifications.map(withNotificationDefaults));
-      setProblems(mockProblems.map(withVoteDefaults));
+      if (!loadedFromApiRef.current) {
+        setNews(mockNews);
+        setNotifications(mockNotifications.map(withNotificationDefaults));
+        setProblems(mockProblems.map(withVoteDefaults));
+      }
     } finally {
       setLoading(false);
     }

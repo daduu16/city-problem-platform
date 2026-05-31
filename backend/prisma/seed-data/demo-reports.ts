@@ -3,6 +3,7 @@ import {
   DEMO_CITIZEN_INCIDENT_BUNDLES,
   flattenIncidentBundles,
 } from './demo-40-incidents';
+import { DEMO_REPORT_PHOTOS } from './demo-report-assets';
 
 export const SEED_DESCRIPTION_TAG = '\n[seed:v5]';
 
@@ -23,12 +24,13 @@ export type DemoReportSeed = {
   videoUrl?: string;
 };
 
-export const DEMO_REPORT_PHOTO_URL =
-  'https://picsum.photos/seed/narimanov-trash/640/480';
+/** @deprecated Use DEMO_REPORT_PHOTOS */
+export const DEMO_REPORT_PHOTO_URL = DEMO_REPORT_PHOTOS.burst;
 
-/** Second demo photo (carousel on first incident). */
-export const DEMO_REPORT_PHOTO_URL_2 =
-  'https://picsum.photos/seed/narimanov-water/640/480';
+/** @deprecated Use DEMO_REPORT_PHOTOS */
+export const DEMO_REPORT_PHOTO_URL_2 = DEMO_REPORT_PHOTOS.entrance;
+
+export { DEMO_REPORT_PHOTOS };
 
 export const DEMO_REPORT_VIDEO_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
 

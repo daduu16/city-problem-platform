@@ -397,7 +397,8 @@ export class MobileApiService {
 
     const push = (url: string | null | undefined, type: 'image' | 'video') => {
       if (!url?.trim()) return;
-      const uri = this.resolvePublicAssetUrl(url.trim());
+      // Relative paths so mobile/web clients resolve with their own API host (not server localhost).
+      const uri = this.toRelativeAssetPath(url.trim());
       const key = `${type}:${uri}`;
       if (seen.has(key)) return;
       seen.add(key);
@@ -447,6 +448,18 @@ export class MobileApiService {
 
   private generateVerificationCode() {
     return `${Math.floor(100000 + Math.random() * 900000)}`;
+  }
+
+  /** Path served under static `/uploads` or `/news` (no host — client resolves). */
+  private toRelativeAssetPath(url: string): string {
+    const trimmed = url.trim();
+    if (trimmed.startsWith('/')) return trimmed;
+    try {
+      const parsed = new URL(trimmed);
+      return `${parsed.pathname}${parsed.search}`;
+    } catch {
+      return trimmed.startsWith('uploads/') ? `/${trimmed}` : trimmed;
+    }
   }
 
   private resolvePublicAssetUrl(url: string): string {

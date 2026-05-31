@@ -17,7 +17,10 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Problem üçün şəkil çəkmək məqsədilə kameraya icazə tələb olunur.",
         "NSPhotoLibraryUsageDescription": "Çəkilən şəkli müraciətə əlavə etmək üçün qalereyaya icazə tələb olunur.",
-        "NSLocationWhenInUseUsageDescription": "Mövcud mövqeyi avtomatik doldurmaq üçün lokasiya icazəsi tələb olunur."
+        "NSLocationWhenInUseUsageDescription": "Mövcud mövqeyi avtomatik doldurmaq üçün lokasiya icazəsi tələb olunur.",
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        }
       }
     },
     "android": {
@@ -25,6 +28,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "usesCleartextTraffic": true,
       "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
     },
     "plugins": [

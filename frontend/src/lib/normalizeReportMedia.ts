@@ -1,3 +1,5 @@
+import { resolvePublicAssetUrl } from '@/lib/assetUrl';
+
 /** API / legacy shapes for optional report media URLs. */
 export type ReportMediaSource = {
   photoUrl?: string | null;
@@ -7,10 +9,13 @@ export type ReportMediaSource = {
 };
 
 export function normalizeReportMedia(source: ReportMediaSource) {
-  const photoUrl = source.photoUrl ?? source.photo_url ?? null;
+  const photoRaw = source.photoUrl ?? source.photo_url ?? null;
   const videoUrl = source.videoUrl ?? source.video_url ?? null;
+  const photoUrl = resolvePublicAssetUrl(
+    photoRaw && String(photoRaw).trim() ? String(photoRaw) : null,
+  );
   return {
-    photoUrl: photoUrl && String(photoUrl).trim() ? photoUrl : null,
+    photoUrl,
     videoUrl: videoUrl && String(videoUrl).trim() ? videoUrl : null,
   };
 }

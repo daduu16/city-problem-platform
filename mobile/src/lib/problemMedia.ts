@@ -1,24 +1,32 @@
 import { getApiBaseUrl } from '@/config/api';
 import type { Problem, ProblemMediaItem } from '@/types';
 
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
+
+function isLoopbackHost(host: string): boolean {
+  return LOOPBACK_HOSTS.has(host.toLowerCase());
+}
+
 export function normalizeAssetUrl(url?: string | null): string | undefined {
   if (!url?.trim()) return undefined;
   const trimmed = url.trim();
-  const base = getApiBaseUrl();
+  const base = getApiBaseUrl().replace(/\/$/, '');
+
   if (trimmed.startsWith('/')) {
     return `${base}${trimmed}`;
   }
-  const legacy = trimmed.match(
-    /^https?:\/\/(localhost|127\.0\.0\.1):(4000|3001)(\/.*)?$/,
-  );
-  if (legacy) {
-    return `${base}${legacy[3] ?? ''}`;
-  }
-  return trimmed;
-}
 
-function normalizeImageUri(uri: string): string | undefined {
-  return normalizeAssetUrl(uri);
+  try {
+    const parsed = new URL(trimmed);
+    if (isLoopbackHost(parsed.hostname)) {
+      return `${base}${parsed.pathname}${parsed.search}`;
+    }
+    return trimmed;
+  } catch {
+    // Not a full URL — treat as path segment
+    const path = trimmed.startsWith('uploads/') ? `/${trimmed}` : trimmed;
+    return path.startsWith('/') ? `${base}${path}` : trimmed;
+  }
 }
 
 /** Image URIs only (videos excluded) for carousel display. */
@@ -27,7 +35,7 @@ export function getProblemImageUris(problem: Problem): string[] {
   const seen = new Set<string>();
 
   const push = (url?: string | null) => {
-    const uri = normalizeImageUri(url ?? '');
+    const uri = normalizeAssetUrl(url);
     if (!uri || seen.has(uri)) return;
     seen.add(uri);
     uris.push(uri);

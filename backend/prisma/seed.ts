@@ -22,7 +22,8 @@ import {
   type CitizenReporterKey,
 } from './seed-data/demo-reports';
 import { groupReports, primaryReport } from './seed-data/group-reports';
-import { patchFirstIncidentDemoPhotos } from './seed-data/patch-first-incident-photos';
+import { patchDemoReportPhotos } from './seed-data/patch-demo-report-photos';
+import { copyDemoReportAssets } from './seed-lib/copy-demo-report-assets';
 import { centroidFromCoordinates } from '../src/incidents/incident-proximity';
 import {
   buildOperatorIncidentTimelineSeed,
@@ -272,6 +273,8 @@ async function seedMobileContent() {
 }
 
 async function main() {
+  copyDemoReportAssets();
+
   const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
 
   await prisma.organization.upsert({
@@ -559,7 +562,7 @@ async function main() {
   });
 
   if (!forceDemoReseed && existingSeedIncidents > 0) {
-    await patchFirstIncidentDemoPhotos(prisma);
+    await patchDemoReportPhotos(prisma);
     console.log(
       `Demo incidents already present (${existingSeedIncidents}) — skipping incident seed`,
     );
