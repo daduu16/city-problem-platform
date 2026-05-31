@@ -43,7 +43,12 @@ function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 	const canAssign = useAuthStore((s) => s.can("assign_task"));
 	const [showPlanner, setShowPlanner] = useState(false);
 
-	const { data: incident, isLoading, isError, error } = useQuery({
+	const {
+		data: incident,
+		isLoading,
+		isError,
+		error,
+	} = useQuery({
 		queryKey: ["incidents", incidentId],
 		queryFn: async () => {
 			const res = await api.get<IncidentDetail>(`/incidents/${incidentId}`);
@@ -143,7 +148,9 @@ function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 						{incident.deadline && (
 							<p className="text-sm font-medium text-amber-700">
 								{az.drawer.deadline}:{" "}
-								{format(new Date(incident.deadline), "PPp", { locale: azLocale })}
+								{format(new Date(incident.deadline), "PPp", {
+									locale: azLocale,
+								})}
 							</p>
 						)}
 
