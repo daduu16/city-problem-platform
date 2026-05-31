@@ -94,27 +94,36 @@ export const az = {
 	map: {
 		title: "Xəritə — Nərimanov, Bakı",
 		archivedTitle: "Arxiv xəritəsi — Nərimanov, Bakı",
-		archivedSubtitle: (count: number, viewMode: "2d" | "3d" = "3d") => {
+		archivedSubtitle: (
+			count: number,
+			viewMode: "2d" | "3d" = "3d",
+			mapEngine?: string,
+		) => {
 			const engine =
-				viewMode === "3d" ? "3D xəritə (MapLibre)" : "OpenStreetMap";
+				mapEngine ??
+				(viewMode === "3d" ? "3D xəritə (MapLibre)" : "OpenStreetMap");
 			return `${engine} · ${count} arxiv hadisəsi`;
 		},
 		subtitle: (
 			count: number,
 			areaKm2?: number,
 			viewMode: "2d" | "3d" = "2d",
+			mapEngine?: string,
 		) => {
 			const base =
 				areaKm2 != null
 					? `${count} hadisə · ${areaKm2.toFixed(2)} km² (Nərimanov)`
 					: `${count} hadisə · Nərimanov rayonu`;
 			const engine =
-				viewMode === "3d" ? "3D xəritə (MapLibre)" : "OpenStreetMap";
+				mapEngine ??
+				(viewMode === "3d" ? "3D xəritə (MapLibre)" : "OpenStreetMap");
 			return `${engine} · ${base}`;
 		},
 		viewMode: "Xəritə növü",
 		view2d: "Sadə (OSM)",
 		view3d: "3D (məkan)",
+		basemapTitle: "Xəritə bazası",
+		basemapOsm: "OSM",
 		tilt3d: "3D bucaq",
 		tiltFlat: "Plan görünüşü",
 		district: {
@@ -171,6 +180,11 @@ export const az = {
 			"Hadisə yaradılsa da, icra üçün ayrılmış son tarix (drawer-də görünür).",
 		createFieldPriority: "Prioritet",
 		createFieldAddress: "Ünvan (istəyə bağlı)",
+		addressSearchPlaceholder: "Ünvan yazın (min. 3 simvol)",
+		addressSearchHint: "Axtarış OpenStreetMap Nominatim (free) ilə edilir.",
+		addressSearchLoading: "Ünvanlar axtarılır…",
+		addressSearchEmpty: "Nəticə tapılmadı",
+		addressSearchError: "Ünvan axtarışında xəta baş verdi",
 		createCategoryPlaceholder: "Kateqoriya seçin…",
 		createCategoriesLoading: "Yüklənir…",
 		createNoCategories:
