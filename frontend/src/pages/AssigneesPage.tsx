@@ -17,6 +17,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  buildAssigneePayload,
+  formatAssigneeApiError,
+  resolveLeafCategoryIds,
+} from '@/lib/assigneeForm';
 import { cn } from '@/lib/utils';
 import { ExecutorAvailabilityTab } from '@/components/executors/ExecutorAvailabilityTab';
 
@@ -111,22 +116,21 @@ export function AssigneesPage() {
     return map;
   }, [categoryIds]);
 
+  const leafCategoryIds = useMemo(
+    () => resolveLeafCategoryIds(categoriesQuery.data ?? [], categoryIds),
+    [categoriesQuery.data, categoryIds],
+  );
+
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['assignees'] });
   };
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const res = await api.post<CategoryAssignee>('/assignees', {
-        kind: form.kind,
-        name: form.name,
-        description: form.description || undefined,
-        contactEmail: form.contactEmail || undefined,
-        contactPhone: form.contactPhone || undefined,
-        organizationId: form.organizationId || undefined,
-        isActive: form.isActive,
-        categoryIds,
-      });
+      const res = await api.post<CategoryAssignee>(
+        '/assignees',
+        buildAssigneePayload(form, leafCategoryIds),
+      );
       return res.data;
     },
     onSuccess: (created) => {
@@ -139,16 +143,19 @@ export function AssigneesPage() {
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (!selectedId) return;
+      const payload = buildAssigneePayload(form, leafCategoryIds);
       await api.patch(`/assignees/${selectedId}`, {
-        kind: form.kind,
-        name: form.name,
-        description: form.description || null,
-        contactEmail: form.contactEmail || null,
-        contactPhone: form.contactPhone || null,
-        organizationId: form.organizationId || null,
-        isActive: form.isActive,
+        kind: payload.kind,
+        name: payload.name,
+        description: form.description.trim() || null,
+        contactEmail: form.contactEmail.trim() || null,
+        contactPhone: form.contactPhone.trim() || null,
+        organizationId: form.organizationId.trim() || null,
+        isActive: payload.isActive,
       });
-      await api.put(`/assignees/${selectedId}/categories`, { categoryIds });
+      await api.put(`/assignees/${selectedId}/categories`, {
+        categoryIds: leafCategoryIds,
+      });
     },
     onSuccess: invalidate,
   });
@@ -166,6 +173,12 @@ export function AssigneesPage() {
 
   const editing = isCreating || Boolean(selected);
   const saving = createMutation.isPending || updateMutation.isPending;
+
+  const saveErrorMessage = useMemo(() => {
+    const err = createMutation.error ?? updateMutation.error;
+    if (!err) return null;
+    return formatAssigneeApiError(err) || az.executors.saveError;
+  }, [createMutation.error, updateMutation.error]);
 
   if (assigneesQuery.isLoading) {
     return <Skeleton className="m-6 h-96 w-full" />;
@@ -398,6 +411,10 @@ export function AssigneesPage() {
                     )}
                   </div>
                 </div>
+
+                {saveErrorMessage && (
+                  <p className="text-sm text-destructive">{saveErrorMessage}</p>
+                )}
 
                 <div className="flex flex-wrap gap-2">
                   <Button

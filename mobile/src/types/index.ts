@@ -32,6 +32,11 @@ export type ProblemPriority = 'Aşağı' | 'Orta' | 'Yüksək' | 'Təcili';
 
 export type ProblemStatus = 'Yeni' | 'Baxılır' | 'İcradadır' | 'Həll edildi';
 
+export type ProblemMediaItem = {
+  uri: string;
+  type: 'image' | 'video';
+};
+
 export type Problem = {
   id: string;
   title: string;
@@ -45,6 +50,10 @@ export type Problem = {
   createdAt: string;
   createdByMe: boolean;
   imageUrl?: string;
+  /** All attached photos (citizen reports + attachments). */
+  imageUrls?: string[];
+  /** Carousel items (photos + videos), preferred over legacy fields. */
+  mediaItems?: ProblemMediaItem[];
   mediaUrl?: string;
   mediaType?: 'image' | 'video';
   assignedToRole?: 'executor' | 'citizen';

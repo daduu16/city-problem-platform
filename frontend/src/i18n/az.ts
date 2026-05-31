@@ -498,6 +498,7 @@ export const az = {
 		delete: "Sil",
 		deleteConfirm: "Bu icraçını silmək istədiyinizə əminsiniz?",
 		selectForAvailability: "Mövcudluq üçün icraçı seçin.",
+		saveError: "İcraçı saxlanılmadı. Məlumatları yoxlayın və yenidən cəhd edin.",
 	},
 	admin: {
 		title: "İstifadəçilər",

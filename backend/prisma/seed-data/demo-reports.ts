@@ -26,6 +26,10 @@ export type DemoReportSeed = {
 export const DEMO_REPORT_PHOTO_URL =
   'https://picsum.photos/seed/narimanov-trash/640/480';
 
+/** Second demo photo (carousel on first incident). */
+export const DEMO_REPORT_PHOTO_URL_2 =
+  'https://picsum.photos/seed/narimanov-water/640/480';
+
 export const DEMO_REPORT_VIDEO_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
 
 export const NARIMANOV_BBOX = {

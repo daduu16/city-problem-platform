@@ -21,28 +21,11 @@ function run(command, args, options = {}) {
   });
 }
 
-async function databaseNeedsSeed(env, backendDir) {
+async function verifyDatabase(env, backendDir) {
   const childEnv = { ...process.env, ...env };
-  return new Promise((resolve) => {
-    const child = spawn(npxCmd, ['tsx', 'scripts/check-needs-seed.js'], {
-      cwd: backendDir,
-      env: childEnv,
-      shell: false,
-      stdio: ['ignore', 'pipe', 'inherit'],
-    });
-    let out = '';
-    child.stdout?.on('data', (chunk) => {
-      out += chunk.toString();
-    });
-    child.on('exit', (code) => {
-      if (code === 2) {
-        resolve(false);
-        return;
-      }
-      const count = Number.parseInt(out.trim(), 10);
-      resolve(!Number.isFinite(count) || count === 0);
-    });
-    child.on('error', () => resolve(true));
+  await run(npxCmd, ['tsx', 'scripts/verify-db-init.js'], {
+    cwd: backendDir,
+    env: childEnv,
   });
 }
 
@@ -59,16 +42,14 @@ async function main() {
   console.log('[db] applying Prisma migrations (migrate deploy)');
   await run(npxCmd, ['prisma', 'migrate', 'deploy'], { cwd: backendDir, env: childEnv });
 
-  const needsSeed = await databaseNeedsSeed(env, backendDir);
-  const shouldSeed =
-    process.env.MUNICIPAL_SKIP_SEED !== '1' &&
-    (process.env.MUNICIPAL_FORCE_SEED === '1' || needsSeed);
-
-  if (shouldSeed) {
-    console.log('[db] empty database — loading demo seed data');
+  if (process.env.MUNICIPAL_SKIP_SEED !== '1') {
+    console.log(
+      '[db] running demo seed (roles, users, categories, executors, incidents if empty…)',
+    );
     await run(npmCmd, ['run', 'prisma:seed'], { cwd: backendDir, env: childEnv });
+    await verifyDatabase(env, backendDir);
   } else {
-    console.log('[db] schema ready (seed skipped — users already exist)');
+    console.log('[db] seed skipped (MUNICIPAL_SKIP_SEED=1)');
   }
 }
 

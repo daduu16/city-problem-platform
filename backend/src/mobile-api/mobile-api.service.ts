@@ -188,13 +188,21 @@ export class MobileApiService {
   async findProblems() {
     const incidents = await this.prisma.incident.findMany({
       orderBy: { createdAt: 'desc' },
-      include: {
-        category: true,
-        attachments: true,
-        _count: { select: { reports: true } },
-      },
+      include: this.problemInclude(),
     });
     return incidents.map((incident) => this.toMobileProblem(incident));
+  }
+
+  private problemInclude() {
+    return {
+      category: true,
+      attachments: { orderBy: { createdAt: 'asc' as const } },
+      reports: {
+        orderBy: { createdAt: 'asc' as const },
+        select: { photoUrl: true, videoUrl: true },
+      },
+      _count: { select: { reports: true } },
+    };
   }
 
   async createProblem(dto: CreateMobileProblemDto) {
@@ -261,11 +269,7 @@ export class MobileApiService {
           },
         },
       },
-      include: {
-        category: true,
-        attachments: true,
-        _count: { select: { reports: true } },
-      },
+      include: this.problemInclude(),
     });
 
     return this.toMobileProblem(incident);
@@ -351,6 +355,7 @@ export class MobileApiService {
       include: {
         category: true;
         attachments: true;
+        reports: { select: { photoUrl: true; videoUrl: true } };
         _count: { select: { reports: true } };
       };
     }>,
@@ -358,7 +363,7 @@ export class MobileApiService {
     const categoryCode = this.toMobileCategoryCode(incident.category.key);
     const priorityCode = this.toMobilePriorityCode(incident.priority);
     const statusCode = this.toMobileStatusCode(incident.status);
-    const media = incident.attachments[0];
+    const media = this.resolveIncidentMedia(incident);
 
     return {
       id: incident.id,
@@ -367,9 +372,11 @@ export class MobileApiService {
       address: incident.address ?? '',
       lat: incident.lat,
       lng: incident.lng,
-      imageUrl: media?.type === AttachmentType.PHOTO ? media.fileUrl : undefined,
-      mediaUrl: media?.fileUrl,
-      mediaType: media?.type === AttachmentType.VIDEO ? 'video' : media ? 'image' : undefined,
+      imageUrl: media.imageUrl,
+      imageUrls: media.imageUrls,
+      mediaItems: media.mediaItems,
+      mediaUrl: media.mediaUrl,
+      mediaType: media.mediaType,
       category: categoryCode,
       categoryLabel: mobileCategoryLabels[categoryCode],
       priority: priorityCode,
@@ -378,6 +385,49 @@ export class MobileApiService {
       statusLabel: mobileStatusLabels[statusCode],
       createdAt: incident.createdAt,
       upvotes: incident._count.reports,
+    };
+  }
+
+  private resolveIncidentMedia(incident: {
+    attachments: Array<{ fileUrl: string; type: AttachmentType }>;
+    reports?: Array<{ photoUrl: string | null; videoUrl: string | null }>;
+  }) {
+    const mediaItems: Array<{ uri: string; type: 'image' | 'video' }> = [];
+    const seen = new Set<string>();
+
+    const push = (url: string | null | undefined, type: 'image' | 'video') => {
+      if (!url?.trim()) return;
+      const uri = this.resolvePublicAssetUrl(url.trim());
+      const key = `${type}:${uri}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      mediaItems.push({ uri, type });
+    };
+
+    for (const attachment of incident.attachments) {
+      if (attachment.type === AttachmentType.VIDEO) {
+        push(attachment.fileUrl, 'video');
+      } else {
+        push(attachment.fileUrl, 'image');
+      }
+    }
+
+    for (const report of incident.reports ?? []) {
+      push(report.videoUrl, 'video');
+      push(report.photoUrl, 'image');
+    }
+
+    const first = mediaItems[0];
+    const imageUrls = mediaItems
+      .filter((m) => m.type === 'image')
+      .map((m) => m.uri);
+
+    return {
+      mediaItems,
+      imageUrl: imageUrls[0],
+      imageUrls,
+      mediaUrl: first?.uri,
+      mediaType: first?.type,
     };
   }
 

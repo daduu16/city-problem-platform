@@ -2,6 +2,7 @@ import { IncidentPriority, IncidentStatus, IncidentType } from '@prisma/client';
 import type { ReportGroupOps } from './demo-report-groups';
 import {
   DEMO_REPORT_PHOTO_URL,
+  DEMO_REPORT_PHOTO_URL_2,
   DEMO_REPORT_VIDEO_URL,
   type CitizenReporterKey,
   type DemoReportSeed,
@@ -58,7 +59,13 @@ export const DEMO_CITIZEN_INCIDENT_BUNDLES: DemoIncidentBundle[] = [
     ops: { status: 'IN_PROGRESS' as const, priority: 'CRITICAL' as const, assign: true },
     reports: [
       { spreadKey: 'w0a', reporterKey: 'citizen1', daysAgo: 0, message: 'Səhər 7-də partlayış səsi, su axını güclüdür.', videoUrl: DEMO_REPORT_VIDEO_URL },
-      { spreadKey: 'w0b', reporterKey: 'citizen2', daysAgo: 0, message: 'Giriş qapısı yanı tam su altındadır, lift işləmir.' },
+      {
+        spreadKey: 'w0b',
+        reporterKey: 'citizen2',
+        daysAgo: 0,
+        message: 'Giriş qapısı yanı tam su altındadır, lift işləmir.',
+        photoUrl: DEMO_REPORT_PHOTO_URL_2,
+      },
       { spreadKey: 'w0c', reporterKey: 'citizen3', daysAgo: 1, message: 'Dünən də sızıntı olmuşdu, bu gün yenidən partladı.', photoUrl: DEMO_REPORT_PHOTO_URL },
     ],
   },

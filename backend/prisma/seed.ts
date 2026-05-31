@@ -10,6 +10,7 @@ import * as bcrypt from 'bcryptjs';
 import * as fs from 'fs';
 import * as path from 'path';
 import { CATEGORY_TREE } from './seed-data/categories';
+import { seedAssignees } from './seed-lib/assignees';
 import {
   attachOpsToGroups,
   groupDescription,
@@ -21,6 +22,7 @@ import {
   type CitizenReporterKey,
 } from './seed-data/demo-reports';
 import { groupReports, primaryReport } from './seed-data/group-reports';
+import { patchFirstIncidentDemoPhotos } from './seed-data/patch-first-incident-photos';
 import { centroidFromCoordinates } from '../src/incidents/incident-proximity';
 import {
   buildOperatorIncidentTimelineSeed,
@@ -288,9 +290,20 @@ async function main() {
     create: { id: AZERIQAZ_ORG_ID, name: 'Azeriqaz', type: 'utility' },
   });
 
+  const forceDemoReseed = process.env.MUNICIPAL_FORCE_SEED === '1';
+
   await seedRolesAndPermissions();
-  await seedMobileContent();
+
+  const newsCount = await prisma.news.count();
+  if (forceDemoReseed || newsCount === 0) {
+    await seedMobileContent();
+  } else {
+    console.log('Mobile content already present — skipping news/notifications seed');
+  }
+
   const categoryKeyToId = await seedCategories();
+  const assigneeCount = await seedAssignees(prisma, categoryKeyToId);
+  console.log(`Seeded ${assigneeCount} category assignees`);
   const allCategoryIds = [...categoryKeyToId.values()];
 
   const roleMap = Object.fromEntries(
@@ -538,6 +551,25 @@ async function main() {
   const seedIncidentWhere = {
     description: { contains: '[seed:v' },
   };
+  const legacyIncidentWhere = LEGACY_DEMO_PREFIXES.map((prefix) => ({
+    title: { startsWith: prefix },
+  }));
+  const existingSeedIncidents = await prisma.incident.count({
+    where: { OR: [seedIncidentWhere, ...legacyIncidentWhere] },
+  });
+
+  if (!forceDemoReseed && existingSeedIncidents > 0) {
+    await patchFirstIncidentDemoPhotos(prisma);
+    console.log(
+      `Demo incidents already present (${existingSeedIncidents}) — skipping incident seed`,
+    );
+    console.log(
+      `Seed complete (core): ${users.length} users, ${assigneeCount} demo assignees. Password: ${DEFAULT_PASSWORD}`,
+    );
+    console.log(`Quick login: user@municipal.local / ${DEFAULT_PASSWORD}`);
+    console.log(`Admin: admin@municipal.local / ${DEFAULT_PASSWORD}`);
+    return;
+  }
 
   await prisma.incidentReport.deleteMany({
     where: { incident: seedIncidentWhere },
@@ -837,6 +869,8 @@ async function main() {
   console.log(`Azeriqaz demo: azeriqaz@municipal.local / ${DEFAULT_PASSWORD}`);
   console.log(`Quick login: user@municipal.local / ${DEFAULT_PASSWORD}`);
   console.log(`Admin: admin@municipal.local / ${DEFAULT_PASSWORD}`);
+  const assigneeTotal = await prisma.categoryAssignee.count();
+  console.log(`Executors in DB: ${assigneeTotal}`);
 }
 
 main()

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { resolveLeafCategoryIds } from './assignee-category.util';
 import { CreateAssigneeDto } from './dto/create-assignee.dto';
 import { UpdateAssigneeDto } from './dto/update-assignee.dto';
 import { SetAssigneeCategoriesDto } from './dto/set-assignee-categories.dto';
@@ -58,8 +59,7 @@ export class AssigneesService {
 
   async create(dto: CreateAssigneeDto, actorId: string) {
     await this.validateOrganization(dto.organizationId);
-    const categoryIds = dto.categoryIds ?? [];
-    await this.validateCategoryIds(categoryIds);
+    const categoryIds = await this.resolveCategoryIds(dto.categoryIds ?? []);
 
     const assignee = await this.prisma.categoryAssignee.create({
       data: {
@@ -132,13 +132,13 @@ export class AssigneesService {
     actorId: string,
   ) {
     await this.findOne(id);
-    await this.validateCategoryIds(dto.categoryIds);
+    const categoryIds = await this.resolveCategoryIds(dto.categoryIds);
 
     await this.prisma.$transaction([
       this.prisma.categoryAssigneeCategory.deleteMany({
         where: { assigneeId: id },
       }),
-      ...dto.categoryIds.map((categoryId) =>
+      ...categoryIds.map((categoryId) =>
         this.prisma.categoryAssigneeCategory.create({
           data: { assigneeId: id, categoryId },
         }),
@@ -150,7 +150,7 @@ export class AssigneesService {
       action: 'UPDATE',
       resource: 'category_assignee_categories',
       resourceId: id,
-      metadata: { categoryCount: dto.categoryIds.length },
+      metadata: { categoryCount: categoryIds.length },
     });
 
     return this.findOne(id);
@@ -177,20 +177,11 @@ export class AssigneesService {
     if (!org) throw new BadRequestException('Invalid organization');
   }
 
-  private async validateCategoryIds(categoryIds: string[]) {
-    if (categoryIds.length === 0) return;
-    const found = await this.prisma.category.findMany({
-      where: { id: { in: categoryIds } },
+  private async resolveCategoryIds(categoryIds: string[]) {
+    if (categoryIds.length === 0) return [];
+    const all = await this.prisma.category.findMany({
       select: { id: true, parentId: true },
     });
-    if (found.length !== categoryIds.length) {
-      throw new BadRequestException('One or more categories are invalid');
-    }
-    const leafOnly = found.filter((c) => c.parentId !== null);
-    if (leafOnly.length !== categoryIds.length) {
-      throw new BadRequestException(
-        'Only leaf subcategories can be assigned (not parent groups)',
-      );
-    }
+    return resolveLeafCategoryIds(all, categoryIds);
   }
 }

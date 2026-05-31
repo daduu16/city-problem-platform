@@ -1,11 +1,12 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import { ResizeMode, Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import ProblemMediaCarousel from '@/components/ProblemMediaCarousel';
 import { BorderRadius, Color, Shadow, Spacing, Typography } from '@/GlobalStyles';
+import { getProblemImageUris } from '@/lib/problemMedia';
 import { ProblemsStackParamList } from '@/navigation/AppNavigator';
 import { useAppData } from '@/state/AppDataContext';
 
@@ -36,6 +37,7 @@ export default function ProblemDetailScreen() {
     isExecutor &&
     problem.assignedToRole === 'executor' &&
     problem.status !== 'Həll edildi';
+  const imageUris = getProblemImageUris(problem);
 
   const handleResolveWithPhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -67,19 +69,8 @@ export default function ProblemDetailScreen() {
         </View>
 
         <ScrollView bounces={false} contentContainerStyle={styles.content}>
-          {problem.mediaType === 'video' && problem.mediaUrl ? (
-            <View style={styles.videoPreview}>
-              <Video
-                source={{ uri: problem.mediaUrl }}
-                style={styles.video}
-                resizeMode={ResizeMode.CONTAIN}
-                shouldPlay={false}
-                isLooping={false}
-                useNativeControls
-              />
-            </View>
-          ) : problem.imageUrl ? (
-            <Image source={{ uri: problem.imageUrl }} style={styles.image} />
+          {imageUris.length > 0 ? (
+            <ProblemMediaCarousel uris={imageUris} height={260} variant="detail" />
           ) : null}
 
           <View style={styles.card}>
@@ -181,15 +172,6 @@ const styles = StyleSheet.create({
   backButton: { alignItems: 'center', height: 40, justifyContent: 'center', width: 40 },
   topTitle: { color: Color.neutral900, flex: 1, fontSize: Typography.body, fontWeight: '900', textAlign: 'center' },
   content: { padding: Spacing.lg, paddingBottom: 40 },
-  image: { borderRadius: BorderRadius.md, height: 220, width: '100%', ...Shadow.surface },
-  videoPreview: {
-    borderRadius: BorderRadius.md,
-    height: 220,
-    overflow: 'hidden',
-    width: '100%',
-    ...Shadow.surface,
-  },
-  video: { height: '100%', width: '100%' },
   card: {
     backgroundColor: Color.white500,
     borderColor: Color.neutral200,

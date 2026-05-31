@@ -1,5 +1,14 @@
 import { getApiBaseUrl } from '@/config/api';
-import { News, NotificationItem, Problem, ProblemCategory, ProblemPriority, ProblemStatus } from '@/types';
+import { normalizeAssetUrl } from '@/lib/problemMedia';
+import {
+  News,
+  NotificationItem,
+  Problem,
+  ProblemCategory,
+  ProblemMediaItem,
+  ProblemPriority,
+  ProblemStatus,
+} from '@/types';
 
 /** @deprecated Prefer getApiBaseUrl() — URL may depend on Expo dev host at runtime. */
 export const API_BASE_URL = getApiBaseUrl();
@@ -12,6 +21,8 @@ type BackendProblem = {
   lat?: number;
   lng?: number;
   imageUrl?: string | null;
+  imageUrls?: string[] | null;
+  mediaItems?: Array<{ uri: string; type: 'image' | 'video' }> | null;
   mediaUrl?: string | null;
   mediaType?: 'image' | 'video' | null;
   category: string;
@@ -61,6 +72,27 @@ const categoryMap: Record<string, ProblemCategory> = {
 };
 
 function toProblem(item: BackendProblem): Problem {
+  const mediaItems: ProblemMediaItem[] = (item.mediaItems ?? [])
+    .map((m) => {
+      const uri = normalizeAssetUrl(m.uri);
+      if (!uri) return null;
+      return { uri, type: m.type };
+    })
+    .filter((m): m is ProblemMediaItem => m != null);
+
+  const imageUrls = (item.imageUrls ?? [])
+    .map((u) => normalizeAssetUrl(u))
+    .filter((u): u is string => Boolean(u));
+  const imageUrl =
+    normalizeAssetUrl(item.imageUrl) ?? imageUrls[0] ?? undefined;
+  const mediaUrl = normalizeAssetUrl(item.mediaUrl) ?? imageUrl;
+  const mediaType =
+    item.mediaType === 'video'
+      ? 'video'
+      : item.mediaType === 'image' || imageUrl
+        ? 'image'
+        : undefined;
+
   return {
     id: item.id,
     title: item.title,
@@ -68,9 +100,11 @@ function toProblem(item: BackendProblem): Problem {
     address: item.address,
     lat: item.lat,
     lng: item.lng,
-    imageUrl: item.imageUrl || undefined,
-    mediaUrl: item.mediaUrl || item.imageUrl || undefined,
-    mediaType: item.mediaType || (item.imageUrl ? 'image' : undefined),
+    imageUrl,
+    imageUrls: imageUrls.length > 0 ? imageUrls : imageUrl ? [imageUrl] : undefined,
+    mediaItems: mediaItems.length > 0 ? mediaItems : undefined,
+    mediaUrl,
+    mediaType,
     category: categoryMap[item.category] || (item.categoryLabel as ProblemCategory),
     priority: priorityMap[item.priority] || (item.priorityLabel as ProblemPriority),
     status: statusMap[item.status] || (item.statusLabel as ProblemStatus),
@@ -79,19 +113,6 @@ function toProblem(item: BackendProblem): Problem {
     upvotes: item.upvotes ?? 0,
     hasUpvoted: false,
   };
-}
-
-function normalizeAssetUrl(url?: string | null): string | undefined {
-  if (!url) return undefined;
-  const base = getApiBaseUrl();
-  if (url.startsWith('/')) {
-    return `${base}${url}`;
-  }
-  const legacy = url.match(/^https?:\/\/(localhost|127\.0\.0\.1):(4000|3001)(\/.*)?$/);
-  if (legacy) {
-    return `${base}${legacy[3] ?? ''}`;
-  }
-  return url;
 }
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
@@ -233,7 +254,7 @@ export async function createProblem(input: {
       mediaType?: 'image' | 'video';
     };
     return {
-      mediaUrl: json.url,
+      mediaUrl: normalizeAssetUrl(json.url) ?? json.url,
       mediaType: json.mediaType ?? mediaType,
     };
   };

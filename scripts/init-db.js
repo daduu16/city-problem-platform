@@ -84,6 +84,8 @@ async function main(argv = process.argv.slice(2)) {
   console.log('');
   console.log('[db:init] done.');
   console.log('  Demo login: user@municipal.local / 123456');
+  console.log('  Admin (manage executors): admin@municipal.local / 123456');
+  console.log('  Demo executors: 6 seeded (see İcraçılar page)');
   console.log('  Start full stack: npm start');
   console.log('');
 }

@@ -79,18 +79,21 @@ npm start
 
 | Command | Purpose |
 |---------|---------|
-| **`npm start`** | Full stack: deps → Docker → migrations → seed (if empty) → backend + frontend + mobile |
-| **`npm run db:init`** | Database only: Docker Postgres/Redis → Prisma migrate → demo seed |
+| **`npm start`** | Full stack: deps → Docker → migrate → demo seed → backend + frontend + mobile |
+| **`npm run db:init`** | Database only: Docker → migrate → demo seed (same as start, without apps) |
 | **`npm run dev`** | Web only (backend + frontend) |
 | **`npm run setup:env`** | Refresh `mobile/.env` with your machine LAN IP (physical device) |
 
 ### Database maintenance
 
 ```bash
-npm run db:init                 # migrate + seed if DB empty
-npm run db:init -- --force-seed # re-load demo data
-npm run db:reset                # docker compose down -v + migrate + seed
+npm run db:init                 # migrate + demo seed (one script, idempotent)
+npm run db:init -- --force-seed # re-create demo incidents too
+npm run db:reset                # docker compose down -v + migrate + full seed
+npm run db:verify               # optional health check
 ```
+
+`npm start` runs the same DB setup automatically (Docker → migrate → seed → apps). The seed always upserts users, categories, and **6 demo executors**; demo incidents are created only on an empty DB (or with `--force-seed`).
 
 Aliases: `npm run init`, `npm run setup` (= `db:init`).
 

@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { CategoryAssigneeKind } from '@prisma/client';
+import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
@@ -9,6 +10,10 @@ import {
   IsUUID,
   MinLength,
 } from 'class-validator';
+import {
+  emptyToNull,
+  OptionalTrimmedString,
+} from './assignee-field.transforms';
 
 export class UpdateAssigneeDto {
   @ApiPropertyOptional({ enum: CategoryAssigneeKind })
@@ -25,21 +30,26 @@ export class UpdateAssigneeDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  description?: string;
+  @OptionalTrimmedString()
+  description?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsEmail()
-  contactEmail?: string;
+  @Transform(emptyToNull)
+  @OptionalTrimmedString()
+  contactEmail?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  contactPhone?: string;
+  @OptionalTrimmedString()
+  contactPhone?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsUUID()
+  @Transform(emptyToNull)
   organizationId?: string | null;
 
   @ApiPropertyOptional()

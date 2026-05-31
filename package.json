@@ -5,6 +5,7 @@
     "start": "node scripts/start-all.js",
     "start:all": "npm start",
     "db:init": "node scripts/init-db.js",
+    "db:verify": "node scripts/verify-db.js",
     "db:reset": "node scripts/init-db.js -- --reset --force-seed",
     "init": "npm run db:init",
     "setup": "npm run db:init",
