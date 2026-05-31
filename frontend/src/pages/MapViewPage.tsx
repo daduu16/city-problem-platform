@@ -88,7 +88,6 @@ export function MapViewPage({ variant }: Props) {
 		incidents,
 		narimanovRayon?.feature,
 	);
-	const markerMode = isArchived ? "type" : "status";
 	const isLoading =
 		incidentsQuery.isLoading ||
 		narimanovQuery.isLoading ||
@@ -117,7 +116,7 @@ export function MapViewPage({ variant }: Props) {
 	const mapReady = narimanovRayon && (isArchived || placesGeoJson);
 
 	return (
-		<div className="flex h-screen flex-col">
+		<div className="flex h-full min-h-0 flex-col">
 			<header className="relative z-50 shrink-0 space-y-3 border-b bg-background px-6 py-4">
 				<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 					<div className="min-w-0">
@@ -157,7 +156,6 @@ export function MapViewPage({ variant }: Props) {
 						>
 							<IncidentMap3D
 								incidents={incidents}
-								markerMode={markerMode}
 								narimanovRayon={narimanovRayon}
 								places={
 									placesGeoJson ?? { type: "FeatureCollection", features: [] }
@@ -167,7 +165,6 @@ export function MapViewPage({ variant }: Props) {
 					) : (
 						<IncidentMap
 							incidents={incidents}
-							markerMode={markerMode}
 							narimanovRayon={narimanovRayon}
 							places={
 								placesGeoJson ?? { type: "FeatureCollection", features: [] }

@@ -175,6 +175,9 @@ export function MapControls({ incidents, showPlacesToggle = true }: Props) {
             <p className={MAP_PANEL_SECTION_TITLE_CLASS}>
               {az.map.categoriesTitle}
             </p>
+            <p className="text-[10px] leading-snug text-muted-foreground">
+              {az.map.categoryIconHint}
+            </p>
             <CategoryTreeDropdown
               mode="checkbox"
               tree={categoryTree}

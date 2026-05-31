@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { az } from '@/i18n/az';
+import { MapMarkerChip } from '@/components/map/MapMarkerChip';
 import { ALL_INCIDENT_TYPES, getTypeStyle } from '@/lib/incidentTypeStyles';
 import { countIncidentsByType } from '@/lib/mapIncidentCounts';
 import type { MapIncident } from '@/types';
@@ -34,9 +35,11 @@ export function TypeLegend({ incidents }: Props) {
                 className="flex items-center justify-between gap-2 text-xs text-foreground"
               >
                 <span className="flex min-w-0 items-center gap-2">
-                  <span
-                    className={`h-3 w-3 shrink-0 rounded-full border-2 ${s.markerClass}`}
-                    style={{ backgroundColor: s.mapColor, borderColor: s.mapBorder }}
+                  <MapMarkerChip
+                    mapColor={s.mapColor}
+                    mapBorder={s.mapBorder}
+                    icon={s.icon}
+                    size={20}
                   />
                   {s.label}
                 </span>

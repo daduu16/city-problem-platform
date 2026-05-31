@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { az as azLocale } from "date-fns/locale";
@@ -21,6 +22,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthStore } from "@/stores/authStore";
+import {
+	IncidentTaskList,
+	IncidentTaskPlanner,
+} from "@/components/incidents/IncidentTaskPlanner";
 
 interface Props {
 	incidentId: string | null;
@@ -34,6 +40,8 @@ const drawerMetaText = "text-xs text-foreground/75";
 
 function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 	const queryClient = useQueryClient();
+	const canAssign = useAuthStore((s) => s.can("assign_task"));
+	const [showPlanner, setShowPlanner] = useState(false);
 
 	const { data: incident, isLoading, isError, error } = useQuery({
 		queryKey: ["incidents", incidentId],
@@ -193,6 +201,49 @@ function IncidentDrawerPanel({ incidentId }: { incidentId: string }) {
 								</section>
 							</>
 						)}
+
+						<Separator />
+
+						<section>
+							<div className="mb-3 flex items-center justify-between gap-2">
+								<h4 className={drawerSectionTitle}>{az.tasks.sectionTitle}</h4>
+								{canAssign && (
+									<Button
+										type="button"
+										variant="outline"
+										size="sm"
+										onClick={() => setShowPlanner((v) => !v)}
+									>
+										{showPlanner ? az.tasks.hidePlanner : az.tasks.planTask}
+									</Button>
+								)}
+							</div>
+							<IncidentTaskList
+								tasks={incident.assigneeTasks ?? []}
+								canManage={canAssign}
+								onCancel={() => {
+									void queryClient.invalidateQueries({
+										queryKey: ["incidents", incidentId],
+									});
+								}}
+							/>
+							{canAssign && showPlanner && (
+								<div className="mt-3">
+									<IncidentTaskPlanner
+										incidentId={incidentId}
+										categoryId={
+											incident.subcategory?.id ?? incident.category.id
+										}
+										onCreated={() => {
+											setShowPlanner(false);
+											void queryClient.invalidateQueries({
+												queryKey: ["incidents", incidentId],
+											});
+										}}
+									/>
+								</div>
+							)}
+						</section>
 
 						<Separator />
 

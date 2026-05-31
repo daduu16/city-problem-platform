@@ -22,8 +22,12 @@ export class CategoriesController {
       orderBy: [{ parentId: 'asc' }, { name: 'asc' }],
     });
 
-    if (scope.roleKey === 'super_admin' || scope.categoryIds.length === 0) {
+    if (this.accessControl.isSuperAdmin(scope)) {
       return all;
+    }
+
+    if (scope.categoryIds.length === 0) {
+      return [];
     }
 
     const allowed = new Set(scope.categoryIds);

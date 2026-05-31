@@ -32,8 +32,12 @@ export class AccessControlService {
     await this.scopeCache.invalidate(userId);
   }
 
+  isSuperAdmin(scope: UserAccessScope): boolean {
+    return scope.roleKey === 'super_admin';
+  }
+
   hasPermission(scope: UserAccessScope, permission: string): boolean {
-    if (scope.roleKey === 'super_admin') return true;
+    if (this.isSuperAdmin(scope)) return true;
     return scope.permissions.includes(permission);
   }
 
@@ -54,7 +58,8 @@ export class AccessControlService {
   }
 
   canAccessCategory(scope: UserAccessScope, categoryId: string): boolean {
-    if (scope.roleKey === 'super_admin' || scope.categoryIds.length === 0) return true;
+    if (this.isSuperAdmin(scope)) return true;
+    if (scope.categoryIds.length === 0) return false;
     return scope.categoryIds.includes(categoryId);
   }
 
@@ -66,7 +71,7 @@ export class AccessControlService {
     assignedToId?: string | null;
     createdById?: string;
   }): Promise<boolean> {
-    if (scope.roleKey === 'super_admin') return true;
+    if (this.isSuperAdmin(scope)) return true;
 
     if (scope.categoryIds.length > 0 && !scope.categoryIds.includes(incident.categoryId)) {
       return false;
@@ -95,7 +100,7 @@ export class AccessControlService {
   }
 
   buildIncidentWhere(scope: UserAccessScope, userId?: string): Prisma.IncidentWhereInput {
-    if (scope.roleKey === 'super_admin') return {};
+    if (this.isSuperAdmin(scope)) return {};
 
     const where: Prisma.IncidentWhereInput = {};
 
@@ -161,7 +166,7 @@ export class AccessControlService {
     if (scope.organizationId) rooms.push(`org:${scope.organizationId}`);
     for (const gz of scope.geozoneIds) rooms.push(`geozone:${gz}`);
     for (const cat of scope.categoryIds.slice(0, 20)) rooms.push(`category:${cat}`);
-    if (scope.roleKey === 'super_admin') rooms.push('global');
+    if (this.isSuperAdmin(scope)) rooms.push('global');
     return rooms;
   }
 

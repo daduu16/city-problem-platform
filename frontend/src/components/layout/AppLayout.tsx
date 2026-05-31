@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
   Archive,
+  CalendarRange,
   LayoutDashboard,
   Map,
   List,
@@ -8,7 +9,9 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
+  UserCog,
 } from 'lucide-react';
+import { isSuperAdmin } from '@/lib/isSuperAdmin';
 import { useAuthStore } from '@/stores/authStore';
 import { useUiStore } from '@/stores/uiStore';
 import { az } from '@/i18n/az';
@@ -18,8 +21,9 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout, can } = useAuthStore();
+  const { user, logout, can, access } = useAuthStore();
   const { sidebarCollapsed, toggleSidebar } = useUiStore();
+  const superAdmin = isSuperAdmin(access, user);
 
   const nav = [
     { to: '/', label: az.nav.dashboard, icon: LayoutDashboard, permission: 'view_dashboard' },
@@ -34,13 +38,33 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     ...(can('manage_users')
       ? [{ to: '/admin/users', label: az.nav.admin, icon: Settings, permission: 'manage_users' }]
       : []),
+    ...(can('manage_assignees')
+      ? [
+          {
+            to: '/admin/assignees',
+            label: az.nav.executors,
+            icon: UserCog,
+            permission: 'manage_assignees',
+          },
+        ]
+      : []),
+    ...(superAdmin
+      ? [
+          {
+            to: '/admin/availability-overview',
+            label: az.nav.availabilityCalendar,
+            icon: CalendarRange,
+            permission: 'manage_assignees',
+          },
+        ]
+      : []),
   ];
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-screen overflow-hidden bg-background">
       <aside
         className={cn(
-          'flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm transition-[width] duration-200 ease-in-out',
+          'flex h-full shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm transition-[width] duration-200 ease-in-out',
           sidebarCollapsed ? 'w-16' : 'w-56',
         )}
       >
@@ -121,7 +145,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </Button>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto">{children}</main>
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
+        {children}
+      </main>
     </div>
   );
 }

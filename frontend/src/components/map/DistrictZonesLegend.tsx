@@ -11,7 +11,7 @@ import { useMapStore } from '@/stores/mapStore';
 import type { MapIncident } from '@/types';
 import { az } from '@/i18n/az';
 import { MAP_GLASS_PANEL_CLASS } from '@/lib/mapGlass';
-import { MAP_PANEL_HINT_CLASS, MAP_PANEL_TITLE_CLASS } from '@/lib/mapPanelStyles';
+import { MAP_PANEL_TITLE_CLASS } from '@/lib/mapPanelStyles';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -91,9 +91,6 @@ export function DistrictZonesLegend({ incidents }: Props) {
 						);
 					})}
 				</ul>
-				<p className={MAP_PANEL_HINT_CLASS}>
-					{az.map.zonesHint}
-				</p>
 			</CardContent>
 		</Card>
 	);

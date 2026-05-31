@@ -25,8 +25,6 @@ export type MapLayerKey =
 
 export type MapViewMode = '2d' | '3d';
 
-export type IncidentMarkerMode = 'status' | 'type';
-
 export type IncidentCreateMode = false | 'pick' | 'form';
 
 export type IncidentCreateLocation = {

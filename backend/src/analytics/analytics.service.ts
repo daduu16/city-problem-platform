@@ -206,6 +206,57 @@ export class AnalyticsService {
     return groups.map((g) => ({ status: g.status, count: g._count.id }));
   }
 
+  /** Status totals plus per-status category counts for dashboard drill-down charts. */
+  async getStatusCategoryBreakdown(user: JwtPayload) {
+    const scope = await this.accessControl.getScope(user.sub);
+    this.accessControl.requirePermission(scope, 'view_dashboard');
+    this.requireAnalytics(scope, 'by_status');
+    this.requireAnalytics(scope, 'by_category');
+
+    const baseWhere = await this.scopedWhere(user);
+    const groups = await this.prisma.incident.groupBy({
+      by: ['status', 'categoryId'],
+      _count: { id: true },
+      where: baseWhere,
+    });
+
+    const categoryIds = [...new Set(groups.map((g) => g.categoryId))];
+    const categories = await this.prisma.category.findMany({
+      where: { id: { in: categoryIds } },
+      select: { id: true, key: true, name: true },
+    });
+    const catMap = Object.fromEntries(categories.map((c) => [c.id, c]));
+
+    const statusTotals = new Map<IncidentStatus, number>();
+    const categoriesByStatus: Record<string, Array<{ categoryId: string; category: typeof categories[0]; count: number }>> = {};
+
+    for (const g of groups) {
+      const status = g.status;
+      const count = g._count.id;
+      statusTotals.set(status, (statusTotals.get(status) ?? 0) + count);
+
+      const category = catMap[g.categoryId];
+      if (!category) continue;
+
+      if (!categoriesByStatus[status]) categoriesByStatus[status] = [];
+      categoriesByStatus[status].push({
+        categoryId: g.categoryId,
+        category,
+        count,
+      });
+    }
+
+    for (const status of Object.keys(categoriesByStatus)) {
+      categoriesByStatus[status].sort((a, b) => b.count - a.count);
+    }
+
+    const statuses = [...statusTotals.entries()]
+      .map(([status, count]) => ({ status, count }))
+      .sort((a, b) => b.count - a.count);
+
+    return { statuses, categoriesByStatus };
+  }
+
   async getTimeline(user: JwtPayload, days = 7) {
     const scope = await this.accessControl.getScope(user.sub);
     this.accessControl.requirePermission(scope, 'view_dashboard');

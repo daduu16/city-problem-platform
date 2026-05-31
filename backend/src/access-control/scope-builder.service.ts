@@ -5,7 +5,16 @@ import { IncidentScopeType, UserAccessScope } from './access-scope.types';
 
 @Injectable()
 export class ScopeBuilderService {
+  private allPermissionsCache: string[] | null = null;
+
   constructor(private prisma: PrismaService) {}
+
+  private async allPermissionKeys(): Promise<string[]> {
+    if (this.allPermissionsCache) return this.allPermissionsCache;
+    const rows = await this.prisma.permission.findMany({ select: { key: true } });
+    this.allPermissionsCache = rows.map((r) => r.key);
+    return this.allPermissionsCache;
+  }
 
   private mapIncidentScope(scope: IncidentScope): IncidentScopeType {
     switch (scope) {
@@ -82,12 +91,16 @@ export class ScopeBuilderService {
 
     const isSuperAdmin = user.role.key === 'super_admin';
 
+    const rolePermissions = user.role.permissions.map((rp) => rp.permission.key);
+
     return {
       userId: user.id,
       roleKey: user.role.key,
       roleId: user.role.id,
       organizationId: user.organizationId,
-      permissions: user.role.permissions.map((rp) => rp.permission.key),
+      permissions: isSuperAdmin
+        ? await this.allPermissionKeys()
+        : rolePermissions,
       categoryIds: isSuperAdmin ? [] : categoryIds,
       categoryKeys: isSuperAdmin ? ['*'] : categories.map((c) => c.key),
       geozoneIds: isSuperAdmin ? [] : geozoneIds,

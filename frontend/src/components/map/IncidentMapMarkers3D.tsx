@@ -1,13 +1,11 @@
 import { useMap } from 'react-map-gl/maplibre';
 import type { MapIncidentPin } from '@/lib/mapIncidentPin';
-import type { IncidentMarkerMode } from '@/stores/mapStore';
 import { useIncidentSupercluster } from '@/hooks/useIncidentSupercluster';
 import { IncidentClusterMarkers3D } from '@/components/map/IncidentClusterMarkers3D';
 import { IncidentMarkers3D } from '@/components/map/IncidentMarkers3D';
 
 interface Props {
 	pins: MapIncidentPin[];
-	markerMode?: IncidentMarkerMode;
 	showClusters: boolean;
 	onPinClick: (pin: MapIncidentPin) => void;
 }
@@ -15,7 +13,6 @@ interface Props {
 /** Incident pins + DOM clusters — must render inside `<Map>`. */
 export function IncidentMapMarkers3D({
 	pins,
-	markerMode,
 	showClusters,
 	onPinClick,
 }: Props) {
@@ -36,7 +33,6 @@ export function IncidentMapMarkers3D({
 			)}
 			<IncidentMarkers3D
 				pins={pins}
-				markerMode={markerMode}
 				showClusters={showClusters}
 				clusters={clusters}
 				clusterReady={clusterReady}

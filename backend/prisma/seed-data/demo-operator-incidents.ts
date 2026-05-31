@@ -27,7 +27,6 @@ export type DemoOperatorIncident = {
   organization?: 'municipality' | 'azeriqaz';
   districtStatus?: DistrictStatus;
   comments?: string[];
-  /** Citizen reports that attach to this dispatcher-created incident */
   lateReports?: DemoReportSeed[];
 };
 
@@ -41,6 +40,7 @@ const DISPATCHER_POINT = {
   address: 'Nərimanov pr., 120, Nərimanov r-n, Bakı',
 };
 
+/** 5 dispatcher incidents — together with 35 citizen groups = 40 situations. */
 export function buildDemoOperatorIncidents(): DemoOperatorIncident[] {
   const base = DISPATCHER_POINT;
   const nearA = spreadWithinRadius(base.lat, base.lng, 'op-late-a', 75);

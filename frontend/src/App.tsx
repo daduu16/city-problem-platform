@@ -8,7 +8,11 @@ import { MapPage } from '@/pages/MapPage';
 import { ArchivedMapPage } from '@/pages/ArchivedMapPage';
 import { IncidentsPage } from '@/pages/IncidentsPage';
 import { AdminUsersPage } from '@/pages/AdminUsersPage';
+import { AssigneesPage } from '@/pages/AssigneesPage';
+import { AvailabilityOverviewPage } from '@/pages/AvailabilityOverviewPage';
+import { SuperAdminRoute } from '@/components/auth/SuperAdminRoute';
 import { useRealtime } from '@/hooks/useRealtime';
+import { useAuthSessionRefresh } from '@/hooks/useAuthSessionRefresh';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
@@ -33,6 +37,7 @@ export default function App() {
 }
 
 function AuthenticatedApp() {
+  useAuthSessionRefresh();
   useRealtime();
 
   return (
@@ -76,6 +81,22 @@ function AuthenticatedApp() {
             <PermissionRoute permission="manage_users">
               <AdminUsersPage />
             </PermissionRoute>
+          }
+        />
+        <Route
+          path="/admin/assignees"
+          element={
+            <PermissionRoute permission="manage_assignees">
+              <AssigneesPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="/admin/availability-overview"
+          element={
+            <SuperAdminRoute>
+              <AvailabilityOverviewPage />
+            </SuperAdminRoute>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />

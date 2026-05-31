@@ -697,7 +697,11 @@ async function main() {
     }
   }
 
-  const reportGroups = attachOpsToGroups(groupReports(buildDemoReports()));
+  const demoReports = buildDemoReports();
+  const reportGroups = attachOpsToGroups(groupReports(demoReports));
+  if (reportGroups.length !== 35) {
+    console.warn(`Expected 35 citizen incident groups, got ${reportGroups.length}`);
+  }
   for (const group of reportGroups) {
     await seedReportGroup(group);
   }
@@ -801,8 +805,9 @@ async function main() {
     );
   }
 
+  const operatorCount = buildDemoOperatorIncidents().length;
   console.log(
-    `Seed complete: ${seededCount} incidents, ${reportRows} citizen reports, ${users.length} users. Password: ${DEFAULT_PASSWORD}`,
+    `Seed complete: ${seededCount} incidents (${reportGroups.length} citizen + ${operatorCount} dispatcher), ${reportRows} citizen reports, ${users.length} users. Password: ${DEFAULT_PASSWORD}`,
   );
   console.log(`Azeriqaz demo: azeriqaz@municipal.local / ${DEFAULT_PASSWORD}`);
 }

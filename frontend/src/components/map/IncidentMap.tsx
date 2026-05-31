@@ -7,9 +7,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { useFilteredMapIncidents } from "@/hooks/useFilteredMapIncidents";
 import { useMapIncidentPins } from "@/hooks/useMapIncidentPins";
 import type { MapIncidentPin } from "@/lib/mapIncidentPin";
-import { statusMarkerHtml } from "@/lib/incidentStyles";
-import { typeMarkerHtml } from "@/lib/incidentTypeStyles";
-import type { IncidentMarkerMode } from "@/stores/mapStore";
+import { incidentMarkerHtml } from "@/lib/incidentMarkerHtml";
 import {
 	NARIMANOV_CENTER,
 	BASE_MAP_2D_TILE_CLASS,
@@ -18,7 +16,10 @@ import {
 	getActiveMapRegion,
 } from "@/lib/mapConfig";
 import { MAP_DISTRICT_COLOR } from "@/lib/mapPalette";
-import { MAP_CLUSTER_RADIUS } from "@/lib/mapClusterConfig";
+import {
+	MAP_CLUSTER_DISABLE_ZOOM,
+	MAP_CLUSTER_RADIUS,
+} from "@/lib/mapClusterConfig";
 import type { NarimanovRayonData } from "@/lib/narimanovRayon";
 import { CreateIncidentDraftMarker2D } from "@/components/map/CreateIncidentDraftMarker2D";
 import { MapLocationPickHandler2D } from "@/components/map/MapLocationPickHandler2D";
@@ -43,30 +44,12 @@ L.Icon.Default.mergeOptions({
 
 interface Props {
 	incidents: MapIncident[];
-	markerMode?: IncidentMarkerMode;
 	narimanovRayon: NarimanovRayonData;
 	places: GeoJSON.FeatureCollection;
 }
 
-function createPinMarkerIcon(
-	pin: MapIncidentPin,
-	markerMode: IncidentMarkerMode,
-) {
-	const incident = pin.incident;
-	const inner =
-		markerMode === "type"
-			? typeMarkerHtml(incident.type)
-			: statusMarkerHtml(incident.status);
-	const size =
-		markerMode === "type"
-			? incident.type === "EMERGENCY"
-				? 18
-				: 14
-			: incident.status === "OVERDUE"
-				? 18
-				: incident.status === "PENDING"
-					? 16
-					: 14;
+function createPinMarkerIcon(pin: MapIncidentPin) {
+	const { html: inner, size } = incidentMarkerHtml(pin);
 	return L.divIcon({
 		className: "incident-marker-wrapper",
 		html: inner,
@@ -144,7 +127,6 @@ function HeatmapLayer({
 
 export function IncidentMap({
 	incidents,
-	markerMode = "status",
 	narimanovRayon,
 	places,
 }: Props) {
@@ -197,7 +179,7 @@ export function IncidentMap({
 		<Marker
 			key={pin.incident.id}
 			position={[pin.lat, pin.lng]}
-			icon={createPinMarkerIcon(pin, markerMode)}
+			icon={createPinMarkerIcon(pin)}
 			eventHandlers={{
 				click: (e) => {
 					L.DomEvent.stopPropagation(e);
@@ -260,6 +242,7 @@ export function IncidentMap({
 				<MarkerClusterGroup
 					chunkedLoading
 					maxClusterRadius={MAP_CLUSTER_RADIUS}
+					disableClusteringAtZoom={MAP_CLUSTER_DISABLE_ZOOM}
 					spiderfyOnMaxZoom
 					showCoverageOnHover={false}
 					zoomToBoundsOnClick

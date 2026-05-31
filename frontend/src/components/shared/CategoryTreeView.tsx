@@ -1,5 +1,10 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { MapMarkerChip } from '@/components/map/MapMarkerChip';
+import {
+  CATEGORY_LEGEND_CHIP,
+  getCategoryStyle,
+} from '@/lib/categoryStyles';
 import type { CategoryTreeNode } from '@/lib/categoryTree';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -97,14 +102,15 @@ function TreeGroup({
           <Label
             htmlFor={props.mode === 'checkbox' ? `cat-group-${node.key}` : undefined}
             className={cn(
-              'min-w-0 flex-1 cursor-pointer py-0.5 text-sm font-medium text-foreground',
+              'flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-0.5 text-sm font-medium text-foreground',
               props.mode === 'select' && 'cursor-default font-semibold',
             )}
             onClick={
               props.mode === 'select' ? () => onToggleExpand(node.key) : undefined
             }
           >
-            {node.label}
+            <CategoryChip categoryKey={node.categoryKey ?? node.key} />
+            <span className="truncate">{node.label}</span>
           </Label>
         </div>
         {isOpen && (
@@ -149,14 +155,15 @@ function TreeLeaf({
         type="button"
         onClick={() => props.onSelectKey(node.key)}
         className={cn(
-          'flex w-full items-center rounded-md py-1 pr-2 text-left text-sm transition-colors',
+          'flex w-full items-center gap-2 rounded-md py-1 pr-2 text-left text-sm transition-colors',
           selected
             ? 'bg-primary/10 font-medium text-primary'
             : 'text-foreground hover:bg-muted/50',
         )}
         style={{ paddingLeft: depth * 12 + 28 }}
       >
-        {node.label}
+        <CategoryChip categoryKey={node.categoryKey ?? node.key} />
+        <span className="truncate">{node.label}</span>
       </button>
     );
   }
@@ -179,7 +186,10 @@ function TreeLeaf({
         htmlFor={`cat-${node.key}`}
         className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 text-sm font-normal text-foreground"
       >
-        <span className="truncate">{node.label}</span>
+        <span className="flex min-w-0 items-center gap-2">
+          <CategoryChip categoryKey={node.categoryKey ?? node.key} />
+          <span className="truncate">{node.label}</span>
+        </span>
         {props.counts && (
           <span
             className="shrink-0 tabular-nums text-foreground/65"
@@ -223,6 +233,18 @@ function TreeNode({
       depth={depth}
       props={props}
       leafKeys={[node.key]}
+    />
+  );
+}
+
+function CategoryChip({ categoryKey }: { categoryKey: string }) {
+  const style = getCategoryStyle(categoryKey);
+  return (
+    <MapMarkerChip
+      mapColor={CATEGORY_LEGEND_CHIP.mapColor}
+      mapBorder={CATEGORY_LEGEND_CHIP.mapBorder}
+      icon={style.icon}
+      size={18}
     />
   );
 }

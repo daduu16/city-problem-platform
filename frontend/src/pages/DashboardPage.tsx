@@ -13,6 +13,8 @@ import { az } from '@/i18n/az';
 import { ApiConnectionAlert } from '@/components/ApiConnectionAlert';
 import { AnalyticsCharts } from '@/components/dashboard/AnalyticsCharts';
 import { CategoryRankingList } from '@/components/dashboard/CategoryRankingList';
+import { DashboardSection } from '@/components/dashboard/DashboardSection';
+import { EventsOverviewPanel } from '@/components/dashboard/EventsOverviewPanel';
 import { LiveEventsFeed } from '@/components/dashboard/LiveEventsFeed';
 import { IncidentDrawer } from '@/components/incidents/IncidentDrawer';
 import { PriorityKpiCards } from '@/components/dashboard/PriorityKpiCards';
@@ -20,7 +22,7 @@ import { TopZonesTable } from '@/components/dashboard/TopZonesTable';
 import { UrbanHealthScore } from '@/components/dashboard/UrbanHealthScore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
-import { PlusCircle, Zap } from 'lucide-react';
+import { AlertTriangle, PlusCircle, Zap } from 'lucide-react';
 
 export function DashboardPage() {
   const hasAnalytics = useAuthStore((s) => s.hasAnalytics);
@@ -108,8 +110,10 @@ export function DashboardPage() {
     hasAnalytics('by_category') ||
     hasAnalytics('by_status');
 
+  const showOverview = hasAnalytics('kpis');
+
   return (
-    <div className="dashboard-page mx-auto max-w-[1600px] p-6">
+    <div className="dashboard-page w-full min-w-0 p-6">
       <header className="mb-6 flex flex-wrap items-start justify-between gap-4 border-b border-border/60 pb-5">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -133,6 +137,14 @@ export function DashboardPage() {
               value={kpis.newToday}
               color="#faad14"
             />
+            {kpis.overdueTasks > 0 && (
+              <QuickStat
+                icon={AlertTriangle}
+                label={az.dashboard.kpiOverdue}
+                value={kpis.overdueTasks}
+                color="#ff4d4f"
+              />
+            )}
           </div>
         )}
         {apiUnreachable && (
@@ -143,39 +155,55 @@ export function DashboardPage() {
       {isLoading && !apiUnreachable ? (
         <DashboardSkeleton />
       ) : kpis ? (
-        <div className="space-y-6">
-          <PriorityKpiCards data={kpis} timelineCounts={timelineCounts} />
+        <div className="space-y-8">
+          {showOverview && (
+            <EventsOverviewPanel kpis={kpis} timelineCounts={timelineCounts} />
+          )}
 
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-            <div className="space-y-4 xl:col-span-2">
-              {showCharts && (
-                <AnalyticsCharts
-                  timeline={timeline}
-                  resolutionTimeline={resolutionTimeline}
-                  byCategory={byCategory}
-                  byStatus={byStatus}
-                  showTimeline={hasAnalytics('timeline')}
-                  showResolution={hasAnalytics('timeline')}
-                  showCategory={hasAnalytics('by_category')}
-                  showStatus={hasAnalytics('by_status')}
-                />
-              )}
-              {hasAnalytics('top_zones') && <TopZonesTable zones={topZones} />}
-            </div>
+          <DashboardSection
+            title={az.dashboard.sectionAttention}
+            description={az.dashboard.sectionAttentionHint}
+          >
+            <PriorityKpiCards data={kpis} timelineCounts={timelineCounts} />
+          </DashboardSection>
 
-            <div className="space-y-4">
-              <UrbanHealthScore data={kpis} />
-              {hasAnalytics('by_category') && (
-                <CategoryRankingList items={byCategory} />
-              )}
-              {hasAnalytics('recent_events') && (
-                <LiveEventsFeed
-                  events={recentEvents}
-                  onEventClick={setSelectedIncidentId}
-                />
-              )}
-            </div>
-          </div>
+          {(showCharts || hasAnalytics('top_zones')) && (
+            <DashboardSection
+              title={az.dashboard.sectionDynamics}
+              description={az.dashboard.sectionDynamicsHint}
+            >
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+                <div className="space-y-4 xl:col-span-2">
+                  {showCharts && (
+                    <AnalyticsCharts
+                      timeline={timeline}
+                      resolutionTimeline={resolutionTimeline}
+                      byCategory={byCategory}
+                      byStatus={byStatus}
+                      showTimeline={hasAnalytics('timeline')}
+                      showResolution={hasAnalytics('timeline')}
+                      showCategory={hasAnalytics('by_category')}
+                      showDistribution={hasAnalytics('by_status')}
+                    />
+                  )}
+                  {hasAnalytics('top_zones') && <TopZonesTable zones={topZones} />}
+                </div>
+
+                <div className="space-y-4">
+                  <UrbanHealthScore data={kpis} />
+                  {hasAnalytics('by_category') && (
+                    <CategoryRankingList items={byCategory} />
+                  )}
+                  {hasAnalytics('recent_events') && (
+                    <LiveEventsFeed
+                      events={recentEvents}
+                      onEventClick={setSelectedIncidentId}
+                    />
+                  )}
+                </div>
+              </div>
+            </DashboardSection>
+          )}
         </div>
       ) : !hasAnalytics('kpis') ? (
         <Card className="border-border/60 p-8 text-center text-sm text-muted-foreground">
@@ -215,11 +243,15 @@ function QuickStat({
 
 function DashboardSkeleton() {
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-28 w-full rounded-xl" />
-        ))}
+    <div className="space-y-8">
+      <Skeleton className="h-52 w-full rounded-xl" />
+      <div className="space-y-4">
+        <Skeleton className="h-4 w-40" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full rounded-xl" />
+          ))}
+        </div>
       </div>
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="space-y-4 xl:col-span-2">

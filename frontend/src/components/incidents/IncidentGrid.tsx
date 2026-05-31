@@ -131,7 +131,6 @@ export function IncidentGrid({ rows, onRowClick, toolbar }: Props) {
               resizable: true,
               suppressMovable: true,
             }}
-            animateRows
             suppressCellFocus
             pagination
             paginationPageSize={25}

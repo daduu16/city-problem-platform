@@ -17,7 +17,7 @@ import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre';
 import type { LngLatBoundsLike, MapMouseEvent } from 'maplibre-gl';
 import type { MapIncident } from '@/types';
 import type { MapIncidentPin } from '@/lib/mapIncidentPin';
-import { useMapStore, type IncidentMarkerMode } from '@/stores/mapStore';
+import { useMapStore } from '@/stores/mapStore';
 import { useFilteredMapIncidents } from '@/hooks/useFilteredMapIncidents';
 import { useMapIncidentPins } from '@/hooks/useMapIncidentPins';
 import {
@@ -51,7 +51,6 @@ const INCIDENTS_SOURCE = 'incidents';
 
 interface Props {
   incidents: MapIncident[];
-  markerMode?: IncidentMarkerMode;
   narimanovRayon: NarimanovRayonData;
   places: GeoJSON.FeatureCollection;
 }
@@ -124,7 +123,6 @@ function DisableBaseMapHoverPopups() {
 
 export function IncidentMap3D({
   incidents,
-  markerMode = 'status',
   narimanovRayon,
   places,
 }: Props) {
@@ -363,7 +361,6 @@ export function IncidentMap3D({
 
         <IncidentMapMarkers3D
           pins={pins}
-          markerMode={markerMode}
           showClusters={showClusters}
           onPinClick={handlePinClick}
         />

@@ -4,6 +4,8 @@ export type CategoryTreeNode = {
   key: string;
   label: string;
   children?: CategoryTreeNode[];
+  /** Map chip style key when `key` is not a category slug (e.g. DB id). */
+  categoryKey?: string;
 };
 
 /** Full incident category hierarchy (mirrors backend CATEGORY_TREE). */

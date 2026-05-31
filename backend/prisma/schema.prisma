@@ -61,6 +61,34 @@ enum IncidentScope {
   ORGANIZATION
 }
 
+enum CategoryAssigneeKind {
+  TEAM
+  PERSON
+}
+
+enum AssigneeAvailabilityKind {
+  WEEKLY
+  DATE
+}
+
+enum AssigneeAvailabilitySlotType {
+  AVAILABLE
+  UNAVAILABLE
+}
+
+enum IncidentAssigneeTaskStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// FIXED = strict calendar slot; WINDOW = complete-by deadline range (soft).
+enum IncidentAssigneeTaskScheduleType {
+  FIXED
+  WINDOW
+}
+
 model Organization {
   id        String     @id @default(uuid())
   name      String
@@ -68,6 +96,7 @@ model Organization {
   createdAt DateTime   @default(now()) @map("created_at")
   users     User[]
   incidents Incident[]
+  assignees CategoryAssignee[]
 
   @@map("organizations")
 }
@@ -115,8 +144,64 @@ model Category {
   incidents            Incident[]           @relation("IncidentCategory")
   subcategoryIncidents Incident[]           @relation("IncidentSubcategory")
   userAccess           UserCategoryAccess[]
+  assigneeLinks        CategoryAssigneeCategory[]
 
   @@map("categories")
+}
+
+// Team or person responsible for resolving incidents in assigned categories.
+model CategoryAssignee {
+  id             String               @id @default(uuid())
+  kind           CategoryAssigneeKind
+  name           String
+  description    String?
+  contactEmail   String?              @map("contact_email")
+  contactPhone   String?              @map("contact_phone")
+  organizationId String?              @map("organization_id")
+  isActive       Boolean              @default(true) @map("is_active")
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @updatedAt @map("updated_at")
+
+  organization Organization?              @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  categories   CategoryAssigneeCategory[]
+  tasks        IncidentAssigneeTask[]
+  availabilitySlots AssigneeAvailabilitySlot[]
+
+  @@index([kind])
+  @@index([isActive])
+  @@map("category_assignees")
+}
+
+model AssigneeAvailabilitySlot {
+  id          String                     @id @default(uuid())
+  assigneeId  String                     @map("assignee_id")
+  kind        AssigneeAvailabilityKind
+  dayOfWeek   Int?                       @map("day_of_week")
+  date        DateTime?                  @db.Date
+  slotType    AssigneeAvailabilitySlotType @map("slot_type")
+  startMinute Int                        @map("start_minute")
+  endMinute   Int                        @map("end_minute")
+  label       String?
+  createdAt   DateTime                   @default(now()) @map("created_at")
+  updatedAt   DateTime                   @updatedAt @map("updated_at")
+
+  assignee CategoryAssignee @relation(fields: [assigneeId], references: [id], onDelete: Cascade)
+
+  @@index([assigneeId])
+  @@index([assigneeId, kind])
+  @@index([assigneeId, date])
+  @@map("assignee_availability_slots")
+}
+
+model CategoryAssigneeCategory {
+  assigneeId String @map("assignee_id")
+  categoryId String @map("category_id")
+
+  assignee CategoryAssignee @relation(fields: [assigneeId], references: [id], onDelete: Cascade)
+  category Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([assigneeId, categoryId])
+  @@map("category_assignee_categories")
 }
 
 model User {
@@ -150,6 +235,7 @@ model User {
   comments          IncidentComment[]
   citizenReports    IncidentReport[]  @relation("CitizenReporter")
   auditLogs         AuditLog[]
+  createdAssigneeTasks IncidentAssigneeTask[] @relation("TaskCreatedBy")
 
   @@map("users")
 }
@@ -246,6 +332,7 @@ model Incident {
   attachments  Attachment[]
   comments     IncidentComment[]
   reports      IncidentReport[]
+  assigneeTasks IncidentAssigneeTask[]
 
   @@index([status])
   @@index([priority])
@@ -256,6 +343,34 @@ model Incident {
   @@index([organizationId])
   @@index([districtStatus])
   @@map("incidents")
+}
+
+model IncidentAssigneeTask {
+  id              String                           @id @default(uuid())
+  incidentId      String                           @map("incident_id")
+  assigneeId      String                           @map("assignee_id")
+  title           String
+  description     String?
+  startsAt        DateTime                         @map("starts_at")
+  endsAt          DateTime                         @map("ends_at")
+  scheduleType    IncidentAssigneeTaskScheduleType @default(FIXED) @map("schedule_type")
+  estimatedMinutes Int?                            @map("estimated_minutes")
+  status          IncidentAssigneeTaskStatus       @default(SCHEDULED)
+  createdById String                     @map("created_by")
+  completedAt DateTime?                  @map("completed_at")
+  createdAt   DateTime                   @default(now()) @map("created_at")
+  updatedAt   DateTime                   @updatedAt @map("updated_at")
+
+  incident  Incident         @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  assignee  CategoryAssignee @relation(fields: [assigneeId], references: [id], onDelete: Restrict)
+  createdBy User             @relation("TaskCreatedBy", fields: [createdById], references: [id])
+
+  @@index([incidentId])
+  @@index([assigneeId])
+  @@index([startsAt])
+  @@index([endsAt])
+  @@index([status])
+  @@map("incident_assignee_tasks")
 }
 
 model IncidentHistory {

@@ -286,54 +286,10 @@
   box-shadow:
     0 0 0 2px rgba(82, 196, 26, 0.45),
     0 2px 8px rgba(0, 0, 0, 0.2);
-  animation: create-pin-pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes create-pin-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.12);
-  }
 }
 
 .status-marker {
   box-sizing: border-box;
-}
-
-.status-marker-new {
-  animation: status-pulse 1.8s ease-in-out infinite;
-}
-
-.status-marker-overdue {
-  animation: status-pulse 1s ease-in-out infinite;
-}
-
-.status-marker-in-progress {
-  animation: status-spin 4s linear infinite;
-}
-
-@keyframes status-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.2);
-    opacity: 0.85;
-  }
-}
-
-@keyframes status-spin {
-  from {
-    filter: hue-rotate(0deg);
-  }
-  to {
-    filter: hue-rotate(15deg);
-  }
 }
 
 .ag-theme-shadcn {

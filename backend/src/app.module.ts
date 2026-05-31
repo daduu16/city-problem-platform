@@ -19,6 +19,9 @@ import { CategoriesModule } from './categories/categories.module';
 import { NotificationModule } from './notifications/notification.module';
 import { AiModule } from './ai/ai.module';
 import { MobileApiModule } from './mobile-api/mobile-api.module';
+import { AssigneesModule } from './assignees/assignees.module';
+import { IncidentTasksModule } from './incident-tasks/incident-tasks.module';
+import { AssigneeAvailabilityModule } from './assignee-availability/assignee-availability.module';
 
 @Module({
   imports: [
@@ -46,6 +49,9 @@ import { MobileApiModule } from './mobile-api/mobile-api.module';
     NotificationModule,
     AiModule,
     MobileApiModule,
+    AssigneesModule,
+    AssigneeAvailabilityModule,
+    IncidentTasksModule,
   ],
   providers: [
     {

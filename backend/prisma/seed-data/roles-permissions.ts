@@ -9,6 +9,7 @@ export const PERMISSIONS = [
   { key: 'export_reports', description: 'Export analytics reports' },
   { key: 'manage_users', description: 'Manage users and access' },
   { key: 'manage_geozones', description: 'Manage geozones' },
+  { key: 'manage_assignees', description: 'Manage category responsible parties' },
   { key: 'view_audit', description: 'View audit log' },
 ] as const;
 
@@ -41,6 +42,7 @@ export const ROLES: Array<{
       'export_reports',
       'manage_users',
       'manage_geozones',
+      'manage_assignees',
       'view_audit',
     ],
   },

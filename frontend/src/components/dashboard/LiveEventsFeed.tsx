@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { az } from '@/i18n/az';
 import { formatCategory, formatRelativeTime, formatStatus } from '@/lib/format';
 import { getPriorityStyle, getStatusStyle } from '@/lib/incidentStyles';
 import type { RecentEventRow } from '@/types';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
@@ -11,10 +13,27 @@ type Props = {
 };
 
 export function LiveEventsFeed({ events, onEventClick }: Props) {
+  const criticalCount = useMemo(
+    () => events.filter((e) => e.priority === 'CRITICAL').length,
+    [events],
+  );
+
   return (
     <Card className="border-border/60 bg-card shadow-sm">
-      <CardHeader className="pb-2">
+      <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
         <CardTitle className="text-sm font-semibold">{az.dashboard.liveEvents}</CardTitle>
+        <div className="flex shrink-0 flex-wrap justify-end gap-1">
+          {events.length > 0 && (
+            <Badge variant="secondary" className="text-[10px] font-normal">
+              {az.dashboard.liveEventsCount(events.length)}
+            </Badge>
+          )}
+          {criticalCount > 0 && (
+            <Badge variant="destructive" className="text-[10px] font-normal">
+              {az.dashboard.liveEventsUrgent(criticalCount)}
+            </Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-0 p-0">
         {events.length === 0 ? (

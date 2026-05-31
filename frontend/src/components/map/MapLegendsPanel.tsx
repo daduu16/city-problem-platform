@@ -44,11 +44,8 @@ export function MapLegendsPanel({
     >
       <div className="pointer-events-auto flex flex-col gap-2">
         <DistrictZonesLegend incidents={incidents} />
-        {variant === 'archived' ? (
-          <TypeLegend incidents={visibleIncidents} />
-        ) : (
-          <StatusLegend incidents={incidentsForStatusCounts} />
-        )}
+        <StatusLegend incidents={incidentsForStatusCounts} />
+        {variant === 'archived' && <TypeLegend incidents={visibleIncidents} />}
         {showPlacesLayer && showPlaces && <PlaceTypeLegend />}
         {showPlacesLayer && viewMode === '3d' && <BuildingTypeLegend />}
       </div>

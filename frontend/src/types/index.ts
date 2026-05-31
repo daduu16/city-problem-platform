@@ -97,6 +97,7 @@ export interface IncidentDetail extends MapIncident {
     createdAt: string;
     author: { id: string; name: string };
   }>;
+  assigneeTasks?: IncidentAssigneeTask[];
 }
 
 export interface DashboardKpis {
@@ -144,6 +145,18 @@ export interface ResolutionTimelinePoint {
   resolved: number;
 }
 
+export interface StatusCategoryBreakdown {
+  statuses: Array<{ status: IncidentStatus; count: number }>;
+  categoriesByStatus: Record<
+    string,
+    Array<{
+      categoryId: string;
+      category: { id: string; key: string; name: string };
+      count: number;
+    }>
+  >;
+}
+
 export interface Geozone {
   id: string;
   name: string;
@@ -178,4 +191,162 @@ export interface Category {
   name: string;
   parentId?: string | null;
   serviceOwner?: string | null;
+}
+
+export type CategoryAssigneeKind = 'TEAM' | 'PERSON';
+
+export interface CategoryAssignee {
+  id: string;
+  kind: CategoryAssigneeKind;
+  name: string;
+  description?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  isActive: boolean;
+  organization?: Organization | null;
+  categories?: Array<{ category: Category }>;
+}
+
+export type IncidentAssigneeTaskStatus =
+  | 'SCHEDULED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'CANCELLED';
+
+export type IncidentAssigneeTaskScheduleType = 'FIXED' | 'WINDOW';
+
+export interface IncidentAssigneeTask {
+  id: string;
+  incidentId: string;
+  assigneeId: string;
+  title: string;
+  description?: string | null;
+  startsAt: string;
+  endsAt: string;
+  scheduleType: IncidentAssigneeTaskScheduleType;
+  estimatedMinutes?: number | null;
+  status: IncidentAssigneeTaskStatus;
+  assignee: CategoryAssignee;
+  createdBy: { id: string; name: string };
+}
+
+export interface AssigneeDaySchedule {
+  assignee: { id: string; name: string };
+  date: string;
+  day: AssigneeAvailabilityCalendarDay;
+  draft?: {
+    fixedConflicts: Array<{
+      id: string;
+      title: string;
+      startsAt: string;
+      endsAt: string;
+      scheduleType: IncidentAssigneeTaskScheduleType;
+    }>;
+    outsideHours: boolean;
+    reason?: string;
+  };
+}
+
+export type AssigneeAvailabilityKind = 'WEEKLY' | 'DATE';
+export type AssigneeAvailabilitySlotType = 'AVAILABLE' | 'UNAVAILABLE';
+
+export interface AssigneeAvailabilitySlot {
+  id: string;
+  assigneeId: string;
+  kind: AssigneeAvailabilityKind;
+  dayOfWeek: number | null;
+  date: string | null;
+  slotType: AssigneeAvailabilitySlotType;
+  startMinute: number;
+  endMinute: number;
+  label: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AvailabilityDayStatus = 'open' | 'partial' | 'closed' | 'off' | 'busy';
+
+export interface AssigneeAvailabilityCalendarDay {
+  date: string;
+  dayOfWeek: number;
+  hasDateOverride: boolean;
+  status?: AvailabilityDayStatus;
+  effectiveWindows: Array<{ startMinute: number; endMinute: number }>;
+  unavailableBlocks: Array<{ startMinute: number; endMinute: number }>;
+  tasks: Array<{
+    id: string;
+    title: string;
+    startsAt: string;
+    endsAt: string;
+    status: IncidentAssigneeTaskStatus;
+    scheduleType?: IncidentAssigneeTaskScheduleType;
+  }>;
+}
+
+export interface AvailabilityOverview {
+  from: string;
+  to: string;
+  dates: string[];
+  assignees: Array<{
+    id: string;
+    name: string;
+    kind: CategoryAssigneeKind;
+    organization?: Organization | null;
+    days: AssigneeAvailabilityCalendarDay[];
+  }>;
+}
+
+export interface AssigneeAvailabilityCalendar {
+  from: string;
+  to: string;
+  days: AssigneeAvailabilityCalendarDay[];
+}
+
+export type AssigneePickerAvailabilityStatus =
+  | 'available'
+  | 'busy'
+  | 'outside_hours'
+  | 'unavailable_block';
+
+export interface AssigneeAvailabilityCandidate {
+  id: string;
+  name: string;
+  kind: CategoryAssigneeKind;
+  organization?: Organization | null;
+  availabilityStatus: AssigneePickerAvailabilityStatus;
+  reason?: string;
+  conflicts?: Array<{ id: string; title: string; startsAt: string; endsAt: string }>;
+}
+
+export interface AssigneeAvailabilityResult {
+  available: CategoryAssignee[];
+  busy: Array<{
+    id: string;
+    name: string;
+    kind: CategoryAssigneeKind;
+    organization?: Organization | null;
+    conflicts: Array<{ id: string; title: string; startsAt: string; endsAt: string }>;
+  }>;
+  outsideAvailability: Array<{
+    id: string;
+    name: string;
+    kind: CategoryAssigneeKind;
+    organization?: Organization | null;
+    reason: string;
+  }>;
+  /** Unified list sorted for picker UI (available → busy → outside). */
+  candidates: AssigneeAvailabilityCandidate[];
+  startsAt: string;
+  endsAt: string;
+}
+
+export interface AssigneeFreeSlot {
+  startsAt: string;
+  endsAt: string;
+}
+
+export interface AssigneeFreeSlotsResult {
+  assignee: CategoryAssignee;
+  durationMinutes: number;
+  slots: AssigneeFreeSlot[];
 }

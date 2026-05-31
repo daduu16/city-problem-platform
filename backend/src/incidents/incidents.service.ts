@@ -239,6 +239,18 @@ export class IncidentsService {
           include: { author: { select: { id: true, name: true } } },
           orderBy: { createdAt: 'asc' },
         },
+        assigneeTasks: {
+          where: { status: { not: 'CANCELLED' } },
+          include: {
+            assignee: {
+              include: {
+                organization: { select: { id: true, name: true, type: true } },
+              },
+            },
+            createdBy: { select: { id: true, name: true } },
+          },
+          orderBy: { startsAt: 'asc' },
+        },
       },
     });
 

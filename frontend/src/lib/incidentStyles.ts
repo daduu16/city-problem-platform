@@ -1,5 +1,6 @@
 import { az } from '@/i18n/az';
 import { MAP_STATUS_COLORS } from '@/lib/mapPalette';
+import { MAP_ICONS, buildMapPinMarkerHtml } from '@/lib/mapMarkerIcons';
 import type { IncidentPriority, IncidentStatus } from '@/types';
 
 const badgeMuted =
@@ -17,6 +18,7 @@ export interface StatusStyle {
   badgeClass: string;
   rowClass: string;
   markerClass: string;
+  icon: (typeof MAP_ICONS)[keyof typeof MAP_ICONS];
 }
 
 export const STATUS_STYLES: Record<IncidentStatus, StatusStyle> = {
@@ -29,7 +31,8 @@ export const STATUS_STYLES: Record<IncidentStatus, StatusStyle> = {
     border: '#faad14',
     badgeClass: badgeMuted,
     rowClass: 'incident-row-new',
-    markerClass: 'status-marker-new',
+    markerClass: 'status-marker',
+    icon: MAP_ICONS.circleDot,
   },
   IN_PROGRESS: {
     label: az.status.IN_PROGRESS,
@@ -40,7 +43,8 @@ export const STATUS_STYLES: Record<IncidentStatus, StatusStyle> = {
     border: '#5d5fef',
     badgeClass: badgeMuted,
     rowClass: 'incident-row-in-progress',
-    markerClass: 'status-marker-in-progress',
+    markerClass: 'status-marker',
+    icon: MAP_ICONS.loader,
   },
   PENDING: {
     label: az.status.PENDING,
@@ -51,7 +55,8 @@ export const STATUS_STYLES: Record<IncidentStatus, StatusStyle> = {
     border: '#9254de',
     badgeClass: badgeMuted,
     rowClass: 'incident-row-pending',
-    markerClass: 'status-marker-pending',
+    markerClass: 'status-marker',
+    icon: MAP_ICONS.hourglass,
   },
   RESOLVED: {
     label: az.status.RESOLVED,
@@ -62,7 +67,8 @@ export const STATUS_STYLES: Record<IncidentStatus, StatusStyle> = {
     border: '#52c41a',
     badgeClass: badgeMuted,
     rowClass: 'incident-row-resolved',
-    markerClass: 'status-marker-resolved',
+    markerClass: 'status-marker',
+    icon: MAP_ICONS.checkCircle,
   },
   OVERDUE: {
     label: az.status.OVERDUE,
@@ -73,7 +79,8 @@ export const STATUS_STYLES: Record<IncidentStatus, StatusStyle> = {
     border: '#ff4d4f',
     badgeClass: `${badgeMuted} border-destructive/30 bg-destructive/10 text-destructive`,
     rowClass: 'incident-row-overdue',
-    markerClass: 'status-marker-overdue',
+    markerClass: 'status-marker',
+    icon: MAP_ICONS.alertTriangle,
   },
   ARCHIVED: {
     label: az.status.ARCHIVED,
@@ -84,7 +91,8 @@ export const STATUS_STYLES: Record<IncidentStatus, StatusStyle> = {
     border: '#bfbfbf',
     badgeClass: `${badgeMuted} opacity-70 line-through decoration-muted-foreground`,
     rowClass: 'incident-row-archived',
-    markerClass: 'status-marker-archived',
+    markerClass: 'status-marker',
+    icon: MAP_ICONS.archive,
   },
 };
 
@@ -130,24 +138,16 @@ export const ACTIVE_MAP_STATUSES = ALL_STATUSES.filter(
   (s) => s !== 'ARCHIVED',
 );
 
-/** Marker HTML per status — shape + color distinguish states on the map */
+/** Marker HTML per status — icon + color on the map */
 export function statusMarkerHtml(status: IncidentStatus): string {
   const s = getStatusStyle(status);
-  const base = `background:${s.mapColor};border:2px solid ${s.mapBorder};box-shadow:0 1px 4px rgba(0,0,0,.2);`;
-
-  switch (status) {
-    case 'PENDING':
-      return `<span class="status-marker ${s.markerClass}" style="${base}width:12px;height:12px;transform:rotate(45deg);border-radius:2px;display:block;"></span>`;
-    case 'ARCHIVED':
-      return `<span class="status-marker ${s.markerClass}" style="${base}width:11px;height:11px;border-radius:2px;opacity:.65;display:block;"></span>`;
-    case 'RESOLVED':
-      return `<span class="status-marker ${s.markerClass}" style="${base}width:13px;height:13px;border-radius:50%;opacity:.85;display:block;"></span>`;
-    case 'OVERDUE':
-      return `<span class="status-marker ${s.markerClass}" style="${base}width:16px;height:16px;border-radius:50%;display:block;border-width:3px;"></span>`;
-    case 'IN_PROGRESS':
-      return `<span class="status-marker ${s.markerClass}" style="${base}width:14px;height:14px;border-radius:50%;display:block;border-style:dashed;"></span>`;
-    case 'NEW':
-    default:
-      return `<span class="status-marker ${s.markerClass}" style="${base}width:14px;height:14px;border-radius:50%;display:block;"></span>`;
-  }
+  const size =
+    status === 'OVERDUE' ? 32 : status === 'ARCHIVED' ? 26 : 30;
+  return buildMapPinMarkerHtml({
+    mapColor: s.mapColor,
+    mapBorder: s.mapBorder,
+    icon: s.icon,
+    size,
+    markerClass: s.markerClass,
+  });
 }

@@ -1,14 +1,11 @@
 import { useMemo } from 'react';
 import { Marker } from 'react-map-gl/maplibre';
 import type { MapIncidentPin } from '@/lib/mapIncidentPin';
-import { statusMarkerHtml } from '@/lib/incidentStyles';
-import { typeMarkerHtml } from '@/lib/incidentTypeStyles';
-import type { IncidentMarkerMode } from '@/stores/mapStore';
+import { incidentMarkerHtml } from '@/lib/incidentMarkerHtml';
 import type { IncidentClusterFeature } from '@/lib/mapClusterUtils';
 
 interface Props {
 	pins: MapIncidentPin[];
-	markerMode?: IncidentMarkerMode;
 	showClusters: boolean;
 	clusters: IncidentClusterFeature[];
 	clusterReady: boolean;
@@ -44,7 +41,6 @@ function visiblePinIds(
 
 export function IncidentMarkers3D({
 	pins,
-	markerMode = 'status',
 	showClusters,
 	clusters,
 	clusterReady,
@@ -61,10 +57,7 @@ export function IncidentMarkers3D({
 		<>
 			{toRender.map((pin) => {
 				const i = pin.incident;
-				const inner =
-					markerMode === 'type'
-						? typeMarkerHtml(i.type)
-						: statusMarkerHtml(i.status);
+				const { html: inner } = incidentMarkerHtml(pin);
 				return (
 					<Marker
 						key={i.id}

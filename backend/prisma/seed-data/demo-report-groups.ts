@@ -5,6 +5,7 @@ import {
 } from '@prisma/client';
 import type { ReportGroup } from './group-reports';
 import { primaryReport } from './group-reports';
+import { bundleOpsByTitle, DEMO_CITIZEN_INCIDENT_BUNDLES } from './demo-40-incidents';
 import { SEED_DESCRIPTION_TAG } from './demo-reports';
 
 export type ReportGroupOps = {
@@ -23,8 +24,14 @@ const DEFAULT_OPS: ReportGroupOps = {
   priority: IncidentPriority.MEDIUM,
 };
 
+const BUNDLE_OPS_BY_TITLE = bundleOpsByTitle(DEMO_CITIZEN_INCIDENT_BUNDLES);
+
 function opsForGroup(group: ReportGroup): ReportGroupOps {
   const p = primaryReport(group);
+  const explicit = BUNDLE_OPS_BY_TITLE.get(p.title);
+  if (explicit) {
+    return { ...DEFAULT_OPS, ...explicit };
+  }
 
   if (p.categoryKey === 'water' && p.title.includes('partlayış')) {
     return {

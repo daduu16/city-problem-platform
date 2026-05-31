@@ -1,5 +1,6 @@
 import { az } from '@/i18n/az';
 import { MAP_TYPE_COLORS } from '@/lib/mapPalette';
+import { MAP_ICONS, buildMapPinMarkerHtml } from '@/lib/mapMarkerIcons';
 import type { IncidentType } from '@/types';
 
 export interface TypeStyle {
@@ -9,6 +10,7 @@ export interface TypeStyle {
   mapBorder: string;
   border: string;
   markerClass: string;
+  icon: (typeof MAP_ICONS)[keyof typeof MAP_ICONS];
 }
 
 export const TYPE_STYLES: Record<IncidentType, TypeStyle> = {
@@ -19,6 +21,7 @@ export const TYPE_STYLES: Record<IncidentType, TypeStyle> = {
     mapBorder: MAP_TYPE_COLORS.ACCIDENT.border,
     border: '#f87171',
     markerClass: 'type-marker-accident',
+    icon: MAP_ICONS.alertTriangle,
   },
   COMPLAINT: {
     label: az.type.COMPLAINT,
@@ -27,6 +30,7 @@ export const TYPE_STYLES: Record<IncidentType, TypeStyle> = {
     mapBorder: MAP_TYPE_COLORS.COMPLAINT.border,
     border: '#60a5fa',
     markerClass: 'type-marker-complaint',
+    icon: MAP_ICONS.messageCircle,
   },
   INSPECTION: {
     label: az.type.INSPECTION,
@@ -35,6 +39,7 @@ export const TYPE_STYLES: Record<IncidentType, TypeStyle> = {
     mapBorder: MAP_TYPE_COLORS.INSPECTION.border,
     border: '#c084fc',
     markerClass: 'type-marker-inspection',
+    icon: MAP_ICONS.clipboardCheck,
   },
   EMERGENCY: {
     label: az.type.EMERGENCY,
@@ -43,6 +48,7 @@ export const TYPE_STYLES: Record<IncidentType, TypeStyle> = {
     mapBorder: MAP_TYPE_COLORS.EMERGENCY.border,
     border: '#fb923c',
     markerClass: 'type-marker-emergency',
+    icon: MAP_ICONS.siren,
   },
 };
 
@@ -54,17 +60,12 @@ export function getTypeStyle(type: IncidentType): TypeStyle {
 
 export function typeMarkerHtml(type: IncidentType): string {
   const s = getTypeStyle(type);
-  const base = `background:${s.mapColor};border:2px solid ${s.mapBorder};box-shadow:0 1px 6px rgba(0,0,0,.55);`;
-
-  switch (type) {
-    case 'EMERGENCY':
-      return `<span class="type-marker ${s.markerClass}" style="${base}width:16px;height:16px;border-radius:50%;border-width:3px;display:block;"></span>`;
-    case 'INSPECTION':
-      return `<span class="type-marker ${s.markerClass}" style="${base}width:12px;height:12px;transform:rotate(45deg);border-radius:2px;display:block;"></span>`;
-    case 'ACCIDENT':
-      return `<span class="type-marker ${s.markerClass}" style="${base}width:14px;height:14px;border-radius:2px;display:block;"></span>`;
-    case 'COMPLAINT':
-    default:
-      return `<span class="type-marker ${s.markerClass}" style="${base}width:14px;height:14px;border-radius:50%;display:block;"></span>`;
-  }
+  const size = type === 'EMERGENCY' ? 32 : 30;
+  return buildMapPinMarkerHtml({
+    mapColor: s.mapColor,
+    mapBorder: s.mapBorder,
+    icon: s.icon,
+    size,
+    markerClass: `type-marker ${s.markerClass}`,
+  });
 }

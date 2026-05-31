@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { isSuperAdmin as checkSuperAdmin } from '@/lib/isSuperAdmin';
 import type { User, UserAccess } from '@/types';
 
 interface AuthState {
@@ -35,24 +36,31 @@ export const useAuthStore = create<AuthState>()(
       setAccess: (access) => set({ access }),
       logout: () => set({ token: null, user: null, access: null }),
       can: (permission) => {
-        const access = get().access ?? emptyAccess;
-        if (access.roleKey === 'super_admin') return true;
-        return access.permissions.includes(permission);
+        const { access, user } = get();
+        const scope = access ?? emptyAccess;
+        if (checkSuperAdmin(scope, user)) return true;
+        return scope.permissions.includes(permission);
       },
       hasCategory: (key) => {
-        const access = get().access ?? emptyAccess;
-        if (access.categories.includes('*')) return true;
-        return access.categories.includes(key);
+        const { access, user } = get();
+        const scope = access ?? emptyAccess;
+        if (checkSuperAdmin(scope, user)) return true;
+        if (scope.categories.includes('*')) return true;
+        return scope.categories.includes(key);
       },
       hasMapLayer: (layerKey) => {
-        const access = get().access ?? emptyAccess;
-        if (access.mapLayers.includes('*')) return true;
-        return access.mapLayers.includes(layerKey);
+        const { access, user } = get();
+        const scope = access ?? emptyAccess;
+        if (checkSuperAdmin(scope, user)) return true;
+        if (scope.mapLayers.includes('*')) return true;
+        return scope.mapLayers.includes(layerKey);
       },
       hasAnalytics: (key) => {
-        const access = get().access ?? emptyAccess;
-        if (access.analytics.includes('*')) return true;
-        return access.analytics.includes(key);
+        const { access, user } = get();
+        const scope = access ?? emptyAccess;
+        if (checkSuperAdmin(scope, user)) return true;
+        if (scope.analytics.includes('*')) return true;
+        return scope.analytics.includes(key);
       },
     }),
     { name: 'municipal-auth' },

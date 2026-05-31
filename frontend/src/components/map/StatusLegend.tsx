@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { MapMarkerChip } from '@/components/map/MapMarkerChip';
 import { ACTIVE_MAP_STATUSES, getStatusStyle } from '@/lib/incidentStyles';
 import { countIncidentsByStatus } from '@/lib/mapIncidentCounts';
 import { useMapStore } from '@/stores/mapStore';
@@ -49,12 +50,10 @@ export function StatusLegend({ incidents }: Props) {
                   className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 text-xs font-normal"
                 >
                   <span className="flex min-w-0 items-center gap-2">
-                    <span
-                      className={`h-3 w-3 shrink-0 rounded-full border-2 ${s.markerClass}`}
-                      style={{
-                        backgroundColor: s.mapColor,
-                        borderColor: s.mapBorder,
-                      }}
+                    <MapMarkerChip
+                      mapColor={s.mapColor}
+                      mapBorder={s.mapBorder}
+                      size={20}
                     />
                     <span className="truncate">{s.label}</span>
                   </span>

@@ -29,7 +29,7 @@ export function LoginPage() {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { email: 'dispatcher@municipal.local', password: 'admin123' },
+    defaultValues: { email: 'admin@municipal.local', password: 'admin123' },
   });
 
   const login = useMutation({

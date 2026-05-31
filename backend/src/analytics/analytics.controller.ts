@@ -32,6 +32,12 @@ export class AnalyticsController {
   }
 
   @RequirePermission('view_dashboard')
+  @Get('status-category-breakdown')
+  getStatusCategoryBreakdown(@CurrentUser() user: JwtPayload) {
+    return this.analyticsService.getStatusCategoryBreakdown(user);
+  }
+
+  @RequirePermission('view_dashboard')
   @Get('timeline')
   getTimeline(@CurrentUser() user: JwtPayload, @Query('days') days?: string) {
     return this.analyticsService.getTimeline(user, days ? parseInt(days, 10) : 7);

@@ -20,6 +20,7 @@ export function CategoryRankingList({ items }: Props) {
     <Card className="border-border/60 bg-card shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-semibold">{az.dashboard.chartCategory}</CardTitle>
+        <p className="text-xs text-muted-foreground">{az.dashboard.chartCategoryHint}</p>
       </CardHeader>
       <CardContent className="space-y-3">
         {sorted.length === 0 ? (

@@ -1,8 +1,12 @@
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { az as azLocale } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 
+import {
+  calendarDateToDateKey,
+  dateKeyToCalendarDate,
+} from '@/lib/baku-date';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -64,15 +68,15 @@ export function DateRangePicker({
   );
 }
 
-/** Map store uses `yyyy-MM-dd` strings; calendar uses `Date`. */
+/** Map store uses Baku `yyyy-MM-dd` keys; calendar uses anchor dates. */
 export function dateRangeFromStore(
   from: string | null,
   to: string | null,
 ): DateRange | undefined {
   if (!from && !to) return undefined;
   return {
-    from: from ? parseISO(from) : undefined,
-    to: to ? parseISO(to) : undefined,
+    from: from ? dateKeyToCalendarDate(from) : undefined,
+    to: to ? dateKeyToCalendarDate(to) : undefined,
   };
 }
 
@@ -84,7 +88,7 @@ export function dateRangeToStore(range: DateRange | undefined): {
     return { from: null, to: null };
   }
   return {
-    from: range.from ? format(range.from, 'yyyy-MM-dd') : null,
-    to: range.to ? format(range.to, 'yyyy-MM-dd') : null,
+    from: range.from ? calendarDateToDateKey(range.from) : null,
+    to: range.to ? calendarDateToDateKey(range.to) : null,
   };
 }

@@ -36,7 +36,7 @@ export function IncidentsPage() {
   const apiUnreachable = isApiUnreachable(listQuery.error);
 
   return (
-    <div className="mx-auto max-w-[1600px] p-6">
+    <div className="w-full min-w-0 p-6">
       <header className="mb-6 space-y-3 border-b border-border/60 pb-5">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
