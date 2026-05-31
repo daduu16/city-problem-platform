@@ -38,7 +38,8 @@ import {
 
 const prisma = new PrismaClient();
 
-const DEFAULT_PASSWORD = 'admin123';
+/** Shared demo password for all seed users (web + mobile login). */
+const DEFAULT_PASSWORD = '123456';
 const LEGACY_DEMO_PREFIXES = ['[Nümunə]', '[Демо]', '[Demo]'];
 
 type GeoJsonFeature = {
@@ -485,7 +486,31 @@ async function main() {
         defaultGeozoneId: GEOZONE_ID,
       },
     }),
+    prisma.user.upsert({
+      where: { email: 'user@municipal.local' },
+      update: {
+        name: 'Demo User',
+        department: 'Test',
+        roleId: roleMap.dispatcher,
+        organizationId: MUNICIPALITY_ORG_ID,
+        defaultGeozoneId: GEOZONE_ID,
+      },
+      create: {
+        email: 'user@municipal.local',
+        passwordHash,
+        name: 'Demo User',
+        roleId: roleMap.dispatcher,
+        department: 'Test',
+        organizationId: MUNICIPALITY_ORG_ID,
+        defaultGeozoneId: GEOZONE_ID,
+      },
+    }),
   ]);
+
+  await prisma.user.updateMany({
+    where: { email: { in: users.map((u) => u.email) } },
+    data: { passwordHash },
+  });
 
   const [, dispatcher, executor, , azeriqaz] = users;
 
@@ -810,6 +835,8 @@ async function main() {
     `Seed complete: ${seededCount} incidents (${reportGroups.length} citizen + ${operatorCount} dispatcher), ${reportRows} citizen reports, ${users.length} users. Password: ${DEFAULT_PASSWORD}`,
   );
   console.log(`Azeriqaz demo: azeriqaz@municipal.local / ${DEFAULT_PASSWORD}`);
+  console.log(`Quick login: user@municipal.local / ${DEFAULT_PASSWORD}`);
+  console.log(`Admin: admin@municipal.local / ${DEFAULT_PASSWORD}`);
 }
 
 main()

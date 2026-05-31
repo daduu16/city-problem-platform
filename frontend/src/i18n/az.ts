@@ -27,7 +27,7 @@ export const az = {
 		submit: "Daxil ol",
 		submitting: "Daxil olunur…",
 		invalidCredentials: "Yanlış giriş məlumatları",
-		demoHint: "Super Admin: admin@municipal.local / admin123",
+		demoHint: "Demo: user@municipal.local / 123456 · Admin: admin@municipal.local / 123456",
 	},
 	dashboard: {
 		title: "İdarə paneli",

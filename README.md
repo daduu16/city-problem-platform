@@ -108,12 +108,15 @@ Mobile app uses the NestJS backend compatibility endpoints under `/api/*`:
 
 | Email | Password | Role |
 |-------|----------|------|
-| admin@municipal.local | admin123 | Super Admin |
-| dispatcher@municipal.local | admin123 | Dispatcher |
-| executor@municipal.local | admin123 | Field Worker |
-| analyst@municipal.local | admin123 | Analyst |
-| azeriqaz@municipal.local | admin123 | Utility Operator (gas only) |
-| viewer@municipal.local | admin123 | Viewer |
+| user@municipal.local | 123456 | Dispatcher (quick demo) |
+| admin@municipal.local | 123456 | Super Admin |
+| dispatcher@municipal.local | 123456 | Dispatcher |
+| executor@municipal.local | 123456 | Field Worker |
+| analyst@municipal.local | 123456 | Analyst |
+| azeriqaz@municipal.local | 123456 | Utility Operator (gas only) |
+| viewer@municipal.local | 123456 | Viewer |
+
+All seed users share the password **123456** (reset on every `npm run seed` in `backend`).
 
 ## Architecture
 
