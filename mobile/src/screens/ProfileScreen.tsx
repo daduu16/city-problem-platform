@@ -38,10 +38,12 @@ export default function ProfileScreen() {
   const { currentUser, setCurrentUser, gamification } = useAppData();
   const [leaderboardPeriod, setLeaderboardPeriod] = useState<'weekly' | 'monthly'>('weekly');
 
+  const isExecutor = currentUser?.role === 'executor';
   const fullName = currentUser?.fullName || 'İstifadəçi';
   const email = currentUser?.email || 'Qeydiyyat məlumatı yoxdur';
   const phone = currentUser?.phone || '-';
   const finCode = currentUser?.finCode || '-';
+  const assigneeName = currentUser?.assigneeName;
   const initials = fullName
     .split(' ')
     .map((part) => part[0]?.toUpperCase())
@@ -86,7 +88,7 @@ export default function ProfileScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{fullName}</Text>
             <Text style={styles.email}>{email}</Text>
-            <Text style={styles.badgeText}>Rəqəmsal Profil</Text>
+            <Text style={styles.badgeText}>{isExecutor ? 'İcraçı' : 'Rəqəmsal Profil'}</Text>
           </View>
         </View>
 
@@ -196,6 +198,9 @@ export default function ProfileScreen() {
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Şəxsi məlumatlar</Text>
           <InfoRow icon="person-outline" label="Ad soyad" value={fullName} />
+          {isExecutor && assigneeName ? (
+            <InfoRow icon="briefcase-outline" label="İcraçı profili" value={assigneeName} />
+          ) : null}
           <InfoRow icon="mail-outline" label="E-poçt" value={email} />
           <InfoRow icon="call-outline" label="Telefon" value={phone} />
           <InfoRow icon="card-outline" label="FIN kod" value={finCode} />

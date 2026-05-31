@@ -124,7 +124,7 @@ export function AvailabilityOverviewPage() {
             value={dateRange}
             onChange={handleRangeChange}
             placeholder={az.map.pickDateRange}
-            className="w-[min(100%,20rem)] sm:w-[20rem]"
+            className="w-full min-w-[26rem] max-w-full sm:w-auto"
             numberOfMonths={2}
           />
           <div className="flex flex-wrap gap-1.5">

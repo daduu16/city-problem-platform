@@ -50,6 +50,29 @@ const slotSelect = {
   updatedAt: true,
 } satisfies Prisma.AssigneeAvailabilitySlotSelect;
 
+export type CalendarTaskIncidentDto = {
+  id: string;
+  title: string;
+  description: string;
+  lat: number | null;
+  lng: number | null;
+  address: string | null;
+  status: string;
+  priority: string;
+};
+
+export type CalendarTaskDto = {
+  id: string;
+  title: string;
+  description: string | null;
+  incidentId: string;
+  startsAt: string;
+  endsAt: string;
+  status: IncidentAssigneeTaskStatus;
+  scheduleType: string;
+  incident: CalendarTaskIncidentDto | null;
+};
+
 export type CalendarDayDto = {
   date: string;
   dayOfWeek: number;
@@ -57,15 +80,35 @@ export type CalendarDayDto = {
   status: 'open' | 'partial' | 'closed' | 'off' | 'busy';
   effectiveWindows: Array<{ startMinute: number; endMinute: number }>;
   unavailableBlocks: Array<{ startMinute: number; endMinute: number }>;
-  tasks: Array<{
-    id: string;
-    title: string;
-    startsAt: string;
-    endsAt: string;
-    status: IncidentAssigneeTaskStatus;
-    scheduleType: string;
-  }>;
+  tasks: CalendarTaskDto[];
 };
+
+const calendarTaskSelect = {
+  id: true,
+  title: true,
+  description: true,
+  incidentId: true,
+  startsAt: true,
+  endsAt: true,
+  status: true,
+  scheduleType: true,
+  incident: {
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      lat: true,
+      lng: true,
+      address: true,
+      status: true,
+      priority: true,
+    },
+  },
+} satisfies Prisma.IncidentAssigneeTaskSelect;
+
+type CalendarTaskRow = Prisma.IncidentAssigneeTaskGetPayload<{
+  select: typeof calendarTaskSelect;
+}>;
 
 @Injectable()
 export class AssigneeAvailabilityService {
@@ -113,16 +156,34 @@ export class AssigneeAvailabilityService {
     return 'open';
   }
 
+  private mapCalendarTask(task: CalendarTaskRow): CalendarTaskDto {
+    return {
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      incidentId: task.incidentId,
+      startsAt: task.startsAt.toISOString(),
+      endsAt: task.endsAt.toISOString(),
+      status: task.status,
+      scheduleType: task.scheduleType,
+      incident: task.incident
+        ? {
+            id: task.incident.id,
+            title: task.incident.title,
+            description: task.incident.description,
+            lat: task.incident.lat,
+            lng: task.incident.lng,
+            address: task.incident.address,
+            status: task.incident.status,
+            priority: task.incident.priority,
+          }
+        : null,
+    };
+  }
+
   private buildCalendarDays(
     slots: AvailabilitySlotRow[],
-    tasks: Array<{
-      id: string;
-      title: string;
-      startsAt: Date;
-      endsAt: Date;
-      status: IncidentAssigneeTaskStatus;
-      scheduleType: IncidentAssigneeTaskScheduleType;
-    }>,
+    tasks: CalendarTaskRow[],
     dateKeys: string[],
   ): CalendarDayDto[] {
     return dateKeys.map((dateKey) => {
@@ -157,14 +218,7 @@ export class AssigneeAvailabilityService {
       const dayEnd = bakuLocalToUtc(dateKey, 24 * 60);
       const dayTasks = tasks
         .filter((t) => t.startsAt < dayEnd && t.endsAt > dayStart)
-        .map((t) => ({
-          id: t.id,
-          title: t.title,
-          startsAt: t.startsAt.toISOString(),
-          endsAt: t.endsAt.toISOString(),
-          status: t.status,
-          scheduleType: t.scheduleType,
-        }));
+        .map((t) => this.mapCalendarTask(t));
 
       return {
         date: dateKey,
@@ -464,14 +518,7 @@ export class AssigneeAvailabilityService {
         startsAt: { lt: to },
         endsAt: { gt: from },
       },
-      select: {
-        id: true,
-        title: true,
-        startsAt: true,
-        endsAt: true,
-        status: true,
-        scheduleType: true,
-      },
+      select: calendarTaskSelect,
     });
 
     const days = this.buildCalendarDays(slots, tasks, dateKeys);
@@ -513,12 +560,7 @@ export class AssigneeAvailabilityService {
       },
       select: {
         assigneeId: true,
-        id: true,
-        title: true,
-        startsAt: true,
-        endsAt: true,
-        status: true,
-        scheduleType: true,
+        ...calendarTaskSelect,
       },
     });
 

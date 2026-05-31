@@ -6,12 +6,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Color, Shadow } from '@/GlobalStyles';
 import NotificationsScreen from '@/screens/NotificationsScreen';
+import ExecutorTaskDetailScreen from '@/screens/ExecutorTaskDetailScreen';
+import ExecutorTasksScreen from '@/screens/ExecutorTasksScreen';
 import HomeScreen from '@/screens/HomeScreen';
 import NewsDetailScreen from '@/screens/NewsDetailScreen';
 import ProblemDetailScreen from '@/screens/ProblemDetailScreen';
 import ProblemsScreen from '@/screens/ProblemsScreen';
 import ProfileScreen from '@/screens/ProfileScreen';
 import ReportProblemScreen from '@/screens/ReportProblemScreen';
+import { useAppData } from '@/state/AppDataContext';
+import { MobileScheduleTask } from '@/types';
 import ElectronicAppealScreen from '@/screens/ElectronicAppealScreen';
 import ElectronicReceptionScreen from '@/screens/ElectronicReceptionScreen';
 import AppealFormsScreen from '@/screens/AppealFormsScreen';
@@ -26,6 +30,11 @@ export type HomeStackParamList = {
 export type ProblemsStackParamList = {
   ProblemsMain: undefined;
   ProblemDetail: { problem: Problem };
+};
+
+export type ExecutorTasksStackParamList = {
+  ExecutorTasksMain: undefined;
+  ExecutorTaskDetail: { task: MobileScheduleTask };
 };
 
 export type ElectronicStackParamList = {
@@ -46,6 +55,7 @@ type TabParamList = {
 const Tab = createBottomTabNavigator<TabParamList>();
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 const ProblemsStack = createNativeStackNavigator<ProblemsStackParamList>();
+const ExecutorTasksStack = createNativeStackNavigator<ExecutorTasksStackParamList>();
 const ElectronicStack = createNativeStackNavigator<ElectronicStackParamList>();
 
 function HomeStackNavigator() {
@@ -64,6 +74,23 @@ function ProblemsStackNavigator() {
       <ProblemsStack.Screen name="ProblemsMain" component={ProblemsScreen} options={{ headerShown: false }} />
       <ProblemsStack.Screen name="ProblemDetail" component={ProblemDetailScreen} options={{ headerShown: false }} />
     </ProblemsStack.Navigator>
+  );
+}
+
+function ExecutorTasksStackNavigator() {
+  return (
+    <ExecutorTasksStack.Navigator>
+      <ExecutorTasksStack.Screen
+        name="ExecutorTasksMain"
+        component={ExecutorTasksScreen}
+        options={{ headerShown: false }}
+      />
+      <ExecutorTasksStack.Screen
+        name="ExecutorTaskDetail"
+        component={ExecutorTaskDetailScreen}
+        options={{ headerShown: false }}
+      />
+    </ExecutorTasksStack.Navigator>
   );
 }
 
@@ -121,6 +148,9 @@ function ElectronicStackNavigator() {
 }
 
 export default function AppNavigator() {
+  const { currentUser } = useAppData();
+  const isExecutor = currentUser?.role === 'executor';
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -155,7 +185,7 @@ export default function AppNavigator() {
               case 'ElectronicTab':
                 return 'document-text-outline';
               case 'ProblemsTab':
-                return 'list-outline';
+                return isExecutor ? 'calendar-outline' : 'list-outline';
               case 'ProfileTab':
                 return 'person-outline';
               default:
@@ -168,28 +198,41 @@ export default function AppNavigator() {
       })}
     >
       <Tab.Screen name="HomeTab" component={HomeStackNavigator} options={{ title: 'Əsas' }} />
-      <Tab.Screen name="ElectronicTab" component={ElectronicStackNavigator} options={{ title: 'E.Xidmətlər' }} />
+      <Tab.Screen
+        name="ElectronicTab"
+        component={ElectronicStackNavigator}
+        options={{
+          title: 'E.Xidmətlər',
+          tabBarButton: isExecutor ? () => null : undefined,
+        }}
+      />
       <Tab.Screen
         name="ReportTab"
         component={ReportProblemScreen}
         options={{
           title: '',
           tabBarLabel: '',
-          tabBarButton: (props) => (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Problem gonder"
-              onPress={props.onPress}
-              style={({ pressed }) => [styles.centerButton, pressed && { opacity: 0.9 }]}
-            >
-              <View style={styles.centerButtonInner}>
-                <Ionicons name="add" size={30} color={Color.white500} />
-              </View>
-            </Pressable>
-          ),
+          tabBarButton: isExecutor
+            ? () => null
+            : (props) => (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Problem gonder"
+                  onPress={props.onPress}
+                  style={({ pressed }) => [styles.centerButton, pressed && { opacity: 0.9 }]}
+                >
+                  <View style={styles.centerButtonInner}>
+                    <Ionicons name="add" size={30} color={Color.white500} />
+                  </View>
+                </Pressable>
+              ),
         }}
       />
-      <Tab.Screen name="ProblemsTab" component={ProblemsStackNavigator} options={{ title: 'Problemlər' }} />
+      <Tab.Screen
+        name="ProblemsTab"
+        component={isExecutor ? ExecutorTasksStackNavigator : ProblemsStackNavigator}
+        options={{ title: isExecutor ? 'Tapşırıqlar' : 'Problemlər' }}
+      />
       <Tab.Screen name="ProfileTab" component={ProfileScreen} options={{ title: 'Profil' }} />
     </Tab.Navigator>
   );

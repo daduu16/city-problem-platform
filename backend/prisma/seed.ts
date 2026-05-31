@@ -11,6 +11,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { CATEGORY_TREE } from './seed-data/categories';
 import { seedAssignees } from './seed-lib/assignees';
+import { seedAssigneeTasks } from './seed-lib/assignee-tasks';
 import {
   attachOpsToGroups,
   groupDescription,
@@ -389,6 +390,27 @@ async function main() {
       },
     }),
     prisma.user.upsert({
+      where: { email: 'kamran.mammadli@municipal.local' },
+      update: {
+        name: 'Kamran Mammadli',
+        department: 'Kommunal xidmət',
+        roleId: roleMap.field_worker,
+        organizationId: MUNICIPALITY_ORG_ID,
+        defaultGeozoneId: GEOZONE_ID,
+        emailVerified: true,
+      },
+      create: {
+        email: 'kamran.mammadli@municipal.local',
+        passwordHash,
+        name: 'Kamran Mammadli',
+        roleId: roleMap.field_worker,
+        department: 'Kommunal xidmət',
+        organizationId: MUNICIPALITY_ORG_ID,
+        defaultGeozoneId: GEOZONE_ID,
+        emailVerified: true,
+      },
+    }),
+    prisma.user.upsert({
       where: { email: 'analyst@municipal.local' },
       update: {
         name: 'Leyla Analitik',
@@ -563,9 +585,11 @@ async function main() {
 
   if (!forceDemoReseed && existingSeedIncidents > 0) {
     await patchDemoReportPhotos(prisma);
+    const taskCount = await seedAssigneeTasks(prisma, dispatcher.id);
     console.log(
       `Demo incidents already present (${existingSeedIncidents}) — skipping incident seed`,
     );
+    console.log(`Seeded/updated ${taskCount} assignee schedule tasks`);
     console.log(
       `Seed complete (core): ${users.length} users, ${assigneeCount} demo assignees. Password: ${DEFAULT_PASSWORD}`,
     );
@@ -866,8 +890,9 @@ async function main() {
   }
 
   const operatorCount = buildDemoOperatorIncidents().length;
+  const taskCount = await seedAssigneeTasks(prisma, dispatcher.id);
   console.log(
-    `Seed complete: ${seededCount} incidents (${reportGroups.length} citizen + ${operatorCount} dispatcher), ${reportRows} citizen reports, ${users.length} users. Password: ${DEFAULT_PASSWORD}`,
+    `Seed complete: ${seededCount} incidents (${reportGroups.length} citizen + ${operatorCount} dispatcher), ${reportRows} citizen reports, ${taskCount} assignee tasks, ${users.length} users. Password: ${DEFAULT_PASSWORD}`,
   );
   console.log(`Azeriqaz demo: azeriqaz@municipal.local / ${DEFAULT_PASSWORD}`);
   console.log(`Quick login: user@municipal.local / ${DEFAULT_PASSWORD}`);

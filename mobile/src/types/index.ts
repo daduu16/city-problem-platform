@@ -37,6 +37,49 @@ export type ProblemMediaItem = {
   type: 'image' | 'video';
 };
 
+export type MobileAssigneeProfile = {
+  id: string;
+  name: string;
+  kind: string;
+  description?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  isActive?: boolean;
+};
+
+export type MobileScheduleIncident = {
+  id: string;
+  title: string;
+  description: string;
+  lat: number | null;
+  lng: number | null;
+  address: string | null;
+  status: string;
+  priority: string;
+};
+
+export type MobileScheduleTask = {
+  id: string;
+  title: string;
+  description?: string | null;
+  incidentId: string;
+  startsAt: string;
+  endsAt: string;
+  status: string;
+  scheduleType?: string;
+  date: string;
+  incident: MobileScheduleIncident | null;
+};
+
+export type MobileScheduleCalendar = {
+  from: string;
+  to: string;
+  days: Array<{
+    date: string;
+    tasks: Array<Omit<MobileScheduleTask, 'date'>>;
+  }>;
+};
+
 export type Problem = {
   id: string;
   title: string;

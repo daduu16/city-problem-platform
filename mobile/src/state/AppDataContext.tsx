@@ -19,7 +19,20 @@ import {
   mockWeeklyLeaderboard,
 } from '@/data/mockData';
 import { createProblem, fetchNews, fetchNotifications, fetchProblems } from '@/services/api';
-import { News, NotificationItem, Problem, ProblemCategory, ProblemPriority } from '@/types';
+import { fetchAssigneeCalendar } from '@/services/executorService';
+import {
+  addDaysToDateKey,
+  flattenCalendarTasks,
+  todayDateKey,
+} from '@/lib/executorSchedule';
+import {
+  MobileScheduleTask,
+  News,
+  NotificationItem,
+  Problem,
+  ProblemCategory,
+  ProblemPriority,
+} from '@/types';
 
 type CreateProblemInput = {
   title: string;
@@ -39,18 +52,26 @@ type CreateProblemInput = {
   };
 };
 
+export type AppUser = {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  finCode?: string;
+  role: 'citizen' | 'executor';
+  token?: string;
+  assigneeId?: string;
+  assigneeName?: string;
+};
+
 type AppDataContextValue = {
-  currentUser: {
-    id: string;
-    fullName: string;
-    email: string;
-    phone: string;
-    finCode?: string;
-    role: 'citizen' | 'executor';
-  } | null;
+  currentUser: AppUser | null;
   news: News[];
   notifications: NotificationItem[];
   problems: Problem[];
+  executorTasks: MobileScheduleTask[];
+  executorLoading: boolean;
+  executorError: string | null;
   gamification: {
     points: number;
     createdProblems: number;
@@ -87,10 +108,11 @@ type AppDataContextValue = {
   unreadNotificationsCount: number;
   addProblem: (input: CreateProblemInput) => Promise<void>;
   resolveProblemAsExecutor: (problemId: string, photoUrl: string) => void;
-  setCurrentUser: (user: AppDataContextValue['currentUser']) => void;
+  setCurrentUser: (user: AppUser | null) => void;
   markNotificationAsRead: (notificationId: string) => void;
   toggleProblemUpvote: (problemId: string) => void;
   refresh: () => Promise<void>;
+  refreshExecutorTasks: () => Promise<void>;
 };
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
@@ -107,10 +129,13 @@ function isResolvedStatus(status: string) {
 }
 
 export function AppDataProvider({ children }: PropsWithChildren) {
-  const [currentUser, setCurrentUser] = useState<AppDataContextValue['currentUser']>(null);
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const [news, setNews] = useState<News[]>(mockNews);
   const [notifications, setNotifications] = useState<NotificationItem[]>(mockNotifications);
   const [problems, setProblems] = useState<Problem[]>(mockProblems);
+  const [executorTasks, setExecutorTasks] = useState<MobileScheduleTask[]>([]);
+  const [executorLoading, setExecutorLoading] = useState(false);
+  const [executorError, setExecutorError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [myCreatedIds, setMyCreatedIds] = useState<string[]>([]);
   const loadedFromApiRef = useRef(false);
@@ -173,6 +198,57 @@ export function AppDataProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  const refreshExecutorTasks = useCallback(async () => {
+    if (
+      currentUser?.role !== 'executor' ||
+      !currentUser.token ||
+      !currentUser.assigneeId
+    ) {
+      return;
+    }
+
+    setExecutorLoading(true);
+    setExecutorError(null);
+    try {
+      const from = todayDateKey();
+      const to = addDaysToDateKey(from, 13);
+      const calendar = await fetchAssigneeCalendar(
+        currentUser.token,
+        currentUser.assigneeId,
+        from,
+        to,
+      );
+      setExecutorTasks(flattenCalendarTasks(calendar.days));
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Tapşırıqlar yüklənmədi';
+      setExecutorError(message);
+      if (__DEV__) {
+        console.warn('[AppData] Executor tasks load failed:', error);
+      }
+    } finally {
+      setExecutorLoading(false);
+    }
+  }, [currentUser?.assigneeId, currentUser?.role, currentUser?.token]);
+
+  useEffect(() => {
+    if (
+      currentUser?.role === 'executor' &&
+      currentUser.token &&
+      currentUser.assigneeId
+    ) {
+      void refreshExecutorTasks();
+    } else {
+      setExecutorTasks([]);
+      setExecutorError(null);
+    }
+  }, [
+    currentUser?.assigneeId,
+    currentUser?.role,
+    currentUser?.token,
+    refreshExecutorTasks,
+  ]);
 
   const addProblem = useCallback(async (input: CreateProblemInput) => {
     const created = await createProblem(input);
@@ -298,6 +374,9 @@ export function AppDataProvider({ children }: PropsWithChildren) {
         return notification.targetRole === role;
       }),
       problems,
+      executorTasks,
+      executorLoading,
+      executorError,
       gamification,
       loading,
       unreadNotificationsCount,
@@ -307,12 +386,16 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       markNotificationAsRead,
       toggleProblemUpvote,
       refresh,
+      refreshExecutorTasks,
     }),
     [
       currentUser,
       news,
       notifications,
       problems,
+      executorTasks,
+      executorLoading,
+      executorError,
       gamification,
       loading,
       unreadNotificationsCount,
@@ -322,6 +405,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       markNotificationAsRead,
       toggleProblemUpvote,
       refresh,
+      refreshExecutorTasks,
     ],
   );
 

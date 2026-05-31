@@ -1,7 +1,6 @@
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -19,6 +18,7 @@ import {
 import MapView, { MapPressEvent, Marker, Region } from 'react-native-maps';
 
 import { BorderRadius, Color, Shadow, Spacing, Typography } from '@/GlobalStyles';
+import { presentMediaSourcePicker } from '@/lib/mediaPicker';
 import { useAppData } from '@/state/AppDataContext';
 import { ProblemCategory, ProblemPriority } from '@/types';
 
@@ -184,75 +184,23 @@ export default function ReportProblemScreen() {
     setMapVisible(false);
   };
 
-  const pickFromLibrary = useCallback(async (type: 'image' | 'video') => {
-    try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert('İcazə tələb olunur', 'Qalereyaya giriş üçün icazə verməyiniz lazımdır.');
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        allowsEditing: type === 'image',
-        quality: 0.8,
-        mediaTypes: type === 'image' ? ['images'] : ['videos'],
+  const applyPickedMedia = useCallback(
+    (asset: { uri: string; fileName?: string | null; mimeType?: string | null }, type: 'image' | 'video') => {
+      setMediaUrl(asset.uri);
+      setMediaType(type);
+      setMediaAsset({
+        uri: asset.uri,
+        fileName: asset.fileName ?? null,
+        mimeType: asset.mimeType ?? null,
       });
-
-      if (!result.canceled && result.assets.length > 0) {
-        const asset = result.assets[0];
-        setMediaUrl(asset.uri);
-        setMediaType(type);
-        setMediaAsset({
-          uri: asset.uri,
-          fileName: asset.fileName ?? null,
-          mimeType: asset.mimeType ?? null,
-        });
-        Alert.alert('Hazırdır', type === 'image' ? 'Şəkil əlavə olundu.' : 'Video əlavə olundu.');
-      }
-    } catch {
-      Alert.alert('Xəta', 'Media seçilə bilmədi. Yenidən cəhd edin.');
-    }
-  }, []);
-
-  const openCamera = useCallback(async (type: 'image' | 'video') => {
-    try {
-      const permission = await ImagePicker.requestCameraPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert('İcazə tələb olunur', 'Kamera üçün icazə verməyiniz lazımdır.');
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: type === 'image',
-        quality: 0.8,
-        mediaTypes: type === 'image' ? ['images'] : ['videos'],
-      });
-
-      if (!result.canceled && result.assets.length > 0) {
-        const asset = result.assets[0];
-        setMediaUrl(asset.uri);
-        setMediaType(type);
-        setMediaAsset({
-          uri: asset.uri,
-          fileName: asset.fileName ?? null,
-          mimeType: asset.mimeType ?? null,
-        });
-        Alert.alert('Hazırdır', type === 'image' ? 'Şəkil əlavə olundu.' : 'Video əlavə olundu.');
-      }
-    } catch {
-      Alert.alert('Xəta', 'Kamera açıla bilmədi. Yenidən cəhd edin.');
-    }
-  }, []);
+      Alert.alert('Hazırdır', type === 'image' ? 'Şəkil əlavə olundu.' : 'Video əlavə olundu.');
+    },
+    [],
+  );
 
   const openMediaPicker = useCallback(() => {
-    Alert.alert('Media əlavə et', 'Şəkil və ya video seçin', [
-      { text: 'Şəkil (qalereya)', onPress: () => pickFromLibrary('image') },
-      { text: 'Video (qalereya)', onPress: () => pickFromLibrary('video') },
-      { text: 'Şəkil (kamera)', onPress: () => openCamera('image') },
-      { text: 'Video (kamera)', onPress: () => openCamera('video') },
-      { text: 'Ləğv et', style: 'cancel' },
-    ]);
-  }, [openCamera, pickFromLibrary]);
+    presentMediaSourcePicker((asset, type) => applyPickedMedia(asset, type));
+  }, [applyPickedMedia]);
 
   const clearAiTyping = useCallback(() => {
     if (aiTypingTimeoutRef.current) {

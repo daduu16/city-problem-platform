@@ -131,6 +131,7 @@ Local overrides (not committed): `.env.local`, `backend/.env.local`, etc.
 | admin@municipal.local | 123456 | Super Admin |
 | dispatcher@municipal.local | 123456 | Dispatcher |
 | executor@municipal.local | 123456 | Field Worker |
+| kamran.mammadli@municipal.local | 123456 | Field Worker (mobile executor demo — linked to assignee Kamran Mammadli) |
 | analyst@municipal.local | 123456 | Analyst |
 | azeriqaz@municipal.local | 123456 | Utility Operator (gas only) |
 | viewer@municipal.local | 123456 | Viewer |

@@ -1,11 +1,11 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import ProblemMediaCarousel from '@/components/ProblemMediaCarousel';
 import { BorderRadius, Color, Shadow, Spacing, Typography } from '@/GlobalStyles';
+import { pickProofImage } from '@/lib/mediaPicker';
 import { getProblemImageUris } from '@/lib/problemMedia';
 import { ProblemsStackParamList } from '@/navigation/AppNavigator';
 import { useAppData } from '@/state/AppDataContext';
@@ -40,20 +40,10 @@ export default function ProblemDetailScreen() {
   const imageUris = getProblemImageUris(problem);
 
   const handleResolveWithPhoto = async () => {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('İcazə tələb olunur', 'Həll sübutu üçün kamera icazəsi verin.');
-      return;
-    }
+    const uri = await pickProofImage();
+    if (!uri) return;
 
-    const photo = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      quality: 0.8,
-      mediaTypes: ['images'],
-    });
-    if (photo.canceled || photo.assets.length === 0) return;
-
-    resolveProblemAsExecutor(problem.id, photo.assets[0].uri);
+    resolveProblemAsExecutor(problem.id, uri);
     Alert.alert('Tamamlandı', 'Problem həll olundu və foto əlavə edildi.');
   };
 

@@ -22,7 +22,7 @@ export function MapDateRangePicker() {
       <DateRangePicker
         value={value}
         placeholder={az.map.pickDateRange}
-        className="w-[min(100%,17rem)] sm:w-[17rem]"
+        className="w-full min-w-[26rem] max-w-full sm:w-auto"
         onChange={(range) => {
           const next = dateRangeToStore(range);
           setMapDateFrom(next.from);

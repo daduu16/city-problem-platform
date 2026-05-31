@@ -1,10 +1,10 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import * as ImagePicker from 'expo-image-picker';
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BorderRadius, Color, Shadow, Spacing, Typography } from '@/GlobalStyles';
+import { pickProofImage } from '@/lib/mediaPicker';
 import { HomeStackParamList } from '@/navigation/AppNavigator';
 import { useAppData } from '@/state/AppDataContext';
 
@@ -52,20 +52,10 @@ export default function NotificationsScreen({ navigation }: Props) {
       return;
     }
 
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('İcazə tələb olunur', 'Həll sübutu üçün kamera icazəsi verin.');
-      return;
-    }
+    const uri = await pickProofImage();
+    if (!uri) return;
 
-    const captured = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      quality: 0.8,
-      mediaTypes: ['images'],
-    });
-    if (captured.canceled || captured.assets.length === 0) return;
-
-    resolveProblemAsExecutor(problemId, captured.assets[0].uri);
+    resolveProblemAsExecutor(problemId, uri);
     markNotificationAsRead(notificationId);
     Alert.alert('Tamamlandı', 'Problem həll olundu və şəkil əlavə edildi.');
   };

@@ -266,6 +266,29 @@ export interface AssigneeAvailabilitySlot {
 
 export type AvailabilityDayStatus = 'open' | 'partial' | 'closed' | 'off' | 'busy';
 
+export interface ScheduleTaskIncident {
+  id: string;
+  title: string;
+  description: string;
+  lat: number | null;
+  lng: number | null;
+  address: string | null;
+  status: IncidentStatus;
+  priority: IncidentPriority;
+}
+
+export interface AssigneeCalendarTask {
+  id: string;
+  title: string;
+  description?: string | null;
+  incidentId: string;
+  startsAt: string;
+  endsAt: string;
+  status: IncidentAssigneeTaskStatus;
+  scheduleType?: IncidentAssigneeTaskScheduleType;
+  incident: ScheduleTaskIncident | null;
+}
+
 export interface AssigneeAvailabilityCalendarDay {
   date: string;
   dayOfWeek: number;
@@ -273,14 +296,12 @@ export interface AssigneeAvailabilityCalendarDay {
   status?: AvailabilityDayStatus;
   effectiveWindows: Array<{ startMinute: number; endMinute: number }>;
   unavailableBlocks: Array<{ startMinute: number; endMinute: number }>;
-  tasks: Array<{
-    id: string;
-    title: string;
-    startsAt: string;
-    endsAt: string;
-    status: IncidentAssigneeTaskStatus;
-    scheduleType?: IncidentAssigneeTaskScheduleType;
-  }>;
+  tasks: AssigneeCalendarTask[];
+}
+
+/** Task with calendar day key for schedule list/map views. */
+export interface ScheduleTaskView extends AssigneeCalendarTask {
+  date: string;
 }
 
 export interface AvailabilityOverview {

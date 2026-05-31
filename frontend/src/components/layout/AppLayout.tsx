@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import {
   Archive,
   CalendarRange,
+  CalendarClock,
   LayoutDashboard,
   Map,
   List,
@@ -35,6 +36,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       permission: 'view_map',
     },
     { to: '/incidents', label: az.nav.incidents, icon: List, permission: 'view_incidents' },
+    {
+      to: '/schedule',
+      label: az.nav.schedule,
+      icon: CalendarClock,
+      permission: 'view_incidents',
+    },
     ...(can('manage_users')
       ? [{ to: '/admin/users', label: az.nav.admin, icon: Settings, permission: 'manage_users' }]
       : []),

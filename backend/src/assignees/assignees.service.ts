@@ -48,6 +48,19 @@ export class AssigneesService {
     });
   }
 
+  /** Match logged-in user email to a category assignee (executor schedule page). */
+  async findScheduleProfileByEmail(email: string) {
+    const normalized = email?.trim();
+    if (!normalized) return null;
+    return this.prisma.categoryAssignee.findFirst({
+      where: {
+        isActive: true,
+        contactEmail: { equals: normalized, mode: 'insensitive' },
+      },
+      include: assigneeInclude,
+    });
+  }
+
   async findOne(id: string) {
     const row = await this.prisma.categoryAssignee.findUnique({
       where: { id },

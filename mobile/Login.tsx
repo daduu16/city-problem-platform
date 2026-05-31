@@ -9,6 +9,7 @@ import { AuthTextInput } from '@/components/auth/AuthTextInput';
 import { Color, Spacing, Typography } from '@/GlobalStyles';
 import { RootStackParamList } from '@/navigation/types';
 import { login } from '@/services/authService';
+import { fetchAssigneeProfile } from '@/services/executorService';
 import { useAppData } from '@/state/AppDataContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
@@ -21,8 +22,8 @@ export default function LoginScreen({ navigation, route }: Props) {
   const [roleMode, setRoleMode] = useState<'citizen' | 'executor'>('citizen');
   const [logoError, setLogoError] = useState({ innovasiya: false, nerimanov: false });
 
-  const EXECUTOR_EMAIL = 'aqil@gmail.com';
-  const EXECUTOR_PASSWORD = '1999Aqil!';
+  const EXECUTOR_DEMO_EMAIL = 'kamran.mammadli@municipal.local';
+  const EXECUTOR_DEMO_PASSWORD = '123456';
 
   useEffect(() => {
     if (route.params?.verifiedEmail) setIdentifier(route.params.verifiedEmail);
@@ -32,32 +33,39 @@ export default function LoginScreen({ navigation, route }: Props) {
     try {
       setErrorMessage('');
 
+      const auth = await login(identifier, password);
+
       if (roleMode === 'executor') {
-        if (identifier.trim().toLowerCase() !== EXECUTOR_EMAIL || password !== EXECUTOR_PASSWORD) {
-          setErrorMessage('İcraçı üçün giriş məlumatları yanlışdır');
+        const profile = await fetchAssigneeProfile(auth.token);
+        if (!profile) {
+          setErrorMessage(
+            'Hesabınız heç bir icraçı ilə əlaqələndirilməyib. Adminə müraciət edin.',
+          );
           return;
         }
 
         setCurrentUser({
-          id: 'executor-demo-1',
-          fullName: 'Aqil İcraçı',
-          email: EXECUTOR_EMAIL,
-          phone: '0500000001',
-          finCode: 'EXE1999',
+          id: auth.user.id,
+          fullName: auth.user.fullName,
+          email: auth.user.email,
+          phone: auth.user.phone,
+          finCode: auth.user.finCode,
           role: 'executor',
+          token: auth.token,
+          assigneeId: profile.id,
+          assigneeName: profile.name,
         });
         navigation.navigate('Home');
         return;
       }
 
-      const auth = await login(identifier, password);
       setCurrentUser({
         id: auth.user.id,
         fullName: auth.user.fullName,
         email: auth.user.email,
         phone: auth.user.phone,
         finCode: auth.user.finCode,
-        role: roleMode,
+        role: 'citizen',
       });
       navigation.navigate('Home');
     } catch (error: any) {
@@ -100,7 +108,7 @@ export default function LoginScreen({ navigation, route }: Props) {
               </View>
               <Text style={styles.roleHint}>
                 {roleMode === 'executor'
-                  ? 'İcraçı girişində operatorun yönləndirdiyi problemləri qəbul edib həll edə bilərsiniz.'
+                  ? `Demo icraçı: ${EXECUTOR_DEMO_EMAIL} / ${EXECUTOR_DEMO_PASSWORD}`
                   : 'İstifadəçi girişində yeni problem yarada və statusu izləyə bilərsiniz.'}
               </Text>
               <AuthTextInput icon="person-outline" placeholder="E-poçt və ya telefon" value={identifier} onChangeText={setIdentifier} />

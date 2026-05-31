@@ -10,6 +10,7 @@ import { IncidentsPage } from '@/pages/IncidentsPage';
 import { AdminUsersPage } from '@/pages/AdminUsersPage';
 import { AssigneesPage } from '@/pages/AssigneesPage';
 import { AvailabilityOverviewPage } from '@/pages/AvailabilityOverviewPage';
+import { ExecutorSchedulePage } from '@/pages/ExecutorSchedulePage';
 import { SuperAdminRoute } from '@/components/auth/SuperAdminRoute';
 import { useRealtime } from '@/hooks/useRealtime';
 import { useAuthSessionRefresh } from '@/hooks/useAuthSessionRefresh';
@@ -72,6 +73,14 @@ function AuthenticatedApp() {
           element={
             <PermissionRoute permission="view_incidents">
               <IncidentsPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="/schedule"
+          element={
+            <PermissionRoute permission="view_incidents">
+              <ExecutorSchedulePage />
             </PermissionRoute>
           }
         />

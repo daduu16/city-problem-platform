@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -11,8 +12,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { UserAccessScope } from '../access-control/access-scope.types';
 import { RequirePermission } from '../access-control/decorators/require-permission.decorator';
 import { PermissionsGuard } from '../access-control/guards/permissions.guard';
+import { AssigneesService } from '../assignees/assignees.service';
+import {
+  AccessScope,
+  CurrentUser,
+  JwtPayload,
+} from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AssigneeAvailabilityService } from './assignee-availability.service';
 import { ReplaceAvailabilityDto } from './dto/replace-availability.dto';
@@ -24,7 +32,10 @@ import { UpsertAvailabilitySlotDto } from './dto/upsert-availability-slot.dto';
 @RequirePermission('manage_assignees')
 @Controller('assignees/:assigneeId/availability')
 export class AssigneeAvailabilityController {
-  constructor(private availabilityService: AssigneeAvailabilityService) {}
+  constructor(
+    private availabilityService: AssigneeAvailabilityService,
+    private assigneesService: AssigneesService,
+  ) {}
 
   @Get()
   findAll(@Param('assigneeId') assigneeId: string) {
@@ -66,11 +77,26 @@ export class AssigneeAvailabilityController {
 
   @RequirePermission('manage_assignees', 'assign_task', 'view_incidents')
   @Get('calendar')
-  getCalendar(
+  async getCalendar(
     @Param('assigneeId') assigneeId: string,
     @Query('from') from: string,
     @Query('to') to: string,
+    @CurrentUser() user: JwtPayload,
+    @AccessScope() scope: UserAccessScope | undefined,
   ) {
+    const canViewOthers =
+      scope?.permissions.includes('manage_assignees') ||
+      scope?.permissions.includes('assign_task');
+    if (!canViewOthers) {
+      const profile = await this.assigneesService.findScheduleProfileByEmail(
+        user.email,
+      );
+      if (!profile || profile.id !== assigneeId) {
+        throw new ForbiddenException(
+          'You can only view your own assignee schedule',
+        );
+      }
+    }
     return this.availabilityService.getCalendar(assigneeId, from, to);
   }
 }
