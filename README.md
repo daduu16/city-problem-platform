@@ -17,7 +17,7 @@ Enterprise-grade municipal incident dispatch and analytics platform (GIS + dispa
 
 ### Run everything (web + mobile + infra)
 
-From the repo root (after `cp .env.example .env` and first-time Prisma setup below):
+From the repo root (after `cp .env.example .env` and [first-time database setup](#first-time-database-setup)):
 
 ```bash
 npm install
@@ -26,6 +26,20 @@ npm run start:all
 
 This starts Postgres/Redis, then backend (`:3001`), frontend (`:5173`), and Expo (`:8081`).  
 Web-only (no mobile): `npm run dev`.
+
+### First-time database setup
+
+Required **once** on a fresh clone (or after pulling new Prisma migrations). Postgres must be running (`docker compose up -d postgres redis`).
+
+From the **repo root**:
+
+```bash
+cd backend && npx prisma migrate dev && npm run prisma:seed
+```
+
+This applies all migrations to the local database and loads demo users, categories, geozones, and sample incidents (see [Demo accounts](#demo-accounts)).
+
+Run the same command again after `git pull` if `backend/prisma/migrations/` changed. For production-like deploys use `npx prisma migrate deploy` instead of `migrate dev`.
 
 ### 1. Infrastructure
 
@@ -43,6 +57,8 @@ npx prisma migrate dev
 npm run prisma:seed
 npm run dev
 ```
+
+(Single command from repo root: see [First-time database setup](#first-time-database-setup).)
 
 API: `http://localhost:3001`  
 Swagger: `http://localhost:3001/api/docs`
