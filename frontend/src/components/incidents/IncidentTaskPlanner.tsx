@@ -1,20 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { api } from "@/lib/api";
 import { az } from "@/i18n/az";
 import type {
-	AssigneeAvailabilityCalendar,
-	AssigneeDaySchedule,
 	CategoryAssignee,
 	IncidentAssigneeTask,
 	IncidentAssigneeTaskScheduleType,
 } from "@/types";
 import {
-	AssigneeDayTimeline,
-	dateKeyFromDraft,
-	minuteOnDateKey,
-} from "@/components/incidents/AssigneeDayTimeline";
+	AssigneeMultiDayTimeline,
+	MAX_PLANNER_DAY_RANGE,
+	syncUtcRangeFromDailyPlan,
+} from "@/components/incidents/AssigneeMultiDayTimeline";
+import { minuteOnDateKey } from "@/components/incidents/AssigneeDayTimeline";
 import { AssigneePickerModal } from "@/components/incidents/AssigneePickerModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,8 +23,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
 	addDaysToDateKey,
 	addUtcMinutes,
-	bakuLocalToUtc,
+	clampDateKeyRangeEnd,
 	defaultTaskStartUtc,
+	enumerateDateKeys,
 	formatBakuDateTime,
 	getBakuMinutes,
 	roundBakuMinutesUp,
@@ -66,6 +66,10 @@ export function IncidentTaskPlanner({
 	const [pickerOpen, setPickerOpen] = useState(false);
 	const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
+	const [planRangeFrom, setPlanRangeFrom] = useState(() => todayDateKey());
+	const [planRangeTo, setPlanRangeTo] = useState(() => todayDateKey());
+	const [dailyStartMinute, setDailyStartMinute] = useState(9 * 60);
+	const [dailyEndMinute, setDailyEndMinute] = useState(17 * 60);
 
 	const isFixed = scheduleType === "FIXED";
 	const endsAt = isFixed ? fixedEndsAt : windowEndsAt;
@@ -73,18 +77,35 @@ export function IncidentTaskPlanner({
 	const startsIso = utcToIsoString(startsAt);
 	const endsIso = utcToIsoString(endsAt);
 	const rangeValid = endsAt > startsAt;
-	const rangeDurationMinutes = useMemo(
-		() =>
-			rangeValid
-				? Math.max(
-						15,
-						Math.round((endsAt.getTime() - startsAt.getTime()) / 60000),
-					)
-				: 15,
-		[endsAt, startsAt, rangeValid],
+	const planDateKeys = useMemo(
+		() => enumerateDateKeys(planRangeFrom, planRangeTo),
+		[planRangeFrom, planRangeTo],
 	);
-	const focusDateKey = dateKeyFromDraft(startsAt);
+	const planRangeValid =
+		planDateKeys.length > 0 && planDateKeys.length <= MAX_PLANNER_DAY_RANGE;
+	const dailyRangeValid = dailyEndMinute > dailyStartMinute;
 	const isAssigneeFirst = mode === "assigneeFirst";
+	const rangeDurationMinutes = useMemo(() => {
+		if (isAssigneeFirst && isFixed && planRangeValid && dailyRangeValid) {
+			return planDateKeys.length * (dailyEndMinute - dailyStartMinute);
+		}
+		if (!rangeValid) return 15;
+		return Math.max(
+			15,
+			Math.round((endsAt.getTime() - startsAt.getTime()) / 60000),
+		);
+	}, [
+		dailyEndMinute,
+		dailyRangeValid,
+		dailyStartMinute,
+		endsAt,
+		isAssigneeFirst,
+		isFixed,
+		planDateKeys.length,
+		planRangeValid,
+		rangeValid,
+		startsAt,
+	]);
 	const showTimeline = isFixed && Boolean(selectedAssignee);
 	const timelineInitForRef = useRef<string | null>(null);
 
@@ -111,10 +132,43 @@ export function IncidentTaskPlanner({
 			dateKey = addDaysToDateKey(today, 1);
 			minutes = 9 * 60;
 		}
-		const start = bakuLocalToUtc(dateKey, minutes);
+		const endMinutes = Math.min(minutes + 120, 24 * 60 - 15);
+		setPlanRangeFrom(dateKey);
+		setPlanRangeTo(dateKey);
+		setDailyStartMinute(minutes);
+		setDailyEndMinute(endMinutes);
+		const { startsAt: start, endsAt: end } = syncUtcRangeFromDailyPlan(
+			dateKey,
+			dateKey,
+			minutes,
+			endMinutes,
+		);
 		setStartsAt(start);
-		setFixedEndsAt(addUtcMinutes(start, 120));
+		setFixedEndsAt(end);
 	}, [isAssigneeFirst, isFixed, selectedAssignee]);
+
+	useEffect(() => {
+		if (!isAssigneeFirst || !isFixed || !planRangeValid || !dailyRangeValid) {
+			return;
+		}
+		const { startsAt: start, endsAt: end } = syncUtcRangeFromDailyPlan(
+			planRangeFrom,
+			planRangeTo,
+			dailyStartMinute,
+			dailyEndMinute,
+		);
+		setStartsAt(start);
+		setFixedEndsAt(end);
+	}, [
+		dailyEndMinute,
+		dailyRangeValid,
+		dailyStartMinute,
+		isAssigneeFirst,
+		isFixed,
+		planRangeFrom,
+		planRangeTo,
+		planRangeValid,
+	]);
 
 	useEffect(() => {
 		if (scheduleType === "WINDOW") {
@@ -144,74 +198,88 @@ export function IncidentTaskPlanner({
 		}
 	};
 
-	const dayScheduleQuery = useQuery({
-		queryKey: [
-			"incident-tasks",
-			"day-schedule",
-			selectedAssignee?.id,
-			focusDateKey,
-			rangeValid ? startsIso : null,
-			rangeValid ? endsIso : null,
-		],
-		queryFn: async (): Promise<AssigneeDaySchedule> => {
-			const assigneeId = selectedAssignee!.id;
-			const params: Record<string, string> = { date: focusDateKey };
-			if (rangeValid) {
-				params.draftStartsAt = startsIso;
-				params.draftEndsAt = endsIso;
-			}
-			try {
-				const res = await api.get<AssigneeDaySchedule>(
-					`/incident-tasks/assignees/${assigneeId}/day-schedule`,
-					{ params },
+	const dayDraftQueries = useQueries({
+		queries: planDateKeys.map((dateKey) => ({
+			queryKey: [
+				"incident-tasks",
+				"day-schedule",
+				selectedAssignee?.id,
+				dateKey,
+				dailyStartMinute,
+				dailyEndMinute,
+			],
+			queryFn: async () => {
+				const assigneeId = selectedAssignee!.id;
+				const draftStartsAt = utcToIsoString(
+					minuteOnDateKey(dateKey, dailyStartMinute),
 				);
-				return res.data;
-			} catch {
-				const cal = await api.get<AssigneeAvailabilityCalendar>(
-					`/assignees/${assigneeId}/availability/calendar`,
-					{ params: { from: focusDateKey, to: focusDateKey } },
+				const draftEndsAt = utcToIsoString(
+					minuteOnDateKey(dateKey, dailyEndMinute),
 				);
-				const day = cal.data.days[0];
-				if (!day) {
-					throw new Error("day_not_found");
-				}
-				return {
-					assignee: {
-						id: assigneeId,
-						name: selectedAssignee!.name,
-					},
-					date: focusDateKey,
-					day,
-				};
-			}
-		},
-		enabled: Boolean(selectedAssignee?.id && isFixed),
-		retry: 1,
+				const res = await api.get<{
+					draft?: {
+						fixedConflicts: Array<{
+							id: string;
+							title: string;
+							startsAt: string;
+							endsAt: string;
+						}>;
+						outsideHours: boolean;
+					};
+				}>(`/incident-tasks/assignees/${assigneeId}/day-schedule`, {
+					params: { date: dateKey, draftStartsAt, draftEndsAt },
+				});
+				return { dateKey, draft: res.data.draft };
+			},
+			enabled: Boolean(
+				selectedAssignee?.id &&
+					isFixed &&
+					isAssigneeFirst &&
+					dailyRangeValid &&
+					planRangeValid,
+			),
+			retry: 1,
+		})),
 	});
 
-	const draftWarnings = dayScheduleQuery.data?.draft;
-	const hasFixedConflict = (draftWarnings?.fixedConflicts.length ?? 0) > 0;
-	const hasOutsideHours = draftWarnings?.outsideHours === true;
+	const draftConflicts = useMemo(
+		() =>
+			dayDraftQueries.flatMap((q) =>
+				(q.data?.draft?.fixedConflicts ?? []).map((c) => ({
+					...c,
+					dateKey: q.data?.dateKey,
+				})),
+			),
+		[dayDraftQueries],
+	);
+	const hasFixedConflict = draftConflicts.length > 0;
+	const hasOutsideHours = dayDraftQueries.some(
+		(q) => q.data?.draft?.outsideHours === true,
+	);
 
 	const createMutation = useMutation({
-		mutationFn: async (payload: {
-			assigneeId: string;
-			startsAt: string;
-			endsAt: string;
-			scheduleType: IncidentAssigneeTaskScheduleType;
-			estimatedMinutes?: number;
-			allowOverlap?: boolean;
-		}) => {
-			await api.post(`/incidents/${incidentId}/tasks`, {
-				assigneeId: payload.assigneeId,
-				title: title.trim(),
-				description: description.trim() || undefined,
-				startsAt: payload.startsAt,
-				endsAt: payload.endsAt,
-				scheduleType: payload.scheduleType,
-				estimatedMinutes: payload.estimatedMinutes,
-				allowOverlap: payload.allowOverlap,
-			});
+		mutationFn: async (
+			slots: Array<{
+				assigneeId: string;
+				startsAt: string;
+				endsAt: string;
+				scheduleType: IncidentAssigneeTaskScheduleType;
+				estimatedMinutes?: number;
+				allowOverlap?: boolean;
+			}>,
+		) => {
+			for (const payload of slots) {
+				await api.post(`/incidents/${incidentId}/tasks`, {
+					assigneeId: payload.assigneeId,
+					title: title.trim(),
+					description: description.trim() || undefined,
+					startsAt: payload.startsAt,
+					endsAt: payload.endsAt,
+					scheduleType: payload.scheduleType,
+					estimatedMinutes: payload.estimatedMinutes,
+					allowOverlap: payload.allowOverlap,
+				});
+			}
 		},
 		onSuccess: () => {
 			setTitle("");
@@ -231,12 +299,17 @@ export function IncidentTaskPlanner({
 	const needsOverlapAck = isFixed && hasFixedConflict && !allowOverlap;
 	const needsOutsideAck = isFixed && hasOutsideHours && !allowOverlap;
 
+	const assigneeFirstPlanReady =
+		!isAssigneeFirst ||
+		!isFixed ||
+		(planRangeValid && dailyRangeValid);
 	const canSubmit =
 		Boolean(
 			selectedAssignee && title.trim() && effectiveStarts && effectiveEnds,
 		) &&
 		!createMutation.isPending &&
 		new Date(effectiveEnds) > new Date(effectiveStarts) &&
+		assigneeFirstPlanReady &&
 		!needsOverlapAck &&
 		!(needsOutsideAck && !allowOverlap);
 
@@ -299,12 +372,42 @@ export function IncidentTaskPlanner({
 		setPickerOpen(true);
 	};
 
-	const handleTimelineRange = (startMinute: number, endMinute: number) => {
-		const dateKey = dayScheduleQuery.data?.day.date ?? focusDateKey;
-		const start = minuteOnDateKey(dateKey, startMinute);
-		const end = minuteOnDateKey(dateKey, endMinute);
-		setStartsAt(start);
-		setFixedEndsAt(end);
+	const handlePlanRangeChange = (from: string, to: string) => {
+		const clampedTo = clampDateKeyRangeEnd(from, to, MAX_PLANNER_DAY_RANGE);
+		setPlanRangeFrom(from);
+		setPlanRangeTo(clampedTo);
+	};
+
+	const handleDailyRange = (startMinute: number, endMinute: number) => {
+		setDailyStartMinute(startMinute);
+		setDailyEndMinute(endMinute);
+	};
+
+	const buildCreateSlots = () => {
+		if (!selectedAssignee) return [];
+		const base = {
+			assigneeId: selectedAssignee.id,
+			scheduleType,
+			estimatedMinutes:
+				!isFixed && estimatedMinutes !== ""
+					? Number(estimatedMinutes)
+					: undefined,
+			allowOverlap: isFixed && allowOverlap ? true : undefined,
+		};
+		if (isAssigneeFirst && isFixed && planRangeValid && dailyRangeValid) {
+			return planDateKeys.map((dateKey) => ({
+				...base,
+				startsAt: utcToIsoString(minuteOnDateKey(dateKey, dailyStartMinute)),
+				endsAt: utcToIsoString(minuteOnDateKey(dateKey, dailyEndMinute)),
+			}));
+		}
+		return [
+			{
+				...base,
+				startsAt: effectiveStarts,
+				endsAt: effectiveEnds,
+			},
+		];
 	};
 
 	return (
@@ -416,57 +519,16 @@ export function IncidentTaskPlanner({
 				</button>
 			</div>
 
-			{showTimeline && (
-				<div className="space-y-2">
-					{dayScheduleQuery.isPending && !dayScheduleQuery.data && (
-						<div className="space-y-2" aria-busy="true">
-							<div className="flex items-center justify-between gap-2">
-								<p className="text-xs font-medium">{az.tasks.dayTimeline}</p>
-								<p className="text-[10px] text-muted-foreground">
-									{focusDateKey}
-								</p>
-							</div>
-							<p className="text-[10px] text-muted-foreground">
-								{az.tasks.dayTimelineLoading}
-							</p>
-							<div className="h-14 animate-pulse rounded-md border border-border bg-muted/50" />
-						</div>
-					)}
-					{dayScheduleQuery.isError && !dayScheduleQuery.data && (
-						<div className="space-y-2">
-							<p className="text-xs font-medium">{az.tasks.dayTimeline}</p>
-							<p className="text-xs text-destructive">
-								{az.tasks.dayTimelineLoadError}
-							</p>
-							<Button
-								type="button"
-								variant="outline"
-								size="sm"
-								onClick={() => void dayScheduleQuery.refetch()}
-							>
-								{az.errors.retry}
-							</Button>
-						</div>
-					)}
-					{dayScheduleQuery.data && (
-						<AssigneeDayTimeline
-							day={dayScheduleQuery.data.day}
-							draftStart={rangeValid ? new Date(startsIso) : undefined}
-							draftEnd={rangeValid ? new Date(endsIso) : undefined}
-							onPickRange={handleTimelineRange}
-						/>
-					)}
-				</div>
-			)}
-
-			{isAssigneeFirst && selectedAssignee && rangeValid && isFixed && (
-				<p className="text-center text-xs text-muted-foreground">
-					{az.tasks.selectedRange(
-						formatBakuDateTime(startsAt),
-						formatBakuDateTime(fixedEndsAt),
-						rangeDurationMinutes,
-					)}
-				</p>
+			{showTimeline && selectedAssignee && (
+				<AssigneeMultiDayTimeline
+					assigneeId={selectedAssignee.id}
+					rangeFrom={planRangeFrom}
+					rangeTo={planRangeTo}
+					onRangeChange={handlePlanRangeChange}
+					dailyStartMinute={dailyStartMinute}
+					dailyEndMinute={dailyEndMinute}
+					onDailyRangeChange={handleDailyRange}
+				/>
 			)}
 
 			{isAssigneeFirst && selectedAssignee && !isFixed && (
@@ -571,8 +633,8 @@ export function IncidentTaskPlanner({
 						{az.tasks.conflictWarning}
 					</p>
 					<ul className="space-y-1 text-[11px] text-amber-900/90 dark:text-amber-100/90">
-						{draftWarnings?.fixedConflicts.map((c) => (
-							<li key={c.id}>
+						{draftConflicts.map((c) => (
+							<li key={`${c.id}-${c.startsAt}`}>
 								{c.title}: {formatBakuDateTime(new Date(c.startsAt))} —{" "}
 								{formatBakuDateTime(new Date(c.endsAt))}
 							</li>
@@ -637,21 +699,16 @@ export function IncidentTaskPlanner({
 					size="sm"
 					disabled={!canSubmit}
 					onClick={() => {
-						if (!selectedAssignee) return;
-						createMutation.mutate({
-							assigneeId: selectedAssignee.id,
-							startsAt: effectiveStarts,
-							endsAt: effectiveEnds,
-							scheduleType,
-							estimatedMinutes:
-								!isFixed && estimatedMinutes !== ""
-									? Number(estimatedMinutes)
-									: undefined,
-							allowOverlap: isFixed && allowOverlap ? true : undefined,
-						});
+						const slots = buildCreateSlots();
+						if (slots.length === 0) return;
+						createMutation.mutate(slots);
 					}}
 				>
-					{createMutation.isPending ? az.tasks.saving : az.tasks.schedule}
+					{createMutation.isPending
+						? az.tasks.saving
+						: isAssigneeFirst && isFixed && planDateKeys.length > 1
+							? az.tasks.scheduleMultiple(planDateKeys.length)
+							: az.tasks.schedule}
 				</Button>
 			</div>
 		</div>

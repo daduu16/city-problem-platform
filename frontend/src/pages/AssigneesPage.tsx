@@ -9,6 +9,8 @@ import type {
   Organization,
 } from '@/types';
 import { az } from '@/i18n/az';
+import { buildDbCategoryTree } from '@/lib/adminCategoryTree';
+import { CategoryTreeView } from '@/components/shared/CategoryTreeView';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -98,27 +100,16 @@ export function AssigneesPage() {
     }
   }, [selected, isCreating]);
 
-  const leafCategories = useMemo(() => {
-    const all = categoriesQuery.data ?? [];
-    return all.filter(
-      (c) => c.parentId !== null && !all.some((x) => x.parentId === c.id),
-    );
-  }, [categoriesQuery.data]);
+  const categoryTree = useMemo(
+    () => buildDbCategoryTree(categoriesQuery.data ?? []),
+    [categoriesQuery.data],
+  );
 
-  const groupedLeaves = useMemo(() => {
-    const all = categoriesQuery.data ?? [];
-    const byParent = new Map<string, Category[]>();
-    for (const leaf of leafCategories) {
-      const parentId = leaf.parentId!;
-      const list = byParent.get(parentId) ?? [];
-      list.push(leaf);
-      byParent.set(parentId, list);
-    }
-    return [...byParent.entries()].map(([parentId, leaves]) => ({
-      parent: all.find((c) => c.id === parentId),
-      leaves,
-    }));
-  }, [categoriesQuery.data, leafCategories]);
+  const checkedKeys = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    for (const id of categoryIds) map[id] = true;
+    return map;
+  }, [categoryIds]);
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['assignees'] });
@@ -374,39 +365,37 @@ export function AssigneesPage() {
 
                 <div>
                   <p className="mb-2 text-sm font-medium">{az.executors.categories}</p>
-                  <div className="max-h-72 space-y-4 overflow-y-auto rounded-md border p-3">
-                    {groupedLeaves.map(({ parent, leaves }) => (
-                      <div key={parent?.id ?? 'other'}>
-                        {parent && (
-                          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            {parent.name}
-                          </p>
-                        )}
-                        <div className="space-y-1.5">
-                          {leaves.map((cat) => (
-                            <div key={cat.id} className="flex items-center gap-2">
-                              <Checkbox
-                                id={`assignee-cat-${cat.id}`}
-                                checked={categoryIds.includes(cat.id)}
-                                onCheckedChange={(checked) => {
-                                  setCategoryIds((prev) =>
-                                    checked
-                                      ? [...prev, cat.id]
-                                      : prev.filter((id) => id !== cat.id),
-                                  );
-                                }}
-                              />
-                              <Label
-                                htmlFor={`assignee-cat-${cat.id}`}
-                                className="cursor-pointer text-sm font-normal"
-                              >
-                                {cat.name}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                  <div className="max-h-72 overflow-y-auto rounded-md border p-3">
+                    {categoriesQuery.isLoading ? (
+                      <Skeleton className="h-40 w-full" />
+                    ) : categoryTree.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">—</p>
+                    ) : (
+                      <CategoryTreeView
+                        mode="checkbox"
+                        tree={categoryTree}
+                        emptyMessage="—"
+                        defaultExpanded
+                        checkedKeys={checkedKeys}
+                        onToggleKey={(id) => {
+                          setCategoryIds((prev) =>
+                            prev.includes(id)
+                              ? prev.filter((x) => x !== id)
+                              : [...prev, id],
+                          );
+                        }}
+                        onToggleKeys={(ids, checked) => {
+                          setCategoryIds((prev) => {
+                            const set = new Set(prev);
+                            for (const id of ids) {
+                              if (checked) set.add(id);
+                              else set.delete(id);
+                            }
+                            return [...set];
+                          });
+                        }}
+                      />
+                    )}
                   </div>
                 </div>
 

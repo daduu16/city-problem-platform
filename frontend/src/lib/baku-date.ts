@@ -32,6 +32,33 @@ export function addDaysToDateKey(dateKey: string, days: number): string {
   return utc.toISOString().slice(0, 10);
 }
 
+export function compareDateKeys(a: string, b: string): number {
+  return a.localeCompare(b);
+}
+
+/** Inclusive list of Baku calendar dates from `from` through `to`. */
+export function enumerateDateKeys(from: string, to: string): string[] {
+  if (compareDateKeys(from, to) > 0) return [];
+  const keys: string[] = [];
+  let cur = from;
+  for (let guard = 0; guard < 400; guard += 1) {
+    keys.push(cur);
+    if (cur === to) break;
+    cur = addDaysToDateKey(cur, 1);
+  }
+  return keys;
+}
+
+export function clampDateKeyRangeEnd(
+  from: string,
+  to: string,
+  maxDays: number,
+): string {
+  const keys = enumerateDateKeys(from, to);
+  if (keys.length <= maxDays) return to;
+  return keys[maxDays - 1]!;
+}
+
 export function todayDateKey(): string {
   return toBakuDateKey(new Date());
 }

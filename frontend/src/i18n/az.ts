@@ -332,7 +332,23 @@ export const az = {
 		scheduleTypeWindowHint:
 			"Yalnız son tarix (deadline) təyin edilir; icraçı vaxtı özü planlaşdırır.",
 		assigneeFirstTimelineHint:
-			"İcraçını seçin, sonra günün cədvəlində interval seçin.",
+			"İcraçını seçin, tarix aralığını və hər gün üçün iş intervalını seçin.",
+		planDateRange: "Tarix aralığı",
+		planDateRangeHint:
+			"Hər seçilmiş gündə eyni saat intervalı tətbiq olunur; cədvəldə sürükləyin və ya klikləyin.",
+		planDateRangeTooLong: (max: number) =>
+			`Ən çoxu ${max} gün seçilə bilər.`,
+		planDayCount: (n: number) =>
+			n === 1 ? "1 gün" : `${n} gün`,
+		selectedMultiDayRange: (
+			dayCount: number,
+			fromTime: string,
+			toTime: string,
+			totalMinutes: number,
+		) =>
+			`${dayCount} gün · hər gün ${fromTime} — ${toTime} · cəmi ${totalMinutes} dəq`,
+		scheduleMultiple: (n: number) =>
+			n === 1 ? "Planlaşdır" : `Planlaşdır (${n} gün)`,
 		windowFrom: "Pəncərə başlanğıcı",
 		windowTo: "Son tarix (deadline)",
 		estimatedEffort: "Təxmini sərfiyyat (dəq)",

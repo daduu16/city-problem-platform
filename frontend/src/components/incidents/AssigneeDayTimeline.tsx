@@ -4,6 +4,7 @@ import type { AssigneeAvailabilityCalendarDay } from '@/types';
 import { minutesToTimeInput } from '@/components/executors/availability-utils';
 import {
   bakuLocalToUtc,
+  formatBakuDate,
   getBakuMinutes,
   toBakuDateKey,
 } from '@/lib/baku-date';
@@ -24,6 +25,10 @@ type Props = {
   draftStart?: Date;
   draftEnd?: Date;
   onPickRange: (startMinute: number, endMinute: number) => void;
+  /** Hide section title when embedded in a multi-day list. */
+  embedded?: boolean;
+  /** Hide color legend (shown once on the parent for multi-day). */
+  hideLegend?: boolean;
 };
 
 function clipIsoToDayMinutes(
@@ -68,6 +73,8 @@ export function AssigneeDayTimeline({
   draftStart,
   draftEnd,
   onPickRange,
+  embedded = false,
+  hideLegend = false,
 }: Props) {
   const barRef = useRef<HTMLDivElement>(null);
   const [anchorMinute, setAnchorMinute] = useState<number | null>(null);
@@ -192,15 +199,24 @@ export function AssigneeDayTimeline({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-medium">{az.tasks.dayTimeline}</p>
-        <p className="text-[10px] text-muted-foreground">{day.date}</p>
-      </div>
-      <p className="text-[10px] text-muted-foreground">
-        {anchorMinute == null
-          ? az.tasks.dayTimelineRangeHint
-          : az.tasks.dayTimelineRangeHintSecond}
-      </p>
+      {!embedded && (
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-medium">{az.tasks.dayTimeline}</p>
+          <p className="text-[10px] text-muted-foreground">{day.date}</p>
+        </div>
+      )}
+      {embedded && (
+        <p className="text-[10px] font-medium text-muted-foreground">
+          {formatBakuDate(day.date)}
+        </p>
+      )}
+      {!embedded && (
+        <p className="text-[10px] text-muted-foreground">
+          {anchorMinute == null
+            ? az.tasks.dayTimelineRangeHint
+            : az.tasks.dayTimelineRangeHintSecond}
+        </p>
+      )}
 
       <div
         ref={barRef}
@@ -300,24 +316,26 @@ export function AssigneeDayTimeline({
         </p>
       )}
 
-      <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <span className="h-2 w-3 rounded-sm bg-emerald-500/40" />
-          {az.tasks.legendWorkHours}
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="h-2 w-3 rounded-sm bg-red-500" />
-          {az.tasks.legendFixedTask}
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="h-2 w-3 rounded-sm border border-amber-500 bg-amber-400/60" />
-          {az.tasks.legendWindowTask}
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="h-2 w-3 rounded-sm border-2 border-primary bg-primary/30" />
-          {az.tasks.legendDraft}
-        </span>
-      </div>
+      {!hideLegend && (
+        <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <span className="h-2 w-3 rounded-sm bg-emerald-500/40" />
+            {az.tasks.legendWorkHours}
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-2 w-3 rounded-sm bg-red-500" />
+            {az.tasks.legendFixedTask}
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-2 w-3 rounded-sm border border-amber-500 bg-amber-400/60" />
+            {az.tasks.legendWindowTask}
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-2 w-3 rounded-sm border-2 border-primary bg-primary/30" />
+            {az.tasks.legendDraft}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
